@@ -20,16 +20,33 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 * Lights (add the labels `mainlight` and `nightlight` if needed)
 * Switches
 
+## Dependencies
+This dashboard strategy needs [Bubble Card](https://github.com/Clooos/Bubble-Card).
+
+[Mini Graph Card](https://github.com/kalkih/mini-graph-card) and [Card Mod](https://github.com/thomasloven/lovelace-card-mod) are highly recommended, but optional.
+
+Please check the respective repositories on how to install them and do that, before you proceed.
+
 ## Installation
-1. Install Bubble Card (required!)
-2. [optional] Install Lovelace Mini Graph Card (for temperature and humidity graphs)
-3. [optional] Install card mod (to make the graphs look more like Bubble Cards)
-4. Download `bonbon-strategy.js`
-5. Place `bonbon-strategy.js` in `<config>/www/bonbon-strategy.js` (restart HA if `/www` didn't exist!)
-6. Go to `Settings` > `Dashboards` > `⋮` > `Resources` > `Add resource` and enter `/local/bonbon-strategy.js` then add
-7. Go to `Settings` > `Dashboards` > `Add dashboard` > `New empty dashboard` then create
-8. Go to the new `Dashboard` > `✎` > `Raw configuration`, paste the configuration from below, then save
-9. Clear your frontend cache!
+
+### With HACS (recommended):
+
+1. Make sure Bubble Card is installed!
+2. Open HACS > `⋮` > `Custom repositories` type `https://github.com/trashbytes/bonbon-strategy` and select `Dashboard` then add
+3. Search for `Bonbon Strategy`, make sure that you have no filters set
+4. Click `Download` and install
+6. Go to `Settings` > `Dashboards` > `Add dashboard` > `New empty dashboard` then create
+7. Go to the new `Dashboard` > `✎` > `Raw configuration`, paste the configuration from below, then save
+8. Clear your frontend cache!
+
+### Without HACS:
+1. Make sure Bubble Card is installed!
+2. Download `bonbon-strategy.js`
+3. Place `bonbon-strategy.js` in `<config>/www/bonbon-strategy.js` (restart HA if `/www` didn't exist!)
+4. Go to `Settings` > `Dashboards` > `⋮` > `Resources` > `Add resource` and enter `/local/bonbon-strategy.js` then add
+5. Go to `Settings` > `Dashboards` > `Add dashboard` > `New empty dashboard` then create
+6. Go to the new `Dashboard` > `✎` > `Raw configuration`, paste the configuration from below, then save
+7. Clear your frontend cache!
 
 Done!
 
