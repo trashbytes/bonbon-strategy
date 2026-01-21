@@ -65,4 +65,5 @@ strategy:
       lights: Beleuchtung
       openings: Fenster & Türen
       switches: Schalter
+      climate: Heizung
 ```
