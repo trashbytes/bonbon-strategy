@@ -61,9 +61,11 @@ strategy:
     weather_entity_id: auto
     translations:
       overview: Übersicht
+      areas: Bereiche
       favorites: Favoriten
       lights: Beleuchtung
       openings: Fenster & Türen
       switches: Schalter
       climate: Heizung
+      misc: Sonstiges
 ```

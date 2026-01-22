@@ -188,37 +188,147 @@ export class BonbonStrategy {
       return false;
     });
 
-    const floors = hass.floors;
+    const floors = {
+      ...(hass.floors || {}),
+      _areas: {
+        name: config?.translations?.areas || 'Areas',
+        floor_id: '_areas',
+        icon: 'mdi:sofa',
+        level: 99,
+      },
+    };
 
-    const areas = Object.values(hass.areas).map(function (area, index, areas) {
-      const seed = area.area_id + String(index) + area.name;
-      let hash = 0;
-      for (let i = 0; i < seed.length; i++) {
-        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const colorIndex = Math.abs(hash % areas.length);
+    const areas = Object.values(hass.areas)
+      .filter((a) => !a.labels?.includes('bonbon_hidden'))
+      .map(function (area, index, areas) {
+        if (area.floor_id == null) {
+          area.floor_id = '_areas';
+        }
+        const seed = area.area_id + String(index) + area.name;
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+          hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const colorIndex = Math.abs(hash % areas.length);
 
-      const hue = (colorIndex * (360 / areas.length)) % 360;
-      const saturation = isDark ? 20 : 40;
-      const lightness = isDark ? 40 : 77;
+        const hue = (colorIndex * (360 / areas.length)) % 360;
+        const saturation = isDark ? 20 : 40;
+        const lightness = isDark ? 40 : 77;
 
-      const lightColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-      const defltColor = `hsl(${hue}, ${saturation}%, ${lightness - 5}%)`;
-      const shadeColor = `hsl(${hue}, ${saturation}%, ${lightness - 10}%)`;
-      area.lightColor = lightColor;
-      area.defltColor = defltColor;
-      area.shadeColor = shadeColor;
-      area._lights = Object.values(entities)
-        .filter((e) => {
-          const isLight = e.entity_id.startsWith('light.');
+        const lightColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        const defltColor = `hsl(${hue}, ${saturation}%, ${lightness - 5}%)`;
+        const shadeColor = `hsl(${hue}, ${saturation}%, ${lightness - 10}%)`;
+        area.lightColor = lightColor;
+        area.defltColor = defltColor;
+        area.shadeColor = shadeColor;
+
+        const categorizedEntityIds = [area.temperature_entity_id, area.humidity_entity_id];
+
+        area._lights = Object.values(entities)
+          .filter((e) => {
+            const isLight = e.entity_id.startsWith('light.');
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
+
+            if (
+              isLight &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              categorizedEntityIds.push(e.entity_id);
+              return true;
+            }
+            return false;
+          })
+          .sort((lightA, lightB) => {
+            const isMainA = lightA.labels?.includes('mainlight');
+            const isMainB = lightB.labels?.includes('mainlight');
+            if (isMainA && !isMainB) return -1;
+            if (!isMainA && isMainB) return 1;
+            const nameA =
+              lightA.name ||
+              states[lightA.entity_id]?.attributes?.friendly_name ||
+              lightA.entity_id;
+            const nameB =
+              lightB.name ||
+              states[lightA.entity_id]?.attributes?.friendly_name ||
+              lightB.entity_id;
+            return nameA.localeCompare(nameB);
+          })
+        area._switches = Object.values(entities)
+          .filter((e) => {
+            const isSwitch = e.entity_id.startsWith('switch.');
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden;
+
+            if (
+              isSwitch &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              categorizedEntityIds.push(e.entity_id);
+              return true;
+            }
+            return false;
+          })
+        area._openings = Object.values(entities)
+          .filter((e) => {
+            const isContact =
+              e.entity_id.startsWith('binary_sensor.') &&
+              e.entity_id.endsWith('_contact');
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
+            if (
+              isContact &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              categorizedEntityIds.push(e.entity_id);
+              return true;
+            }
+            return false;
+          })
+
+        area._climates = Object.values(entities)
+          .filter((e) => {
+            const isClimate = e.entity_id.startsWith('climate.');
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
+            if (
+              isClimate &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              categorizedEntityIds.push(e.entity_id);
+              return true;
+            }
+            return false;
+          })
+        area._misc = Object.values(entities).filter((e) => {
+          const isMisc = !categorizedEntityIds.includes(e.entity_id);
           const directArea = e.area_id === area.area_id;
           const device = hass.devices[e.device_id];
           const deviceArea = device && device.area_id === area.area_id;
           const isUserEntity = !e.entity_category;
-          const isHidden = e.hidden;
-
+          const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
           if (
-            isLight &&
+            isMisc &&
             isUserEntity &&
             (directArea || deviceArea) &&
             !isHidden
@@ -226,79 +336,9 @@ export class BonbonStrategy {
             return true;
           }
           return false;
-        })
-        .sort((lightA, lightB) => {
-          const isMainA = lightA?.labels?.includes('mainlight');
-          const isMainB = lightB?.labels?.includes('mainlight');
-          if (isMainA && !isMainB) return -1;
-          if (!isMainA && isMainB) return 1;
-          const nameA =
-            lightA.name ||
-            states[lightA.entity_id]?.attributes?.friendly_name ||
-            lightA.entity_id;
-          const nameB =
-            lightB.name ||
-            states[lightA.entity_id]?.attributes?.friendly_name ||
-            lightB.entity_id;
-          return nameA.localeCompare(nameB);
         });
-      area._switches = Object.values(entities).filter((e) => {
-        const isSwitch = e.entity_id.startsWith('switch.');
-        const directArea = e.area_id === area.area_id;
-        const device = hass.devices[e.device_id];
-        const deviceArea = device && device.area_id === area.area_id;
-        const isUserEntity = !e.entity_category;
-        const isHidden = e.hidden;
-
-        if (
-          isSwitch &&
-          isUserEntity &&
-          (directArea || deviceArea) &&
-          !isHidden
-        ) {
-          return true;
-        }
-        return false;
+        return area;
       });
-      area._openings = Object.values(entities).filter((e) => {
-        const isContact =
-          e.entity_id.startsWith('binary_sensor.') &&
-          e.entity_id.endsWith('_contact');
-        const directArea = e.area_id === area.area_id;
-        const device = hass.devices[e.device_id];
-        const deviceArea = device && device.area_id === area.area_id;
-        const isUserEntity = !e.entity_category;
-        const isHidden = e.hidden;
-        if (
-          isContact &&
-          isUserEntity &&
-          (directArea || deviceArea) &&
-          !isHidden
-        ) {
-          return true;
-        }
-        return false;
-      });
-
-      area._climates = Object.values(entities).filter((e) => {
-        const isClimate = e.entity_id.startsWith('climate.');
-        const directArea = e.area_id === area.area_id;
-        const device = hass.devices[e.device_id];
-        const deviceArea = device && device.area_id === area.area_id;
-        const isUserEntity = !e.entity_category;
-        const isHidden = e.hidden;
-        if (
-          isClimate &&
-          isUserEntity &&
-          (directArea || deviceArea) &&
-          !isHidden
-        ) {
-          return true;
-        }
-        return false;
-      });
-      return area;
-    });
 
     const areaViews = areas.map((area) => {
       let sections = [];
@@ -404,15 +444,15 @@ export class BonbonStrategy {
           cards: [],
         };
 
-        area._climates.forEach((c) => {
+        area._climates.forEach((e) => {
           climatesGrid.cards.push({
             type: 'custom:bubble-card',
             card_type: 'climate',
-            entity: c.entity_id,
+            entity: e.entity_id,
             name:
-              c.name ||
-              states[c.entity_id]?.attributes?.friendly_name ||
-              c.entity_id,
+              e.name ||
+              states[e.entity_id]?.attributes?.friendly_name ||
+              e.entity_id,
             show_state: true,
             state_color: true,
             show_last_changed: true,
@@ -455,15 +495,15 @@ export class BonbonStrategy {
           cards: [],
         };
 
-        mainlights.forEach((l) => {
+        mainlights.forEach((e) => {
           mainlightsGrid.cards.push({
             type: 'custom:bubble-card',
             card_type: 'button',
-            entity: l.entity_id,
+            entity: e.entity_id,
             name:
-              l.name ||
-              states[l.entity_id]?.attributes?.friendly_name ||
-              l.entity_id,
+              e.name ||
+              states[e.entity_id]?.attributes?.friendly_name ||
+              e.entity_id,
             show_state: true,
             show_last_changed: true,
             use_accent_color: true,
@@ -481,15 +521,15 @@ export class BonbonStrategy {
           cards: [],
         };
 
-        sublights.forEach((l) => {
+        sublights.forEach((e) => {
           sublightsGrid.cards.push({
             type: 'custom:bubble-card',
             card_type: 'button',
-            entity: l.entity_id,
+            entity: e.entity_id,
             name:
-              l.name ||
-              states[l.entity_id]?.attributes?.friendly_name ||
-              l.entity_id,
+              e.name ||
+              states[e.entity_id]?.attributes?.friendly_name ||
+              e.entity_id,
             show_state: true,
             show_last_changed: true,
             use_accent_color: true,
@@ -522,15 +562,15 @@ export class BonbonStrategy {
           cards: [],
         };
 
-        area._switches.forEach((l) => {
+        area._switches.forEach((e) => {
           switchesGrid.cards.push({
             type: 'custom:bubble-card',
             card_type: 'button',
-            entity: l.entity_id,
+            entity: e.entity_id,
             name:
-              l.name ||
-              states[l.entity_id]?.attributes?.friendly_name ||
-              l.entity_id,
+              e.name ||
+              states[e.entity_id]?.attributes?.friendly_name ||
+              e.entity_id,
             show_state: true,
             show_last_changed: true,
             use_accent_color: true,
@@ -563,15 +603,15 @@ export class BonbonStrategy {
           cards: [],
         };
 
-        area._openings.forEach((o) => {
+        area._openings.forEach((e) => {
           openingsGrid.cards.push({
             type: 'custom:bubble-card',
             card_type: 'button',
-            entity: o.entity_id,
+            entity: e.entity_id,
             name: (
-              o.name ||
-              states[o.entity_id]?.attributes?.friendly_name ||
-              o.entity_id
+              e.name ||
+              states[e.entity_id]?.attributes?.friendly_name ||
+              e.entity_id
             ).split(' (')[0],
             show_state: true,
             show_last_changed: true,
@@ -589,6 +629,66 @@ export class BonbonStrategy {
         openingsSection.cards.push(openingsGrid);
 
         sections.push(openingsSection);
+      }
+
+      if (area._misc?.length) {
+        let miscSection = {
+          cards: [],
+        };
+
+        let miscTitle = {
+          type: 'custom:bubble-card',
+          card_type: 'separator',
+          name: config?.translations?.misc || 'Misc',
+          icon: 'mdi:dots-horizontal-circle-outline',
+        };
+        miscSection.cards.push(miscTitle);
+
+        let miscGrid = {
+          type: 'grid',
+          columns: area._misc.length > 1 ? 2 : 1,
+          square: false,
+          cards: [],
+        };
+
+        area._misc.forEach((e) => {
+          console.log(e);
+          const isMeasurement = states[e.entity_id]?.attributes?.unit_of_measurement != null;
+          console.log(isMeasurement);
+          miscGrid.cards.push({
+            type: 'custom:bubble-card',
+            card_type: 'button',
+            entity: e.entity_id,
+            name: (
+              e.name ||
+              states[e.entity_id]?.attributes?.friendly_name ||
+              e.entity_id
+            ).split(' (')[0],
+            show_state: true,
+            show_last_changed: false,
+            use_accent_color: true,
+            tap_action: {
+              action: 'none',
+            },
+            button_action: {
+              tap_action: {
+                action: 'more-info',
+              },
+            },
+            styles: isMeasurement ? `
+              .is-on .bubble-name-container {
+                color: var(--primary-text-color) !important;
+              }
+              .is-on .bubble-button-background {
+                background-color: var(--ha-card-background,var(--card-background-color,#fff)) !important;
+                opacity: 1 !important;
+              }
+            ` : ''
+          });
+        });
+        miscSection.cards.push(miscGrid);
+
+        sections.push(miscSection);
       }
 
       return {
@@ -701,28 +801,30 @@ export class BonbonStrategy {
 
     sections.push(titleSection);
 
-    Object.values(floors).forEach((floor, index) => {
-      let floorSection = {
-        cards: [],
-      };
+    Object.values(floors).forEach((floor, index, floors) => {
+      const floorAreas = areas.filter(
+        (area) => area.floor_id == floor.floor_id,
+      );
+      if (floorAreas.length) {
+        let floorSection = {
+          cards: [],
+        };
 
-      floorSection.cards.push({
-        type: 'custom:bubble-card',
-        card_type: 'separator',
-        name: floor.name,
-        icon: floor.icon || 'mdi:home-floor-' + index,
-      });
+        floorSection.cards.push({
+          type: 'custom:bubble-card',
+          card_type: 'separator',
+          name: floor.name,
+          icon: floor.icon || 'mdi:home-floor-' + index,
+        });
 
-      let areasGrid = {
-        type: 'grid',
-        columns: 2,
-        square: false,
-        cards: [],
-      };
+        let areasGrid = {
+          type: 'grid',
+          columns: 2,
+          square: false,
+          cards: [],
+        };
 
-      areas
-        .filter((area) => area.floor_id == floor.floor_id)
-        .forEach((area) => {
+        floorAreas.forEach((area) => {
           areasGrid.cards.push({
             type: 'custom:bubble-card',
             card_type: 'button',
@@ -873,9 +975,10 @@ export class BonbonStrategy {
           });
         });
 
-      floorSection.cards.push(areasGrid);
+        floorSection.cards.push(areasGrid);
 
-      sections.push(floorSection);
+        sections.push(floorSection);
+      }
     });
 
     const homeView = {
