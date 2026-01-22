@@ -249,96 +249,144 @@ export class BonbonStrategy {
             }
             return false;
           })
-          .sort((lightA, lightB) => {
-            const isMainA = lightA.labels?.includes('mainlight');
-            const isMainB = lightB.labels?.includes('mainlight');
+          .sort((eA, eB) => {
+            const isMainA = eA.labels?.includes('mainlight');
+            const isMainB = eB.labels?.includes('mainlight');
             if (isMainA && !isMainB) return -1;
             if (!isMainA && isMainB) return 1;
             const nameA =
-              lightA.name ||
-              states[lightA.entity_id]?.attributes?.friendly_name ||
-              lightA.entity_id;
+              eA.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eA.entity_id;
             const nameB =
-              lightB.name ||
-              states[lightA.entity_id]?.attributes?.friendly_name ||
-              lightB.entity_id;
+              eB.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eB.entity_id;
             return nameA.localeCompare(nameB);
           });
-        area._switches = Object.values(entities).filter((e) => {
-          const isSwitch = e.entity_id.startsWith('switch.');
-          const directArea = e.area_id === area.area_id;
-          const device = hass.devices[e.device_id];
-          const deviceArea = device && device.area_id === area.area_id;
-          const isUserEntity = !e.entity_category;
-          const isHidden = e.hidden;
+        area._switches = Object.values(entities)
+          .filter((e) => {
+            const isSwitch = e.entity_id.startsWith('switch.');
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden;
 
-          if (
-            isSwitch &&
-            isUserEntity &&
-            (directArea || deviceArea) &&
-            !isHidden
-          ) {
-            categorizedEntityIds.push(e.entity_id);
-            return true;
-          }
-          return false;
-        });
-        area._openings = Object.values(entities).filter((e) => {
-          const isContact =
-            e.entity_id.startsWith('binary_sensor.') &&
-            e.entity_id.endsWith('_contact');
-          const directArea = e.area_id === area.area_id;
-          const device = hass.devices[e.device_id];
-          const deviceArea = device && device.area_id === area.area_id;
-          const isUserEntity = !e.entity_category;
-          const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
-          if (
-            isContact &&
-            isUserEntity &&
-            (directArea || deviceArea) &&
-            !isHidden
-          ) {
-            categorizedEntityIds.push(e.entity_id);
-            return true;
-          }
-          return false;
-        });
+            if (
+              isSwitch &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              categorizedEntityIds.push(e.entity_id);
+              return true;
+            }
+            return false;
+          })
+          .sort((eA, eB) => {
+            const nameA =
+              eA.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eA.entity_id;
+            const nameB =
+              eB.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eB.entity_id;
+            return nameA.localeCompare(nameB);
+          });
+        area._openings = Object.values(entities)
+          .filter((e) => {
+            const isContact =
+              e.entity_id.startsWith('binary_sensor.') &&
+              e.entity_id.endsWith('_contact');
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
+            if (
+              isContact &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              categorizedEntityIds.push(e.entity_id);
+              return true;
+            }
+            return false;
+          })
+          .sort((eA, eB) => {
+            const nameA =
+              eA.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eA.entity_id;
+            const nameB =
+              eB.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eB.entity_id;
+            return nameA.localeCompare(nameB);
+          });
 
-        area._climates = Object.values(entities).filter((e) => {
-          const isClimate = e.entity_id.startsWith('climate.');
-          const directArea = e.area_id === area.area_id;
-          const device = hass.devices[e.device_id];
-          const deviceArea = device && device.area_id === area.area_id;
-          const isUserEntity = !e.entity_category;
-          const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
-          if (
-            isClimate &&
-            isUserEntity &&
-            (directArea || deviceArea) &&
-            !isHidden
-          ) {
-            categorizedEntityIds.push(e.entity_id);
-            return true;
-          }
-          return false;
-        });
-        area._misc = Object.values(entities).filter((e) => {
-          const isMisc = !categorizedEntityIds.includes(e.entity_id);
-          const directArea = e.area_id === area.area_id;
-          const device = hass.devices[e.device_id];
-          const deviceArea = device && device.area_id === area.area_id;
-          const isUserEntity = !e.entity_category;
-          const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
-          if (
-            isMisc &&
-            isUserEntity &&
-            (directArea || deviceArea) &&
-            !isHidden
-          ) {
-            return true;
-          }
-          return false;
-        });
+        area._climates = Object.values(entities)
+          .filter((e) => {
+            const isClimate = e.entity_id.startsWith('climate.');
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
+            if (
+              isClimate &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              categorizedEntityIds.push(e.entity_id);
+              return true;
+            }
+            return false;
+          })
+          .sort((eA, eB) => {
+            const nameA =
+              eA.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eA.entity_id;
+            const nameB =
+              eB.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eB.entity_id;
+            return nameA.localeCompare(nameB);
+          });
+        area._misc = Object.values(entities)
+          .filter((e) => {
+            const isMisc = !categorizedEntityIds.includes(e.entity_id);
+            const directArea = e.area_id === area.area_id;
+            const device = hass.devices[e.device_id];
+            const deviceArea = device && device.area_id === area.area_id;
+            const isUserEntity = !e.entity_category;
+            const isHidden = e.hidden || e.labels?.includes('bonbon_hidden');
+            if (
+              isMisc &&
+              isUserEntity &&
+              (directArea || deviceArea) &&
+              !isHidden
+            ) {
+              return true;
+            }
+            return false;
+          })
+          .sort((eA, eB) => {
+            const nameA =
+              eA.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eA.entity_id;
+            const nameB =
+              eB.name ||
+              states[eA.entity_id]?.attributes?.friendly_name ||
+              eB.entity_id;
+            return nameA.localeCompare(nameB);
+          });
         return area;
       });
 
