@@ -60,12 +60,12 @@ strategy:
     use_graphs: true
     weather_entity_id: auto
     translations:
-      overview: Übersicht
-      areas: Bereiche
-      favorites: Favoriten
-      lights: Beleuchtung
-      openings: Fenster & Türen
-      switches: Schalter
-      climate: Heizung
-      misc: Sonstiges
+      overview: Overview
+      areas: Areas
+      favorites: Favorites
+      lights: Lights
+      openings: Doors & Windows
+      switches: Switches
+      climate: Climate
+      misc: Miscellaneous
 ```
