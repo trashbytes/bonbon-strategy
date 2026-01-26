@@ -122,7 +122,7 @@ export class BonbonStrategy {
     androidGesturesFix();
     const views = [];
 
-    const config = mergeConfig(defaultConfig, userConfig);
+    const config = mergeDeep(defaultConfig, userConfig);
     const dashboardName =
       Object.values(hass?.panels).find((p) => p?.url_path === hass?.panelUrl)
         ?.title ||
@@ -1241,7 +1241,7 @@ export class BonbonStrategy {
 
 customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
 console.info(
-  `%c 🍬 Bonbon Strategy %c v1.1.1 `,
+  `%c 🍬 Bonbon Strategy %c v1.1.2 `,
   'background-color: #cfd49b;color: #000;padding: 3px 2px 3px 3px;border-radius: 14px 0 0 14px;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
   'background-color: #8e72c3;color: #fff;padding: 3px 3px 3px 2px;border-radius: 0 14px 14px 0;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
 );
@@ -1322,11 +1322,24 @@ function androidGesturesFix() {
   }
 }
 
-function mergeConfig(target, source) {
-  for (const key in source) {
-    if (source[key] instanceof Object && key in target) {
-      Object.assign(source[key], mergeConfig(target[key], source[key]));
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+function mergeDeep(target, ...sources) {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        mergeDeep(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
     }
   }
-  return { ...target, ...source };
+
+  return mergeDeep(target, ...sources);
 }
