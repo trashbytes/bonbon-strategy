@@ -53,12 +53,49 @@ Done!
 
 ## Configuration
 Add this to your dashboard configuration. Change the translations and options as needed.
+
+Minimum required configuration, everything default:
 ```
-# Required:
 strategy:
   type: custom:bonbon-strategy
+```
 
-# Optional:
+Configuration with translations only, rest default:
+```
+strategy:
+  type: custom:bonbon-strategy
+  options:
+    views:
+      bonbon_home:
+        sections:
+          bonbon_weather:
+            name: Weather
+          bonbon_persons:
+            name: Persons
+          bonbon_favorites:
+            name: Favorites
+          bonbon_areas:
+            name: Areas
+      bonbon_area:
+        sections:
+          bonbon_environment:
+            name: Environment
+          bonbon_climate:
+            name: Climate
+          bonbon_lights:
+            name: Lights
+          bonbon_switches:
+            name: Switches
+          bonbon_openings:
+            name: Doors & Windows
+          bonbon_miscellaneous:
+            name: Miscellaneous
+```
+
+Complete configuration for maximum control:
+```
+strategy:
+  type: custom:bonbon-strategy
   options:
     views:
       bonbon_home:
@@ -160,4 +197,19 @@ strategy:
             max_columns: 2
             hidden: false
 
+```
+
+You can add custom sections like this:
+```
+death_star_controls:
+  name: Death Star
+  icon: mdi:death-star
+  order: 3
+  show_separator: true
+  min_columns: 1
+  max_columns: 2
+  hidden: false
+  cards: # can be an entity_id, an array of entity_ids a card or an array of cards
+    - light.death_star
+    - switch.arm
 ```
