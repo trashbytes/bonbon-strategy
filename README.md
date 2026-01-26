@@ -54,19 +54,110 @@ Done!
 ## Configuration
 Add this to your dashboard configuration. Change the translations and options as needed.
 ```
+# Required:
 strategy:
   type: custom:bonbon-strategy
+
+# Optional:
   options:
-    max_columns: 1
-    use_graphs: true
-    weather_entity_id: auto
-    translations:
-      overview: Overview
-      areas: Areas
-      favorites: Favorites
-      lights: Lights
-      openings: Doors & Windows
-      switches: Switches
-      climate: Climate
-      misc: Miscellaneous
+    views:
+      bonbon_home:
+        max_columns: 1
+        sections:
+          bonbon_weather:
+            name: Weather
+            icon: mdi:cloud-question
+            order: 1
+            entity_id: auto
+            show_separator: true
+            min_columns: 1
+            max_columns: 1
+            style: inline
+            hidden: false
+          bonbon_persons:
+            name: Persons
+            icon: mdi:account-group
+            order: 2
+            show_separator: false
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+          bonbon_favorites:
+            name: Favorites
+            icon: mdi:star
+            order: 3
+            show_separator: true
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+          bonbon_areas:
+            name: Areas
+            icon: mdi:sofa
+            order: 4
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            show_temperature: true
+            show_humidity: true
+            show_co2: true
+            show_active_lights: true
+            show_main_lights: true
+            hidden: false
+      bonbon_area:
+        subview: true
+        max_columns: 1
+        sections:
+          bonbon_environment:
+            name: Environment
+            icon: mdi:thermometer-water
+            order: 1
+            show_separator: true
+            min_columns: 1
+            max_columns: 3
+            style: graph
+            show_temperature: true
+            show_humidity: true
+            show_co2: true
+            hidden: false
+          bonbon_climate:
+            name: Climate
+            icon: mdi:radiator
+            order: 2
+            show_separator: true
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+          bonbon_lights:
+            name: Lights
+            icon: mdi:lightbulb-group
+            order: 3
+            show_separator: true
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+          bonbon_switches:
+            name: Switches
+            icon: mdi:toggle-switch
+            order: 4
+            show_separator: true
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+          bonbon_openings:
+            name: Doors & Windows
+            icon: mdi:window-closed-variant
+            order: 5
+            show_separator: true
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+          bonbon_miscellaneous:
+            name: Miscellaneous
+            icon: mdi:dots-horizontal-circle-outline
+            order: 1000
+            show_separator: true
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+
 ```
