@@ -122,7 +122,7 @@ export class BonbonStrategy {
     androidGesturesFix();
     const views = [];
 
-    const config = { ...defaultConfig, ...userConfig };
+    const config = mergeConfig(defaultConfig, userConfig);
     const dashboardName =
       Object.values(hass?.panels).find((p) => p?.url_path === hass?.panelUrl)
         ?.title ||
@@ -351,10 +351,12 @@ export class BonbonStrategy {
               }
               section.cards.push({
                 type: 'grid',
-                columns: sectionConfig.columns || Math.min(
-                  Math.max(sectionConfig.min_columns, persons.length),
-                  sectionConfig.max_columns,
-                ),
+                columns:
+                  sectionConfig.columns ||
+                  Math.min(
+                    Math.max(sectionConfig.min_columns, persons.length),
+                    sectionConfig.max_columns,
+                  ),
                 square: false,
                 cards: persons.map((e) => {
                   return {
@@ -394,10 +396,12 @@ export class BonbonStrategy {
               }
               section.cards.push({
                 type: 'grid',
-                columns: sectionConfig.columns || Math.min(
-                  Math.max(sectionConfig.min_columns, favorites.length),
-                  sectionConfig.max_columns,
-                ),
+                columns:
+                  sectionConfig.columns ||
+                  Math.min(
+                    Math.max(sectionConfig.min_columns, favorites.length),
+                    sectionConfig.max_columns,
+                  ),
                 square: false,
                 cards: favorites.map((e) => {
                   return getButton(e);
@@ -679,10 +683,12 @@ export class BonbonStrategy {
 
                 section.cards.push({
                   type: 'grid',
-                  columns: sectionConfig.columns || Math.min(
-                    Math.max(sectionConfig.min_columns, floorAreas.length),
-                    sectionConfig.max_columns,
-                  ),
+                  columns:
+                    sectionConfig.columns ||
+                    Math.min(
+                      Math.max(sectionConfig.min_columns, floorAreas.length),
+                      sectionConfig.max_columns,
+                    ),
                   square: false,
                   cards: floorAreas.map((area) => {
                     return {
@@ -877,17 +883,19 @@ export class BonbonStrategy {
                         }
                       section.cards.push({
                         type: 'grid',
-                        columns: sectionConfig.columns || Math.min(
-                          Math.max(
-                            sectionConfig.min_columns,
-                            [
-                              area.temperature_entity_id,
-                              area.humidity_entity_id,
-                              area.co2_entity_id,
-                            ].filter((e_id) => e_id).length,
+                        columns:
+                          sectionConfig.columns ||
+                          Math.min(
+                            Math.max(
+                              sectionConfig.min_columns,
+                              [
+                                area.temperature_entity_id,
+                                area.humidity_entity_id,
+                                area.co2_entity_id,
+                              ].filter((e_id) => e_id).length,
+                            ),
+                            sectionConfig.max_columns,
                           ),
-                          sectionConfig.max_columns,
-                        ),
                         square: false,
                         cards: [
                           area.temperature_entity_id,
@@ -948,13 +956,15 @@ export class BonbonStrategy {
                         }
                         section.cards.push({
                           type: 'grid',
-                          columns: sectionConfig.columns || Math.min(
-                            Math.max(
-                              sectionConfig.min_columns,
-                              area._climates.length,
+                          columns:
+                            sectionConfig.columns ||
+                            Math.min(
+                              Math.max(
+                                sectionConfig.min_columns,
+                                area._climates.length,
+                              ),
+                              sectionConfig.max_columns,
                             ),
-                            sectionConfig.max_columns,
-                          ),
                           square: false,
                           cards: area._climates.map((e) => {
                             return {
@@ -988,13 +998,15 @@ export class BonbonStrategy {
                         }
                         section.cards.push({
                           type: 'grid',
-                          columns: sectionConfig.columns || Math.min(
-                            Math.max(
-                              sectionConfig.min_columns,
-                              area._lights.length,
+                          columns:
+                            sectionConfig.columns ||
+                            Math.min(
+                              Math.max(
+                                sectionConfig.min_columns,
+                                area._lights.length,
+                              ),
+                              sectionConfig.max_columns,
                             ),
-                            sectionConfig.max_columns,
-                          ),
                           square: false,
                           cards: area._lights.map((e) => {
                             return {
@@ -1024,13 +1036,15 @@ export class BonbonStrategy {
                         }
                         section.cards.push({
                           type: 'grid',
-                          columns: sectionConfig.columns || Math.min(
-                            Math.max(
-                              sectionConfig.min_columns,
-                              area._switches.length,
+                          columns:
+                            sectionConfig.columns ||
+                            Math.min(
+                              Math.max(
+                                sectionConfig.min_columns,
+                                area._switches.length,
+                              ),
+                              sectionConfig.max_columns,
                             ),
-                            sectionConfig.max_columns,
-                          ),
                           square: false,
                           cards: area._switches.map((e) => {
                             return {
@@ -1060,13 +1074,15 @@ export class BonbonStrategy {
                         }
                         section.cards.push({
                           type: 'grid',
-                          columns: sectionConfig.columns || Math.min(
-                            Math.max(
-                              sectionConfig.min_columns,
-                              area._openings.length,
+                          columns:
+                            sectionConfig.columns ||
+                            Math.min(
+                              Math.max(
+                                sectionConfig.min_columns,
+                                area._openings.length,
+                              ),
+                              sectionConfig.max_columns,
                             ),
-                            sectionConfig.max_columns,
-                          ),
                           square: false,
                           cards: area._openings.map((e) => {
                             return {
@@ -1101,13 +1117,15 @@ export class BonbonStrategy {
                         }
                         section.cards.push({
                           type: 'grid',
-                          columns: sectionConfig.columns || Math.min(
-                            Math.max(
-                              sectionConfig.min_columns,
-                              area._misc.length,
+                          columns:
+                            sectionConfig.columns ||
+                            Math.min(
+                              Math.max(
+                                sectionConfig.min_columns,
+                                area._misc.length,
+                              ),
+                              sectionConfig.max_columns,
                             ),
-                            sectionConfig.max_columns,
-                          ),
                           square: false,
                           cards: area._misc.map((e) => {
                             return getButton(e);
@@ -1228,8 +1246,6 @@ console.info(
   'background-color: #8e72c3;color: #fff;padding: 3px 3px 3px 2px;border-radius: 0 14px 14px 0;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
 );
 
-
-
 function getWeatherIcon(weatherType) {
   switch (weatherType) {
     case 'cloudy':
@@ -1304,4 +1320,13 @@ function androidGesturesFix() {
     androidGesturesFix.append(fixLeft, fixRight);
     document.body.append(androidGesturesFix);
   }
+}
+
+function mergeConfig(target, source) {
+  for (const key in source) {
+    if (source[key] instanceof Object && key in target) {
+      Object.assign(source[key], mergeConfig(target[key], source[key]));
+    }
+  }
+  return { ...target, ...source };
 }
