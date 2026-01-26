@@ -111,7 +111,7 @@ const defaultConfig = {
           min_columns: 1,
           max_columns: 2,
           hidden: false,
-        },
+        }
       },
     },
   },
@@ -191,6 +191,17 @@ export class BonbonStrategy {
     const entities = hass.entities;
     const states = hass.states;
     const devices = hass.devices;
+    const labels = Object.values(entities).reduce((acc, e) => {
+      if (e.labels && Array.isArray(e.labels)) {
+        e.labels.forEach((label) => {
+          if (!acc[label]) {
+            acc[label] = [];
+          }
+          acc[label].push(e);
+        });
+      }
+      return acc;
+    }, {});
 
     const getLightRank = (e) => {
       if (
@@ -856,9 +867,9 @@ export class BonbonStrategy {
                 .filter((key) => {
                   return !config.views.bonbon_area.sections[key].hidden;
                 })
-                .sort((a, b) => {
-                  const orderA = a.order ?? 999;
-                  const orderB = b.order ?? 999;
+                .sort((aKey, bKey) => {
+                  const orderA = config.views.bonbon_area.sections[aKey].order ?? 999;
+                  const orderB = config.views.bonbon_area.sections[bKey].order ?? 999;
                   return orderA - orderB;
                 })
                 .map((key) => {
@@ -1135,30 +1146,66 @@ export class BonbonStrategy {
                       break;
                     default:
                       if (sectionConfig.cards && sectionConfig.cards.length) {
-                        if (sectionConfig.show_separator) {
-                          section.cards.push({
-                            type: 'custom:bubble-card',
-                            card_type: 'separator',
-                            name: sectionConfig.name,
-                            icon: sectionConfig.icon,
-                          });
-                        }
-                        section.cards = section.cards.concat(
-                          (Array.isArray(sectionConfig.cards)
+                        const userCards = (
+                          Array.isArray(sectionConfig.cards)
                             ? sectionConfig.cards
                             : [sectionConfig.cards]
-                          ).map(function (c) {
+                        )
+                          .map(function (c) {
+                            if (c !== null && typeof c === 'object') {
+                              return c;
+                            }
                             if (typeof c === 'string' && entities[c]) {
                               return getButton(c);
                             }
-                            return c;
-                          }),
-                        );
+                            if (
+                              typeof c === 'string' &&
+                              labels[
+                                resolvePlaceholders(c, {
+                                  area_id: area.area_id,
+                                })
+                              ]
+                            ) {
+                              return labels[
+                                resolvePlaceholders(c, {
+                                  area_id: area.area_id,
+                                })
+                              ].map((e) => getButton(e));
+                            }
+                            return false;
+                          })
+                          .flat()
+                          .filter((c) => c);
+                        if (userCards.length) {
+                          if (sectionConfig.show_separator) {
+                            section.cards.push({
+                              type: 'custom:bubble-card',
+                              card_type: 'separator',
+                              name: sectionConfig.name,
+                              icon: sectionConfig.icon,
+                            });
+                          }
+                          section.cards.push({
+                            type: 'grid',
+                            columns:
+                              sectionConfig.columns ||
+                              Math.min(
+                                Math.max(
+                                  sectionConfig.min_columns,
+                                  area._misc.length,
+                                ),
+                                sectionConfig.max_columns,
+                              ),
+                            square: false,
+                            cards: userCards,
+                          });
+                        }
                       }
                       break;
                   }
-                  return section;
-                });
+                  return section.cards.length ? section : false;
+                })
+                .filter((section) => section);
               views.push({
                 title: area.name,
                 subview: true,
@@ -1171,30 +1218,63 @@ export class BonbonStrategy {
             break;
           default:
             if (sectionConfig.cards && sectionConfig.cards.length) {
-              if (sectionConfig.show_separator) {
-                section.cards.push({
-                  type: 'custom:bubble-card',
-                  card_type: 'separator',
-                  name: sectionConfig.name,
-                  icon: sectionConfig.icon,
-                });
-              }
-              section.cards = section.cards.concat(
-                (Array.isArray(sectionConfig.cards)
+              const userCards = (
+                Array.isArray(sectionConfig.cards)
                   ? sectionConfig.cards
                   : [sectionConfig.cards]
-                ).map(function (c) {
+              )
+                .map(function (c) {
+                  if (c !== null && typeof c === 'object') {
+                    return c;
+                  }
                   if (typeof c === 'string' && entities[c]) {
                     return getButton(c);
                   }
-                  return c;
-                }),
-              );
+                  if (
+                    typeof c === 'string' &&
+                    labels[
+                      resolvePlaceholders(c, {
+                        area_id: area.area_id,
+                      })
+                    ]
+                  ) {
+                    return labels[
+                      resolvePlaceholders(c, {
+                        area_id: area.area_id,
+                      })
+                    ].map((e) => getButton(e));
+                  }
+                  return false;
+                })
+                .flat()
+                .filter((c) => c);
+              if (userCards.length) {
+                if (sectionConfig.show_separator) {
+                  section.cards.push({
+                    type: 'custom:bubble-card',
+                    card_type: 'separator',
+                    name: sectionConfig.name,
+                    icon: sectionConfig.icon,
+                  });
+                }
+                section.cards.push({
+                  type: 'grid',
+                  columns:
+                    sectionConfig.columns ||
+                    Math.min(
+                      Math.max(sectionConfig.min_columns, area._misc.length),
+                      sectionConfig.max_columns,
+                    ),
+                  square: false,
+                  cards: userCards,
+                });
+              }
             }
             break;
         }
-        return section;
-      });
+        return section.cards.length ? section : false;
+      })
+      .filter((section) => section);
 
     const homeView = {
       title: dashboardName,
@@ -1323,7 +1403,7 @@ function androidGesturesFix() {
 }
 
 function isObject(item) {
-  return (item && typeof item === 'object' && !Array.isArray(item));
+  return item && typeof item === 'object' && !Array.isArray(item);
 }
 
 function mergeDeep(target, ...sources) {
@@ -1343,3 +1423,13 @@ function mergeDeep(target, ...sources) {
 
   return mergeDeep(target, ...sources);
 }
+
+const resolvePlaceholders = (str, dictionary) => {
+  if (typeof str !== 'string' || !dictionary) return str;
+  let result = str;
+  for (const [key, value] of Object.entries(dictionary)) {
+    const placeholder = `[[${key}]]`;
+    result = result.replaceAll(placeholder, value ?? '');
+  }
+  return result;
+};
