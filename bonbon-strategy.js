@@ -1712,7 +1712,7 @@ function getAllEntityIds(obj, foundIds = []) {
 
 customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
 console.info(
-  `%c 🍬 Bonbon Strategy %c v1.1.7-1 `,
+  `%c 🍬 Bonbon Strategy %c v1.1.7-2 `,
   'background-color: #cfd49b;color: #000;padding: 3px 2px 3px 3px;border-radius: 14px 0 0 14px;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
   'background-color: #8e72c3;color: #fff;padding: 3px 3px 3px 2px;border-radius: 0 14px 14px 0;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
 );
