@@ -213,7 +213,7 @@ death_star_controls:
   min_columns: 1
   max_columns: 2
   hidden: false
-  cards: # can be an entity_id, an array of entity_ids, a card, an array of cards or a label ([[area_id]] will be replaced with an area_id)
+  cards: # can be cards, entity_ids or labels
     - light.death_star
     - switch.arm
 ```

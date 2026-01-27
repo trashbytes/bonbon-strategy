@@ -541,13 +541,40 @@ export class BonbonStrategy {
                     isCo2 &&
                     isUserEntity &&
                     (inArea || deviceInArea) &&
-                    !isHidden
+                    !isHidden &&
+                    !categorizedEntityIds.includes(e.entity_id)
                   ) {
                     categorizedEntityIds.push(e.entity_id);
                     return true;
                   }
                   return false;
                 })?.entity_id;
+
+                Object.values(config?.views?.bonbon_area?.sections)
+                  .filter((s) => {
+                    return !s.hidden;
+                  })
+                  .map((s) => {
+                    return s.cards;
+                  })
+                  .flat()
+                  .forEach((c) => {
+                    if (c !== null && typeof c === 'object') {
+                      getAllEntityIds(c).forEach(function (entity_id) {
+                        if (entities[entity_id]) {
+                          categorizedEntityIds.push(entity_id);
+                        }
+                      });
+                    }
+                    if (typeof c === 'string' && entities[c]) {
+                      categorizedEntityIds.push(c);
+                    }
+                    if (typeof c === 'string' && labels[c]) {
+                      labels[c].forEach((e) => {
+                        categorizedEntityIds.push(e.entity_id);
+                      });
+                    }
+                  });
 
                 area._lights = Object.values(entities)
                   .filter((e) => {
@@ -564,7 +591,8 @@ export class BonbonStrategy {
                       isLight &&
                       isUserEntity &&
                       (inArea || deviceInArea) &&
-                      !isHidden
+                      !isHidden &&
+                      !categorizedEntityIds.includes(e.entity_id)
                     ) {
                       categorizedEntityIds.push(e.entity_id);
                       return true;
@@ -602,7 +630,8 @@ export class BonbonStrategy {
                       isSwitch &&
                       isUserEntity &&
                       (inArea || deviceInArea) &&
-                      !isHidden
+                      !isHidden &&
+                      !categorizedEntityIds.includes(e.entity_id)
                     ) {
                       categorizedEntityIds.push(e.entity_id);
                       return true;
@@ -636,7 +665,8 @@ export class BonbonStrategy {
                       isContact &&
                       isUserEntity &&
                       (inArea || deviceInArea) &&
-                      !isHidden
+                      !isHidden &&
+                      !categorizedEntityIds.includes(e.entity_id)
                     ) {
                       categorizedEntityIds.push(e.entity_id);
                       return true;
@@ -669,7 +699,8 @@ export class BonbonStrategy {
                       isClimate &&
                       isUserEntity &&
                       (inArea || deviceInArea) &&
-                      !isHidden
+                      !isHidden &&
+                      !categorizedEntityIds.includes(e.entity_id)
                     ) {
                       categorizedEntityIds.push(e.entity_id);
                       return true;
@@ -687,9 +718,9 @@ export class BonbonStrategy {
                       eB.entity_id;
                     return nameA.localeCompare(nameB);
                   });
+
                 area._misc = Object.values(entities)
                   .filter((e) => {
-                    const isMisc = !categorizedEntityIds.includes(e.entity_id);
                     const inArea = e.area_id === area.area_id;
                     const device = devices[e.device_id];
                     const deviceInArea =
@@ -698,10 +729,10 @@ export class BonbonStrategy {
                     const isHidden =
                       e.hidden || e.labels?.includes('bonbon_hidden');
                     if (
-                      isMisc &&
                       isUserEntity &&
                       (inArea || deviceInArea) &&
-                      !isHidden
+                      !isHidden &&
+                      !categorizedEntityIds.includes(e.entity_id)
                     ) {
                       return true;
                     }
@@ -1392,19 +1423,8 @@ export class BonbonStrategy {
                             if (typeof c === 'string' && entities[c]) {
                               return getButton(c);
                             }
-                            if (
-                              typeof c === 'string' &&
-                              labels[
-                                resolvePlaceholders(c, {
-                                  area_id: area.area_id,
-                                })
-                              ]
-                            ) {
-                              return labels[
-                                resolvePlaceholders(c, {
-                                  area_id: area.area_id,
-                                })
-                              ].map((e) => getButton(e));
+                            if (typeof c === 'string' && labels[c]) {
+                              return labels[c].map((e) => getButton(e));
                             }
                             return false;
                           })
@@ -1464,19 +1484,8 @@ export class BonbonStrategy {
                   if (typeof c === 'string' && entities[c]) {
                     return getButton(c);
                   }
-                  if (
-                    typeof c === 'string' &&
-                    labels[
-                      resolvePlaceholders(c, {
-                        area_id: area.area_id,
-                      })
-                    ]
-                  ) {
-                    return labels[
-                      resolvePlaceholders(c, {
-                        area_id: area.area_id,
-                      })
-                    ].map((e) => getButton(e));
+                  if (typeof c === 'string' && labels[c]) {
+                    return labels[c].map((e) => getButton(e));
                   }
                   return false;
                 })
@@ -1555,7 +1564,7 @@ export class BonbonStrategy {
 
 customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
 console.info(
-  `%c 🍬 Bonbon Strategy %c v1.1.6 `,
+  `%c 🍬 Bonbon Strategy %c v1.1.7 `,
   'background-color: #cfd49b;color: #000;padding: 3px 2px 3px 3px;border-radius: 14px 0 0 14px;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
   'background-color: #8e72c3;color: #fff;padding: 3px 3px 3px 2px;border-radius: 0 14px 14px 0;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
 );
@@ -1658,12 +1667,24 @@ function mergeDeep(target, ...sources) {
   return mergeDeep(target, ...sources);
 }
 
-const resolvePlaceholders = (str, dictionary) => {
-  if (typeof str !== 'string' || !dictionary) return str;
-  let result = str;
-  for (const [key, value] of Object.entries(dictionary)) {
-    const placeholder = `[[${key}]]`;
-    result = result.replaceAll(placeholder, value ?? '');
+function getAllEntityIds(obj, foundIds = []) {
+  if (!obj || typeof obj !== 'object') return foundIds;
+
+  if (Array.isArray(obj)) {
+    obj.forEach((item) => getAllEntityIds(item, foundIds));
+  } else {
+    if (obj.entity_id) {
+      if (Array.isArray(obj.entity_id)) {
+        foundIds.push(...obj.entity_id);
+      } else {
+        foundIds.push(obj.entity_id);
+      }
+    }
+    Object.values(obj).forEach((value) => {
+      if (typeof value === 'object') {
+        getAllEntityIds(value, foundIds);
+      }
+    });
   }
-  return result;
-};
+  return [...new Set(foundIds)];
+}
