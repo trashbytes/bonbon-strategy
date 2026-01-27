@@ -14,12 +14,14 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 * Persons
 * Favorites (add the label `favorite` to an entity)
 * Floors
-* Areas (add the label `bonbon_hidden` to hide an area)
+* Areas (add the label `hidden` to hide an area)
 * Temperature and humidity
 * Climate
 * Lights (add the labels `mainlight` and `nightlight` if needed)
 * Switches
-* Miscellaneous sensors (almost every entity not the above, hide them either by disabling the `Visible` setting or by adding the label `bonbon_hidden`)
+* Miscellaneous sensors (almost every entity not the above, hide them either by disabling the `Visible` setting or by adding the label `hidden`)
+
+You can add the prefix `bonbon_` to any of these labels in case it interferes with your setup.
 
 ## Dependencies
 This dashboard strategy needs [Bubble Card](https://github.com/Clooos/Bubble-Card).

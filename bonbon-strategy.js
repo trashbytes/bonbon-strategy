@@ -124,9 +124,8 @@ const defaultConfig = {
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
     androidGesturesFix();
-
-    const views = [];
     try {
+      const views = [];
       const config = mergeDeep(defaultConfig, userConfig);
       const dashboardName =
         Object.values(hass?.panels).find((p) => p?.url_path === hass?.panelUrl)
@@ -296,8 +295,12 @@ export class BonbonStrategy {
                     card_type: 'separator',
                     name:
                       sectionConfig.style == 'inline'
-                        ? devices[entities[weather_entity_id]?.device_id]
-                            ?.name || sectionConfig.name
+                        ? entities[weather_entity_id]?.name ||
+                          states[weather_entity_id]?.attributes
+                            ?.friendly_name ||
+                          devices[entities[weather_entity_id]?.device_id]
+                            ?.name ||
+                          sectionConfig.name
                         : sectionConfig.name,
                     icon:
                       sectionConfig.style == 'inline'
@@ -360,7 +363,12 @@ export class BonbonStrategy {
               break;
             case 'bonbon_persons':
               const persons = Object.values(entities).filter((e) => {
-                return e.entity_id.startsWith('person.') && !e.hidden;
+                return (
+                  e.entity_id.startsWith('person.') &&
+                  !e.hidden &&
+                  !e.labels?.includes('hidden') &&
+                  !e.labels?.includes('bonbon_hidden')
+                );
               });
               if (persons.length) {
                 if (sectionConfig.show_separator) {
@@ -398,7 +406,10 @@ export class BonbonStrategy {
                   e.labels?.includes('favorite') ||
                   e.labels?.includes('bonbon_favorite');
                 const isUserEntity = !e.entity_category;
-                const isHidden = e.hidden;
+                const isHidden =
+                  e.hidden ||
+                  e.labels?.includes('hidden') ||
+                  e.labels?.includes('bonbon_hidden');
 
                 if (isFavorite && isUserEntity && !isHidden) {
                   return true;
@@ -450,7 +461,9 @@ export class BonbonStrategy {
                     const onFloor = area?.floor_id == floor.floor_id;
                     const isUserEntity = !e.entity_category;
                     const isHidden =
-                      e.hidden || e.labels?.includes('bonbon_hidden');
+                      e.hidden ||
+                      e.labels?.includes('hidden') ||
+                      e.labels?.includes('bonbon_hidden');
 
                     if (isLight && isUserEntity && onFloor && !isHidden) {
                       return true;
@@ -483,7 +496,10 @@ export class BonbonStrategy {
                   e.labels?.includes('nightlight') ||
                   e.labels?.includes('bonbon_nightlight');
                 const isUserEntity = !e.entity_category;
-                const isHidden = e.hidden;
+                const isHidden =
+                  e.hidden ||
+                  e.labels?.includes('hidden') ||
+                  e.labels?.includes('bonbon_hidden');
 
                 if (isLight && isNightlight && isUserEntity && !isHidden) {
                   return true;
@@ -492,7 +508,11 @@ export class BonbonStrategy {
               });
 
               const areas = Object.values(hass.areas)
-                .filter((a) => !a.labels?.includes('bonbon_hidden'))
+                .filter(
+                  (a) =>
+                    !a.labels?.includes('hidden') &&
+                    !a.labels?.includes('bonbon_hidden'),
+                )
                 .map(function (area, index, areas) {
                   if (area.floor_id == null) {
                     area.floor_id = '_areas';
@@ -536,7 +556,9 @@ export class BonbonStrategy {
                       device && device.area_id === area.area_id;
                     const isUserEntity = !e.entity_category;
                     const isHidden =
-                      e.hidden || e.labels?.includes('bonbon_hidden');
+                      e.hidden ||
+                      e.labels?.includes('hidden') ||
+                      e.labels?.includes('bonbon_hidden');
 
                     if (
                       isCo2 &&
@@ -586,7 +608,9 @@ export class BonbonStrategy {
                         device && device.area_id === area.area_id;
                       const isUserEntity = !e.entity_category;
                       const isHidden =
-                        e.hidden || e.labels?.includes('bonbon_hidden');
+                        e.hidden ||
+                        e.labels?.includes('hidden') ||
+                        e.labels?.includes('bonbon_hidden');
 
                       if (
                         isLight &&
@@ -625,7 +649,10 @@ export class BonbonStrategy {
                       const deviceInArea =
                         device && device.area_id === area.area_id;
                       const isUserEntity = !e.entity_category;
-                      const isHidden = e.hidden;
+                      const isHidden =
+                        e.hidden ||
+                        e.labels?.includes('hidden') ||
+                        e.labels?.includes('bonbon_hidden');
 
                       if (
                         isSwitch &&
@@ -661,7 +688,9 @@ export class BonbonStrategy {
                         device && device.area_id === area.area_id;
                       const isUserEntity = !e.entity_category;
                       const isHidden =
-                        e.hidden || e.labels?.includes('bonbon_hidden');
+                        e.hidden ||
+                        e.labels?.includes('hidden') ||
+                        e.labels?.includes('bonbon_hidden');
                       if (
                         isContact &&
                         isUserEntity &&
@@ -695,7 +724,9 @@ export class BonbonStrategy {
                         device && device.area_id === area.area_id;
                       const isUserEntity = !e.entity_category;
                       const isHidden =
-                        e.hidden || e.labels?.includes('bonbon_hidden');
+                        e.hidden ||
+                        e.labels?.includes('hidden') ||
+                        e.labels?.includes('bonbon_hidden');
                       if (
                         isClimate &&
                         isUserEntity &&
@@ -728,7 +759,9 @@ export class BonbonStrategy {
                         device && device.area_id === area.area_id;
                       const isUserEntity = !e.entity_category;
                       const isHidden =
-                        e.hidden || e.labels?.includes('bonbon_hidden');
+                        e.hidden ||
+                        e.labels?.includes('hidden') ||
+                        e.labels?.includes('bonbon_hidden');
                       if (
                         isUserEntity &&
                         (inArea || deviceInArea) &&
@@ -1564,7 +1597,6 @@ export class BonbonStrategy {
       return dashboard;
     } catch (e) {
       console.error(e);
-
       const dashboard = {
         views: [
           {
@@ -1712,7 +1744,7 @@ function getAllEntityIds(obj, foundIds = []) {
 
 customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
 console.info(
-  `%c 🍬 Bonbon Strategy %c v1.1.7-2 `,
+  `%c 🍬 Bonbon Strategy %c v1.1.8 `,
   'background-color: #cfd49b;color: #000;padding: 3px 2px 3px 3px;border-radius: 14px 0 0 14px;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
   'background-color: #8e72c3;color: #fff;padding: 3px 3px 3px 2px;border-radius: 0 14px 14px 0;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
 );
