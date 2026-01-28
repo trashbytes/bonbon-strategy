@@ -1452,7 +1452,12 @@ export class BonbonStrategy {
                         }
                         break;
                       default:
-                        if (sectionConfig.cards && sectionConfig.cards.length) {
+                        if (
+                          sectionConfig.cards &&
+                          sectionConfig.cards.length &&
+                          (!sectionConfig.area_id ||
+                            sectionConfig.area_id == area_id)
+                        ) {
                           const userCards = (
                             Array.isArray(sectionConfig.cards)
                               ? sectionConfig.cards
@@ -1471,7 +1476,22 @@ export class BonbonStrategy {
                               return false;
                             })
                             .flat()
-                            .filter((c) => c);
+                            .filter((c) => {
+                              if (sectionConfig.area == area.area_id) {
+                                return true;
+                              }
+                              const e = c.entity
+                                ? entities[c.entity]
+                                : undefined;
+                              if (e) {
+                                const inArea = e.area_id === area.area_id;
+                                const device = devices[e.device_id];
+                                const deviceInArea =
+                                  device && device.area_id === area.area_id;
+                                return inArea || deviceInArea;
+                              }
+                              return true;
+                            });
                           if (userCards.length) {
                             if (sectionConfig.show_separator) {
                               section.cards.push({
@@ -1576,34 +1596,34 @@ export class BonbonStrategy {
       views.unshift(homeView);
 
       const applyGlobalStyles = (data) => {
-        data.forEach((struct) => {
-          if (struct.type && struct.type.startsWith('custom:bubble-card')) {
-            struct.styles = globalStyles + (struct.styles || '');
-          } else if (
-            window.cardMod_patch_state &&
-            struct.type &&
-            struct.type.startsWith('custom:')
+        if (!Array.isArray(data)) return data;
+        return data.map((struct) => {
+          let newStruct = { ...struct };
+          if (
+            newStruct.type &&
+            newStruct.type.startsWith('custom:bubble-card')
           ) {
-            struct.card_mod = {
+            newStruct.styles = globalStyles + (newStruct.styles || '');
+          } else if (newStruct.type && window.cardMod_patch_state) {
+            newStruct.card_mod = {
               style: globalStyles,
             };
           }
-          if (struct.cards && Array.isArray(struct.cards)) {
-            applyGlobalStyles(struct.cards);
+          if (newStruct.cards && Array.isArray(newStruct.cards)) {
+            newStruct.cards = applyGlobalStyles(newStruct.cards);
           }
-          if (struct.sections && Array.isArray(struct.sections)) {
-            applyGlobalStyles(struct.sections);
+          if (newStruct.sections && Array.isArray(newStruct.sections)) {
+            newStruct.sections = applyGlobalStyles(newStruct.sections);
           }
+          return newStruct;
         });
       };
 
       const dashboard = {
-        views: views,
+        views: applyGlobalStyles(views),
       };
-
+      
       console.log(dashboard);
-
-      applyGlobalStyles(dashboard.views);
 
       return dashboard;
     } catch (e) {
