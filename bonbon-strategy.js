@@ -432,7 +432,10 @@ export class BonbonStrategy {
                   columns:
                     sectionConfig.columns ||
                     Math.min(
-                      Math.max(sectionConfig.min_columns || 1, favorites.length),
+                      Math.max(
+                        sectionConfig.min_columns || 1,
+                        favorites.length,
+                      ),
                       sectionConfig.max_columns || 1,
                     ),
                   square: false,
@@ -876,7 +879,10 @@ export class BonbonStrategy {
                     columns:
                       sectionConfig.columns ||
                       Math.min(
-                        Math.max(sectionConfig.min_columns || 1, floorAreas.length),
+                        Math.max(
+                          sectionConfig.min_columns || 1,
+                          floorAreas.length,
+                        ),
                         sectionConfig.max_columns || 1,
                       ),
                     square: false,
@@ -1471,8 +1477,10 @@ export class BonbonStrategy {
                               section.cards.push({
                                 type: 'custom:bubble-card',
                                 card_type: 'separator',
-                                name: sectionConfig.name,
-                                icon: sectionConfig.icon,
+                                name: sectionConfig.name || 'Custom Section',
+                                icon:
+                                  sectionConfig.icon ||
+                                  'mdi:view-dashboard-edit',
                               });
                             }
                             section.cards.push({
@@ -1532,8 +1540,8 @@ export class BonbonStrategy {
                     section.cards.push({
                       type: 'custom:bubble-card',
                       card_type: 'separator',
-                      name: sectionConfig.name,
-                      icon: sectionConfig.icon,
+                      name: sectionConfig.name || 'Custom Section',
+                      icon: sectionConfig.icon || 'mdi:view-dashboard-edit',
                     });
                   }
                   section.cards.push({
@@ -1541,7 +1549,10 @@ export class BonbonStrategy {
                     columns:
                       sectionConfig.columns ||
                       Math.min(
-                        Math.max(sectionConfig.min_columns || 1, userCards.length),
+                        Math.max(
+                          sectionConfig.min_columns || 1,
+                          userCards.length,
+                        ),
                         sectionConfig.max_columns || 1,
                       ),
                     square: false,
