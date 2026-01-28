@@ -194,15 +194,17 @@ export class BonbonStrategy {
       .bubble-main-icon-container {
         pointer-events: none;
       }
+      .bubble-media-player-container,
       .bubble-calendar-container,
-      .bubble-button-container {
+      :not(.bubble-media-player) > .bubble-button-container {
         border-top: 0.5px solid rgba(255,255,255,${isDark ? '0.01' : '0.2'});
         border-bottom: 0.5px solid rgba(0,0,0,${isDark ? '0.8' : '0.12'});
         box-shadow:  0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
+        border-radius: var(--bubble-button-border-radius);
       }
       mwc-list-item[selected],
       mwc-list-item[selected] ha-icon,
-      .is-on .bubble-name-container {
+      .is-on :not(.bubble-media-player) > .bubble-content-container .bubble-name-container {
         color: #fff !important;
       }
       .bubble-dropdown-inner-border {
