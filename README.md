@@ -219,3 +219,4 @@ death_star_controls:
     - light.death_star
     - switch.arm
 ```
+To add a section to a specific area, make sure that the entities in your top level cards of the custom section are assigned to that area or add `area_id: area_id` to the custom section.
