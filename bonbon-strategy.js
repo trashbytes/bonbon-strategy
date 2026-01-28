@@ -107,6 +107,15 @@ const defaultConfig = {
           max_columns: 2,
           hidden: false,
         },
+        bonbon_covers: {
+          name: 'Shutters & Shades',
+          icon: 'mdi:roller-shade',
+          order: 6,
+          show_separator: true,
+          min_columns: 1,
+          max_columns: 2,
+          hidden: false,
+        },
         bonbon_miscellaneous: {
           name: 'Miscellaneous',
           icon: 'mdi:dots-horizontal-circle-outline',
@@ -696,6 +705,42 @@ export class BonbonStrategy {
                         e.labels?.includes('bonbon_hidden');
                       if (
                         isContact &&
+                        isUserEntity &&
+                        (inArea || deviceInArea) &&
+                        !isHidden &&
+                        !categorizedEntityIds.includes(e.entity_id)
+                      ) {
+                        categorizedEntityIds.push(e.entity_id);
+                        return true;
+                      }
+                      return false;
+                    })
+                    .sort((eA, eB) => {
+                      const nameA =
+                        eA.name ||
+                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        eA.entity_id;
+                      const nameB =
+                        eB.name ||
+                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        eB.entity_id;
+                      return nameA.localeCompare(nameB);
+                    });
+
+                  area._covers = Object.values(entities)
+                    .filter((e) => {
+                      const isCover = e.entity_id.startsWith('cover.');
+                      const inArea = e.area_id === area.area_id;
+                      const device = devices[e.device_id];
+                      const deviceInArea =
+                        device && device.area_id === area.area_id;
+                      const isUserEntity = !e.entity_category;
+                      const isHidden =
+                        e.hidden ||
+                        e.labels?.includes('hidden') ||
+                        e.labels?.includes('bonbon_hidden');
+                      if (
+                        isCover &&
                         isUserEntity &&
                         (inArea || deviceInArea) &&
                         !isHidden &&
@@ -1423,6 +1468,51 @@ export class BonbonStrategy {
                           });
                         }
                         break;
+                      case 'bonbon_covers':
+                        if (area._covers.length) {
+                          if (sectionConfig.show_separator) {
+                            section.cards.push({
+                              type: 'custom:bubble-card',
+                              card_type: 'separator',
+                              name: sectionConfig.name,
+                              icon: sectionConfig.icon,
+                            });
+                          }
+                          section.cards.push({
+                            type: 'grid',
+                            columns:
+                              sectionConfig.columns ||
+                              Math.min(
+                                Math.max(
+                                  sectionConfig.min_columns || 1,
+                                  area._covers.length,
+                                ),
+                                sectionConfig.max_columns || 1,
+                              ),
+                            square: false,
+                            cards: area._covers.map((e) => {
+                              return {
+                                type: 'custom:bubble-card',
+                                card_type: 'cover',
+                                entity: e.entity_id,
+                                show_state: true,
+                                show_last_changed: true,
+                                use_accent_color: true,
+                                tap_action: {
+                                  action: 'none',
+                                },
+                                button_action: {
+                                  tap_action: {
+                                    action: 'more-info',
+                                  },
+                                },
+                                icon_open: 'mdi:roller-shade',
+                                icon_close: 'mdi:roller-shade-closed',
+                              };
+                            }),
+                          });
+                        }
+                        break;
                       case 'bonbon_miscellaneous':
                         if (area._misc.length) {
                           if (sectionConfig.show_separator) {
@@ -1622,7 +1712,7 @@ export class BonbonStrategy {
       const dashboard = {
         views: applyGlobalStyles(views),
       };
-      
+
       console.log(dashboard);
 
       return dashboard;
