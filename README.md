@@ -19,6 +19,7 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 * Climate
 * Lights (add the labels `mainlight` and `nightlight` if needed)
 * Switches
+* Media Players
 * Openings
 * Covers
 * Miscellaneous (almost everything that isn't part of the above)
