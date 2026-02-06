@@ -142,6 +142,18 @@ const defaultConfig = {
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
     androidGesturesFix();
+    const ha = document.querySelector('home-assistant');
+    const autoDarkMode = () => {
+      if (
+        hass?.states['sun.sun']?.state == 'below_horizon' &&
+        hass?.selectedTheme &&
+        !hass?.selectedTheme?.dark
+      ) {
+        hass.selectedTheme.dark = true;
+        ha._applyTheme();
+      }
+    };
+
     try {
       const views = [];
       const config = mergeDeep(defaultConfig, userConfig);
@@ -150,6 +162,11 @@ export class BonbonStrategy {
           ?.title ||
         hass?.config?.location_name ||
         'Home';
+
+      if (config.auto_dark_mode) {
+        autoDarkMode();
+        setInterval(autoDarkMode, 2000);
+      }
 
       const isDark =
         document
@@ -191,16 +208,29 @@ export class BonbonStrategy {
         border-bottom: 0.5px solid rgba(0,0,0,${isDark ? '0.8' : '0.12'});
         box-shadow:  0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
       }
+      ha-card .graph {
+        margin-bottom: -1px;
+      }
       .bubble-main-icon-container {
         pointer-events: none;
       }
-      .bubble-media-player-container,
-      .bubble-calendar-container,
-      :not(.bubble-media-player) > .bubble-button-container {
-        border-top: 0.5px solid rgba(255,255,255,${isDark ? '0.01' : '0.2'});
-        border-bottom: 0.5px solid rgba(0,0,0,${isDark ? '0.8' : '0.12'});
+      // .bubble-media-player-container,
+      // .bubble-calendar-container,
+      // :not(.bubble-media-player) > .bubble-button-container {
+      .bubble-button-container {
+        overflow: visible;
+      }
+      .bubble-sub-buttons-container .bubble-sub-button,
+      .bubble-button-container:not(.bubble-buttons-container),
+      .bubble-climate-container,
+      .bubble-cover-container,
+      .bubble-media-player-container {
         box-shadow:  0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
         border-radius: var(--bubble-button-border-radius);
+      }
+      .bubble-background {
+        border-top: 0.5px solid rgba(255,255,255,${isDark ? '0.01' : '0.1'});
+        border-bottom: 0.5px solid rgba(0,0,0,${isDark ? '0.8' : '0.12'});
       }
       mwc-list-item[selected],
       mwc-list-item[selected] ha-icon,
@@ -253,32 +283,35 @@ export class BonbonStrategy {
         }
         const isMeasurement =
           states[e.entity_id]?.attributes?.unit_of_measurement != null;
+        const isToggle =
+          e.entity_id.startsWith('light.') || e.entity_id.startsWith('switch.');
+        const isBinary = e.entity_id.startsWith('binary_sensor.');
         return {
           type: 'custom:bubble-card',
           card_type: 'button',
           entity: e.entity_id,
           show_state: true,
-          show_last_changed: !isMeasurement,
+          show_last_changed: isToggle,
           use_accent_color: true,
           tap_action: {
             action: 'none',
           },
           button_action: {
             tap_action: {
-              action: 'more-info',
+              action: isToggle ? 'toggle' : 'more-info',
             },
           },
-          styles: isMeasurement
-            ? `
-          .is-on .bubble-name-container {
-            color: var(--primary-text-color) !important;
-          }
-          .is-on .bubble-button-background {
-            background-color: var(--ha-card-background,var(--card-background-color,#fff)) !important;
-            opacity: 1 !important;
-          }
-        `
-            : '',
+          styles:
+            isToggle || isBinary
+              ? ``
+              : `
+            .is-on :not(.bubble-media-player) > .bubble-content-container .bubble-name-container[class] {
+              color: var(--primary-text-color) !important;
+            }
+            .is-on .bubble-button-background[class] {
+              background-color: var(--ha-card-background,var(--card-background-color,#fff)) !important;
+              opacity: 1 !important;
+            }`,
         };
       };
 
@@ -564,9 +597,6 @@ export class BonbonStrategy {
                   ];
 
                   area.co2_entity_id = Object.values(entities).find((e) => {
-                    states[e.entity_id]?.attributes?.device_class ===
-                      'carbon_dioxide';
-
                     const isCo2 =
                       states[e.entity_id]?.attributes?.device_class ===
                         'carbon_dioxide' ||
@@ -696,7 +726,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -733,7 +763,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -769,7 +799,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -805,7 +835,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -841,7 +871,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -1077,7 +1107,7 @@ export class BonbonStrategy {
                         ha-ripple {
                           display: none;
                         }
-                        .bubble-container {
+                        .bubble-button {
                           background: ${area.lightColor};
                           overflow: hidden;
                         }
@@ -1509,7 +1539,7 @@ export class BonbonStrategy {
                                   tap_action: {
                                     action: 'more-info',
                                   },
-                                }
+                                },
                               };
                             }),
                           });
@@ -1636,7 +1666,7 @@ export class BonbonStrategy {
                           sectionConfig.cards &&
                           sectionConfig.cards.length &&
                           (!sectionConfig.area_id ||
-                            sectionConfig.area_id == area_id)
+                            sectionConfig.area_id == area.area_id)
                         ) {
                           const userCards = (
                             Array.isArray(sectionConfig.cards)
@@ -1706,6 +1736,17 @@ export class BonbonStrategy {
                   .filter((section) => section);
                 views.push({
                   title: area.name,
+                  background: isDark
+                    ? config.background_image_dark
+                      ? 'top / cover no-repeat fixed url("' +
+                        config.background_image_dark +
+                        '")'
+                      : ''
+                    : config.background_image_light
+                      ? 'top / cover no-repeat fixed url("' +
+                        config.background_image_light +
+                        '")'
+                      : '',
                   subview: true,
                   path: `area_${area.area_id}`,
                   type: 'sections',
@@ -1768,6 +1809,17 @@ export class BonbonStrategy {
 
       const homeView = {
         title: dashboardName,
+        background: isDark
+          ? config.background_image_dark
+            ? 'top / cover no-repeat fixed url("' +
+              config.background_image_dark +
+              '")'
+            : ''
+          : config.background_image_light
+            ? 'top / cover no-repeat fixed url("' +
+              config.background_image_light +
+              '")'
+            : '',
         path: 'home',
         type: 'sections',
         max_columns: config?.views?.bonbon_home?.max_columns || 1,
@@ -1784,10 +1836,14 @@ export class BonbonStrategy {
             newStruct.type.startsWith('custom:bubble-card')
           ) {
             newStruct.styles = globalStyles + (newStruct.styles || '');
-          } else if (newStruct.type && window.cardMod_patch_state) {
+          }
+          if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {
-              style: globalStyles,
+              style: (newStruct.card_mod?.style || '') + globalStyles,
             };
+          }
+          if (newStruct.elements && Array.isArray(newStruct.elements)) {
+            newStruct.elements = applyGlobalStyles(newStruct.elements);
           }
           if (newStruct.cards && Array.isArray(newStruct.cards)) {
             newStruct.cards = applyGlobalStyles(newStruct.cards);
