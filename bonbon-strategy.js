@@ -597,9 +597,6 @@ export class BonbonStrategy {
                   ];
 
                   area.co2_entity_id = Object.values(entities).find((e) => {
-                    states[e.entity_id]?.attributes?.device_class ===
-                      'carbon_dioxide';
-
                     const isCo2 =
                       states[e.entity_id]?.attributes?.device_class ===
                         'carbon_dioxide' ||
@@ -729,7 +726,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -766,7 +763,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -802,7 +799,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -838,7 +835,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
@@ -874,7 +871,7 @@ export class BonbonStrategy {
                         eA.entity_id;
                       const nameB =
                         eB.name ||
-                        states[eA.entity_id]?.attributes?.friendly_name ||
+                        states[eB.entity_id]?.attributes?.friendly_name ||
                         eB.entity_id;
                       return nameA.localeCompare(nameB);
                     });
