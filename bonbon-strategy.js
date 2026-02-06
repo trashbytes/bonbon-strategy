@@ -1201,7 +1201,7 @@ export class BonbonStrategy {
                                   background: ${area.shadeColor} !important;
                                 }
                                 .bubble-sub-button-container.fixed-top .background-on {
-                                  background: ${area.dfltColor} !important;
+                                  background: ${area.defltColor} !important;
                                 }
                                 .bubble-container:hover .bubble-sub-button-container.fixed-top .background-on {
                                   background: ${area.shadeColor} !important;
