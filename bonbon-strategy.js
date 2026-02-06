@@ -146,6 +146,7 @@ export class BonbonStrategy {
     const autoDarkMode = () => {
       if (
         hass?.states['sun.sun']?.state == 'below_horizon' &&
+        hass?.selectedTheme &&
         !hass?.selectedTheme?.dark
       ) {
         hass.selectedTheme.dark = true;
