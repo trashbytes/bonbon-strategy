@@ -1669,7 +1669,7 @@ export class BonbonStrategy {
                           sectionConfig.cards &&
                           sectionConfig.cards.length &&
                           (!sectionConfig.area_id ||
-                            sectionConfig.area_id == area_id)
+                            sectionConfig.area_id == area.area_id)
                         ) {
                           const userCards = (
                             Array.isArray(sectionConfig.cards)
