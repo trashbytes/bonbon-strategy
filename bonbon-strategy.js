@@ -1,143 +1,19 @@
 // Thanks Cloos!
+const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
-const defaultConfig = {
-  views: {
-    bonbon_home: {
-      max_columns: 1,
-      sections: {
-        bonbon_weather: {
-          name: 'Weather',
-          icon: 'mdi:cloud-question',
-          order: 1,
-          entity_id: 'auto',
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 1,
-          style: 'inline',
-          hidden: false,
-        },
-        bonbon_persons: {
-          name: 'Persons',
-          icon: 'mdi:account-group',
-          order: 2,
-          show_separator: false,
-          min_columns: 1,
-          max_columns: 2,
-          hidden: false,
-        },
-        bonbon_favorites: {
-          name: 'Favorites',
-          icon: 'mdi:star',
-          order: 3,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 2,
-          hidden: false,
-        },
-        bonbon_areas: {
-          name: 'Areas',
-          icon: 'mdi:sofa',
-          order: 4,
-          show_separator: true,
-          min_columns: 2,
-          max_columns: 2,
-          show_temperature: true,
-          show_humidity: true,
-          show_co2: true,
-          show_floor_lights_toggle: true,
-          always_show_floor_lights_toggle: false,
-          show_area_lights_toggle: true,
-          always_show_area_lights_toggle: false,
-          hidden: false,
-        },
-      },
-    },
-    bonbon_area: {
-      subview: true,
-      max_columns: 1,
-      sections: {
-        bonbon_environment: {
-          name: 'Environment',
-          icon: 'mdi:thermometer-water',
-          order: 1,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 3,
-          style: 'graph',
-          show_temperature: true,
-          show_humidity: true,
-          show_co2: true,
-          hidden: false,
-        },
-        bonbon_climate: {
-          name: 'Climate',
-          icon: 'mdi:radiator',
-          order: 2,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 2,
-          hidden: false,
-        },
-        bonbon_lights: {
-          name: 'Lights',
-          icon: 'mdi:lightbulb-group',
-          order: 3,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 2,
-          show_area_lights_toggle: true,
-          always_show_area_lights_toggle: true,
-          hidden: false,
-        },
-        bonbon_switches: {
-          name: 'Switches',
-          icon: 'mdi:toggle-switch',
-          order: 4,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 2,
-          hidden: false,
-        },
-        bonbon_media: {
-          name: 'Media Players',
-          icon: 'mdi:disc-player',
-          order: 5,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 1,
-          hidden: false,
-        },
-        bonbon_openings: {
-          name: 'Doors & Windows',
-          icon: 'mdi:window-closed-variant',
-          order: 6,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 2,
-          hidden: false,
-        },
-        bonbon_covers: {
-          name: 'Shutters & Shades',
-          icon: 'mdi:roller-shade',
-          order: 7,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 2,
-          hidden: false,
-        },
-        bonbon_miscellaneous: {
-          name: 'Miscellaneous',
-          icon: 'mdi:dots-horizontal-circle-outline',
-          order: 1000,
-          show_separator: true,
-          min_columns: 1,
-          max_columns: 2,
-          hidden: false,
-        },
-      },
-    },
-  },
-};
+const { defaultConfig } = await import(
+  `./bonbon-strategy-config.js?hacstag=${hacstag}`
+);
+const { css, getStyles } = await import(
+  `./bonbon-strategy-styles.js?hacstag=${hacstag}`
+);
+const {
+  getWeatherIcon,
+  androidGesturesFix,
+  isObject,
+  mergeDeep,
+  getAllEntityIds,
+} = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
@@ -173,80 +49,8 @@ export class BonbonStrategy {
           .querySelector('meta[name="color-scheme"]')
           ?.getAttribute('content') === 'dark';
 
-      let globalStyles = `
-      *,
-      *:before,
-      *:after {
-        --bubble-default-color: #9373c9;
-        transition: all 0.3s ease-out !important;
-      }
-      .bubble-sub-button-name-container {
-        white-space: nowrap !important;
-      }
-      .is-off .bubble-main-icon {
-        opacity:  1;
-      }
-      :host {
-        --primary-text-color: ${isDark ? '#eee' : '#111'};
-        --bubble-line-background-color: rgba(0,0,0,0.05);
-        --bubble-main-background-color: var(--ha-card-background, var(--card-background-color, #fff));
-        --bubble-border-radius: var(--ha-card-border-radius, 12px);
-        --bubble-icon-border-radius: 8px;
-        --bubble-sub-button-border-radius: 8px;
-        --bubble-button-border-radius: var(--bubble-border-radius);
-      }
-      .bubble-button-background {
-        background-color: var(--ha-card-background,var(--card-background-color,#fff));
-      }
-      .is-on .bubble-button-background {
-        background-color: var(--bubble-default-color) !important;
-        opacity: 1 !important;
-      }
-      ha-card {
-        border: none;
-        border-top: 0.5px solid rgba(255,255,255,${isDark ? '0.01' : '0.2'});
-        border-bottom: 0.5px solid rgba(0,0,0,${isDark ? '0.8' : '0.12'});
-        box-shadow:  0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
-      }
-      ha-card .graph {
-        margin-bottom: -1px;
-      }
-      .bubble-main-icon-container {
-        pointer-events: none;
-      }
-      // .bubble-media-player-container,
-      // .bubble-calendar-container,
-      // :not(.bubble-media-player) > .bubble-button-container {
-      .bubble-button-container {
-        overflow: visible;
-      }
-      .bubble-sub-buttons-container .bubble-sub-button,
-      .bubble-button-container:not(.bubble-buttons-container),
-      .bubble-climate-container,
-      .bubble-cover-container,
-      .bubble-media-player-container {
-        box-shadow:  0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
-        border-radius: var(--bubble-button-border-radius);
-      }
-      .bubble-background {
-        border-top: 0.5px solid rgba(255,255,255,${isDark ? '0.01' : '0.1'});
-        border-bottom: 0.5px solid rgba(0,0,0,${isDark ? '0.8' : '0.12'});
-      }
-      mwc-list-item[selected],
-      mwc-list-item[selected] ha-icon,
-      .is-on :not(.bubble-media-player) > .bubble-content-container .bubble-name-container {
-        color: #fff !important;
-      }
-      .bubble-dropdown-inner-border {
-        display: none !important;
-      }
-      .bubble-separator .bubble-sub-button-container {
-        right: 0;
-      }
-      .bubble-separator .bubble-sub-button {
-        border-radius: 10px;
-      }
-    `;
+      const styles = getStyles(isDark);
+      let globalStyles = styles.global;
 
       const entities = hass.entities;
       const states = hass.states;
@@ -301,17 +105,7 @@ export class BonbonStrategy {
               action: isToggle ? 'toggle' : 'more-info',
             },
           },
-          styles:
-            isToggle || isBinary
-              ? ``
-              : `
-            .is-on :not(.bubble-media-player) > .bubble-content-container .bubble-name-container[class] {
-              color: var(--primary-text-color) !important;
-            }
-            .is-on .bubble-button-background[class] {
-              background-color: var(--ha-card-background,var(--card-background-color,#fff)) !important;
-              opacity: 1 !important;
-            }`,
+          styles: isToggle || isBinary ? '' : styles.bubbleButtonNonBinary,
         };
       };
 
@@ -960,39 +754,8 @@ export class BonbonStrategy {
                           }
                         : false,
                       styles: sectionConfig.always_show_floor_lights_toggle
-                        ? `
-                                .bubble-sub-button,
-                                .bubble-sub-button-container:not(:has(.background-on)) .bubble-sub-button {
-                                  background-color: var(--ha-card-background,var(--card-background-color,#fff));
-                                  box-shadow: 0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
-                                }
-                                .bubble-sub-button-container:has(.background-on) .bubble-sub-button {
-                                  color: #fff;
-                                  background-color: var(--bubble-default-color);
-                                }
-                                .bubble-sub-button-container:has(.background-on) .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-                                .bubble-sub-button-container:has(.background-on) .bubble-sub-button[data-tap-action*='light.turn_off'] ~ .bubble-sub-button[data-tap-action*='light.turn_off']{
-                                  display: none !important;
-                                }
-                                .bubble-sub-button-container:not(:has(.background-on)) .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-                                .bubble-sub-button-container:not(:has(.background-on)) .bubble-sub-button[data-tap-action*='light.turn_on'] ~ .bubble-sub-button[data-tap-action*='light.turn_on']{
-                                  display: none !important;
-                                }
-                              `
-                        : `
-                                .bubble-sub-button {
-                                  background-color: var(--ha-card-background,var(--card-background-color,#fff));
-                                  box-shadow: 0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
-                                }
-                                .background-on {
-                                  color: #fff;
-                                  background-color: var(--bubble-default-color);
-                                }
-                                .bubble-sub-button-container .bubble-sub-button:not(.background-on),
-                                .bubble-sub-button-container .bubble-sub-button.background-on ~ .bubble-sub-button.background-on {
-                                  display: none !important;
-                                }
-                              `,
+                        ? styles.bubbleSubButtonAlternate
+                        : styles.bubbleSubButtonRegular,
                     });
                   }
 
@@ -1100,117 +863,16 @@ export class BonbonStrategy {
                             ? 1.4
                             : 1,
                         styles:
-                          `
-                        .fixed-top .bubble-sub-button-container {
-                          ${sectionConfig.show_temperature || sectionConfig.show_humidity || sectionConfig.show_co2 ? 'margin-top: 8px;' : ''}
-                        }
-                        ha-ripple {
-                          display: none;
-                        }
-                        .bubble-button {
-                          background: ${area.lightColor};
-                          overflow: hidden;
-                        }
-                        .bubble-button-background {
-                          opacity: 1 !important;
-                          background: ${area.lightColor} !important;
-                        }
-                        // .bubble-sub-button-container .bubble-sub-button.background-on {
-                        //   background: ${area.defltColor} !important;
-                        // }
-                        .bubble-main-icon-container {
-                          background: transparent;
-                          margin: 0;
-                          position: absolute;
-                          top: 50%;
-                          left: -4px;
-                          transform: translateY(-50%);
-                          overflow: visible;
-                        }
-                        .bubble-main-icon-container:before {
-                          display: block;
-                          width: 1000%;
-                          height: 1000%;
-                          content: '';
-                          background: ${area.defltColor};
-                          position: absolute;
-                          top: 50%;
-                          right: -4px;
-                          transform: translateY(-50%);
-                          border-radius: 50%;
-                        }
-                        .bubble-container:hover .bubble-button-background {
-                          background: ${area.defltColor} !important;
-                        }
-                        .bubble-container:hover .bubble-main-icon-container:before {
-                          background: ${area.shadeColor} !important;
-                        }
-                        .bubble-name-container {
-                          margin-left: 62px !important;
-                        }
-                        .bubble-name {
-                          font-size: 16px;
-                        }
-                        .bubble-sub-button-bottom-container,
-                        .bubble-sub-button-bottom-container * {
-                          pointer-events: none !important;
-                        }
-                        .bubble-sub-button-bottom-container .bubble-sub-button:first-child {
-                          margin-left: 42px !important;
-                        }
-                        .bubble-sub-button-bottom-container .bubble-sub-button {
-                          padding-right: 0;
-                        }
-                        .bubble-sub-button-bottom-container .icon-with-state {
-                          margin-right: 2px;
-                        }
-                        .bubble-sub-button-group {
-                          gap: 0;
-                        }
-                      ` +
+                          css`
+                            :host {
+                              --area-light-color: ${area.lightColor};
+                              --area-deflt-color: ${area.defltColor};
+                              --area-shade-color: ${area.shadeColor};
+                            }
+                          ` +
                           (sectionConfig.always_show_area_lights_toggle
-                            ? `
-                                .bubble-sub-button-container.fixed-top .bubble-sub-button,
-                                .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-                                  background: ${area.defltColor} !important;
-                                }
-                                .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-                                .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-                                  background: ${area.shadeColor} !important;
-                                }
-                                .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button,
-                                .bubble-container:hover .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
-                                  background: var(--bubble-default-color) !important;
-                                  color: #fff !important;
-                                }
-                                .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-                                .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button[data-tap-action*='light.turn_off'] ~ .bubble-sub-button[data-tap-action*='light.turn_off']{
-                                  display: none !important;
-                                }
-                                .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-                                .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button[data-tap-action*='light.turn_on'] ~ .bubble-sub-button[data-tap-action*='light.turn_on']{
-                                  display: none !important;
-                                }
-                              `
-                            : `
-                                .bubble-sub-button-container.fixed-top .bubble-sub-button {
-                                  background: ${area.defltColor} !important;
-                                }
-                                .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-                                .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-                                  background: ${area.shadeColor} !important;
-                                }
-                                .bubble-sub-button-container.fixed-top .background-on {
-                                  background: ${area.defltColor} !important;
-                                }
-                                .bubble-container:hover .bubble-sub-button-container.fixed-top .background-on {
-                                  background: ${area.shadeColor} !important;
-                                }
-                                .bubble-sub-button-container.fixed-top .bubble-sub-button:not(.background-on),
-                                .bubble-sub-button-container.fixed-top .bubble-sub-button.background-on ~ .bubble-sub-button.background-on {
-                                  display: none !important;
-                                }
-                              `),
+                            ? styles.bubbleAreaSubButtonRegular
+                            : styles.bubbleAreaSubButtonAlternate),
                       };
                     }),
                   });
@@ -1300,15 +962,7 @@ export class BonbonStrategy {
                                           action: 'more-info',
                                         },
                                       },
-                                      styles: `
-                                    .is-on .bubble-name-container {
-                                      color: var(--primary-text-color) !important;
-                                    }
-                                    .is-on .bubble-button-background {
-                                      background-color: var(--ha-card-background,var(--card-background-color,#fff)) !important;
-                                      opacity: 1 !important;
-                                    }
-                                  `,
+                                      styles: styles.bubbleButtonNonBinary,
                                     };
                               }
                               return false;
@@ -1401,39 +1055,8 @@ export class BonbonStrategy {
                                 : false,
                               styles:
                                 sectionConfig.always_show_area_lights_toggle
-                                  ? `
-                                .bubble-sub-button,
-                                .bubble-sub-button-container:not(:has(.background-on)) .bubble-sub-button {
-                                  background-color: var(--ha-card-background,var(--card-background-color,#fff));
-                                  box-shadow: 0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
-                                }
-                                .bubble-sub-button-container:has(.background-on) .bubble-sub-button {
-                                  color: #fff;
-                                  background-color: var(--bubble-default-color);
-                                }
-                                .bubble-sub-button-container:has(.background-on) .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-                                .bubble-sub-button-container:has(.background-on) .bubble-sub-button[data-tap-action*='light.turn_off'] ~ .bubble-sub-button[data-tap-action*='light.turn_off']{
-                                  display: none !important;
-                                }
-                                .bubble-sub-button-container:not(:has(.background-on)) .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-                                .bubble-sub-button-container:not(:has(.background-on)) .bubble-sub-button[data-tap-action*='light.turn_on'] ~ .bubble-sub-button[data-tap-action*='light.turn_on']{
-                                  display: none !important;
-                                }
-                              `
-                                  : `
-                                .bubble-sub-button {
-                                  background-color: var(--ha-card-background,var(--card-background-color,#fff));
-                                  box-shadow: 0 2px 6px rgba(0,0,0,${isDark ? '0.2' : '0.05'});
-                                }
-                                .background-on {
-                                  color: #fff;
-                                  background-color: var(--bubble-default-color);
-                                }
-                                .bubble-sub-button-container .bubble-sub-button:not(.background-on),
-                                .bubble-sub-button-container .bubble-sub-button.background-on ~ .bubble-sub-button.background-on {
-                                  display: none !important;
-                                }
-                              `,
+                                  ? styles.bubbleSubButtonAlternate
+                                  : styles.bubbleSubButtonRegular,
                             });
                           }
                           section.cards.push({
@@ -1887,126 +1510,6 @@ export class BonbonStrategy {
       return dashboard;
     }
   }
-}
-
-function getWeatherIcon(weatherType) {
-  switch (weatherType) {
-    case 'cloudy':
-      return 'mdi:weather-cloudy';
-    case 'partlycloudy':
-      return 'mdi:weather-partly-cloudy';
-    case 'rainy':
-      return 'mdi:weather-rainy';
-    case 'snowy':
-      return 'mdi:weather-snowy';
-    case 'sunny':
-      return 'mdi:weather-sunny';
-    case 'clear-night':
-      return 'mdi:weather-night';
-    case 'fog':
-      return 'mdi:weather-fog';
-    case 'hail':
-      return 'mdi:weather-hail';
-    case 'lightning':
-      return 'mdi:weather-lightning';
-    case 'lightning-rainy':
-      return 'mdi:weather-lightning-rainy';
-    case 'pouring':
-      return 'mdi:weather-pouring';
-    case 'windy':
-      return 'mdi:weather-windy';
-    case 'windy-variant':
-      return 'mdi:weather-windy-variant';
-    case 'exceptional':
-      return 'mdi:alert-circle-outline';
-    default:
-      return 'mdi:weather-cloudy';
-  }
-}
-
-function androidGesturesFix() {
-  if (!document.querySelectorAll('.android-gestures-fix').length) {
-    const androidGesturesFix = document.createElement('div');
-    androidGesturesFix.classList.add('android-gestures-fix');
-    Object.assign(androidGesturesFix.style, {
-      display: 'block',
-      position: 'absolute',
-      zIndex: '1000',
-      width: '100%',
-      height: '100%',
-      top: 0,
-      left: 0,
-      pointerEvents: 'none',
-    });
-    const fixLeft = document.createElement('div');
-    Object.assign(fixLeft.style, {
-      display: 'block',
-      position: 'absolute',
-      top: 0,
-      pointerEvents: 'all',
-      width: '20px',
-      height: '100%',
-      left: 0,
-      pointerEvents: 'all',
-    });
-    const fixRight = document.createElement('div');
-    Object.assign(fixRight.style, {
-      display: 'block',
-      position: 'absolute',
-      top: 0,
-      pointerEvents: 'all',
-      width: '20px',
-      height: '100%',
-      right: 0,
-      pointerEvents: 'all',
-    });
-    androidGesturesFix.append(fixLeft, fixRight);
-    document.body.append(androidGesturesFix);
-  }
-}
-
-function isObject(item) {
-  return item && typeof item === 'object' && !Array.isArray(item);
-}
-
-function mergeDeep(target, ...sources) {
-  if (!sources.length) return target;
-  const source = sources.shift();
-
-  if (isObject(target) && isObject(source)) {
-    for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
-      } else {
-        Object.assign(target, { [key]: source[key] });
-      }
-    }
-  }
-
-  return mergeDeep(target, ...sources);
-}
-
-function getAllEntityIds(obj, foundIds = []) {
-  if (!obj || typeof obj !== 'object') return foundIds;
-
-  if (Array.isArray(obj)) {
-    obj.forEach((item) => getAllEntityIds(item, foundIds));
-  } else {
-    if (obj.entity_id) {
-      if (Array.isArray(obj.entity_id)) {
-        foundIds.push(...obj.entity_id);
-      } else {
-        foundIds.push(obj.entity_id);
-      }
-    }
-    Object.values(obj).forEach((value) => {
-      if (typeof value === 'object') {
-        getAllEntityIds(value, foundIds);
-      }
-    });
-  }
-  return [...new Set(foundIds)];
 }
 
 customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
