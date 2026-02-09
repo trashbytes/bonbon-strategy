@@ -175,7 +175,7 @@ export const getStyles = (isDark) => {
         width: 1000%;
         height: 1000%;
         content: '';
-        background: var(--area-deflt-color);
+        background: var(--area-reglr-color);
         position: absolute;
         top: 50%;
         right: -4px;
@@ -183,7 +183,7 @@ export const getStyles = (isDark) => {
         border-radius: 50%;
       }
       .bubble-container:hover .bubble-button-background {
-        background: var(--area-deflt-color) !important;
+        background: var(--area-reglr-color) !important;
       }
       .bubble-container:hover .bubble-main-icon-container:before {
         background: var(--area-shade-color) !important;
@@ -211,7 +211,7 @@ export const getStyles = (isDark) => {
         gap: 0;
       }
       .bubble-sub-button-container.fixed-top .bubble-sub-button {
-        background: var(--area-deflt-color) !important;
+        background: var(--area-reglr-color) !important;
       }
       .bubble-container:hover
         .bubble-sub-button-container.fixed-top
@@ -222,7 +222,7 @@ export const getStyles = (isDark) => {
         background: var(--area-shade-color) !important;
       }
       .bubble-sub-button-container.fixed-top .background-on {
-        background: var(--area-deflt-color) !important;
+        background: var(--area-reglr-color) !important;
       }
       .bubble-container:hover
         .bubble-sub-button-container.fixed-top
@@ -266,7 +266,7 @@ export const getStyles = (isDark) => {
         width: 1000%;
         height: 1000%;
         content: '';
-        background: var(--area-deflt-color);
+        background: var(--area-reglr-color);
         position: absolute;
         top: 50%;
         right: -4px;
@@ -274,7 +274,7 @@ export const getStyles = (isDark) => {
         border-radius: 50%;
       }
       .bubble-container:hover .bubble-button-background {
-        background: var(--area-deflt-color) !important;
+        background: var(--area-reglr-color) !important;
       }
       .bubble-container:hover .bubble-main-icon-container:before {
         background: var(--area-shade-color) !important;
@@ -304,7 +304,7 @@ export const getStyles = (isDark) => {
       .bubble-sub-button-container.fixed-top .bubble-sub-button,
       .bubble-sub-button-container.fixed-top:not(:has(.background-on))
         .bubble-sub-button {
-        background: var(--area-deflt-color) !important;
+        background: var(--area-reglr-color) !important;
       }
       .bubble-container:hover
         .bubble-sub-button-container.fixed-top
