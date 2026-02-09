@@ -7,15 +7,18 @@ const { defaultConfig } = await import(
 const { css, getStyles } = await import(
   `./bonbon-strategy-styles.js?hacstag=${hacstag}`
 );
-const { getWeatherIcon, androidGesturesFix, mergeDeep, getAllEntityIds } =
-  await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const {
+  getWeatherIcon,
+  androidGesturesFix,
+  mergeDeep,
+  getAllEntityIds,
   getAreaColors,
-  createButton,
-  createSeparatorCard,
+} = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
+const { createButton, createSeparatorCard, createGrid, createBubbleCard } =
+  await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
+
+const {
   isEntityType,
-  createGrid,
-  createBubbleCard,
   getNightlights,
   getLightsOnFloor,
   sortByNameWithRank,
@@ -24,7 +27,7 @@ const {
   getVisiblePersons,
   getFavorites,
   findFirstEntityByPrefix,
-} = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
+} = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {

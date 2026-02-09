@@ -33,6 +33,28 @@ export function getWeatherIcon(weatherType) {
   }
 }
 
+export function getAreaColors(area, index, areas, isDark) {
+  if (area.floor_id == null) {
+    area.floor_id = '_areas';
+  }
+  const seed = area.area_id + String(index) + area.name;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colorIndex = Math.abs(hash % areas.length);
+
+  const hue = (colorIndex * (360 / areas.length)) % 360;
+  const saturation = isDark ? 20 : 40;
+  const lightness = isDark ? 40 : 77;
+
+  const lightColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  const reglrColor = `hsl(${hue}, ${saturation}%, ${lightness - 5}%)`;
+  const shadeColor = `hsl(${hue}, ${saturation}%, ${lightness - 10}%)`;
+
+  return { lightColor, reglrColor, shadeColor };
+}
+
 export function androidGesturesFix() {
   if (!document.querySelectorAll('.android-gestures-fix').length) {
     const androidGesturesFix = document.createElement('div');
