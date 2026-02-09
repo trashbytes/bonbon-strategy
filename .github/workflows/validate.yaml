@@ -1,3 +1,19 @@
-- name: HACS Action
+name: Validate
 
-  uses: hacs/action@22.5.0
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate-hacs:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: HACS validation
+        uses: "hacs/action@main"
+        with:
+          category: "CHANGE_ME!"
