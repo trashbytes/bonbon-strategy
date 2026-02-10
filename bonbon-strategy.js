@@ -1,4 +1,3 @@
-// Thanks Cloos!
 const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
 const { defaultConfig } = await import(
@@ -106,8 +105,6 @@ export class BonbonStrategy {
 
       const styles = getStyles(isDark);
       let globalStyles = styles.global;
-
-      // `getLightRank` and `createButton` moved to `bonbon-strategy-builders.js`
 
       const homeSections = Object.keys(config?.views?.bonbon_home?.sections)
         .filter((key) => {
