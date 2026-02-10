@@ -114,8 +114,8 @@ Complete configuration for maximum control:
 strategy:
   type: custom:bonbon-strategy
   options:
-    background_image_light: none
-    background_image_dark: none
+    background_image_light: false
+    background_image_dark: false
     auto_light_dark_mode: false
     views:
       bonbon_home:
