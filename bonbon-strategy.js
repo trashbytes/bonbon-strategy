@@ -20,8 +20,8 @@ const {
   isEntityType,
   getNightlights,
   getLightsOnFloor,
-  sortByNameWithRank,
-  sortByName,
+  sortLights,
+  sortEntities,
   filterEntitiesInArea,
   getVisiblePersons,
   getFavorites,
@@ -320,7 +320,7 @@ export class BonbonStrategy {
                       }
                     });
 
-                  area._lights = sortByNameWithRank(
+                  area._lights = sortLights(
                     filterEntitiesInArea(
                       entities,
                       (e) => isEntityType(e, 'light.'),
@@ -330,7 +330,7 @@ export class BonbonStrategy {
                     ),
                     states,
                   );
-                  area._switches = sortByName(
+                  area._switches = sortEntities(
                     filterEntitiesInArea(
                       entities,
                       (e) => isEntityType(e, 'switch.'),
@@ -340,7 +340,7 @@ export class BonbonStrategy {
                     ),
                     states,
                   );
-                  area._openings = sortByName(
+                  area._openings = sortEntities(
                     filterEntitiesInArea(
                       entities,
                       (e) =>
@@ -353,7 +353,7 @@ export class BonbonStrategy {
                     states,
                   );
 
-                  area._media = sortByName(
+                  area._media = sortEntities(
                     filterEntitiesInArea(
                       entities,
                       (e) => isEntityType(e, 'media_player.'),
@@ -364,7 +364,7 @@ export class BonbonStrategy {
                     states,
                   );
 
-                  area._covers = sortByName(
+                  area._covers = sortEntities(
                     filterEntitiesInArea(
                       entities,
                       (e) => isEntityType(e, 'cover.'),
@@ -375,7 +375,7 @@ export class BonbonStrategy {
                     states,
                   );
 
-                  area._climates = sortByName(
+                  area._climates = sortEntities(
                     filterEntitiesInArea(
                       entities,
                       (e) => isEntityType(e, 'climate.'),
@@ -386,7 +386,7 @@ export class BonbonStrategy {
                     states,
                   );
 
-                  area._misc = sortByName(
+                  area._misc = sortEntities(
                     filterEntitiesInArea(
                       entities,
                       (e) => {

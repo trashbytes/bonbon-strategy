@@ -23,6 +23,26 @@ function isUserEntity(e) {
   return !e?.entity_category;
 }
 
+function getOrderLabelNumber(entity) {
+  const labels = entity.labels || [];
+  const orderLabel = labels.find((label) =>
+    /^bonbon_order_\d+$|^order_\d+$/.test(label),
+  );
+  if (orderLabel) {
+    const match = orderLabel.match(/order_(\d+)/);
+    if (match) return parseInt(match[1], 10);
+  }
+  return Infinity;
+}
+
+function getEntityDisplayName(entity, states) {
+  return (
+    entity?.name ||
+    states?.[entity?.entity_id]?.attributes?.friendly_name ||
+    entity?.entity_id
+  );
+}
+
 export function isEntityType(e, prefix) {
   return !!(e?.entity_id && e.entity_id.startsWith(prefix));
 }
@@ -40,35 +60,24 @@ export function getNightlights(entities) {
 }
 
 export function getLightsOnFloor(entities, floor, areas, devices) {
-  return Object.values(entities)
-    .filter((e) => {
-      const isLight = isEntityType(e, 'light.');
-      const device = devices[e.device_id];
-      const area_id = e.area_id || device?.area_id;
-      const area = areas[area_id];
-      const onFloor = area?.floor_id == floor.floor_id;
-      return isLight && isUserEntity(e) && onFloor && !isHiddenEntity(e);
-    })
-    .sort((eA, eB) => {
-      const rankA = getLightRank(eA);
-      const rankB = getLightRank(eB);
-      if (rankA !== rankB) return rankA - rankB;
-      const nameA = eA.name || eA.entity_id;
-      const nameB = eB.name || eB.entity_id;
-      return nameA.localeCompare(nameB);
-    });
+  const lights = Object.values(entities).filter((e) => {
+    const isLight = isEntityType(e, 'light.');
+    const device = devices[e.device_id];
+    const area_id = e.area_id || device?.area_id;
+    const area = areas[area_id];
+    const onFloor = area?.floor_id == floor.floor_id;
+    return isLight && isUserEntity(e) && onFloor && !isHiddenEntity(e);
+  });
+  let result = sortLights(lights, {});
+  result = sortEntities(result, {});
+  return result;
 }
 
-export function sortByNameWithRank(list, states) {
+export function sortLights(list, states) {
   return (list || []).sort((a, b) => {
     const rankA = getLightRank(a);
     const rankB = getLightRank(b);
-    if (rankA !== rankB) return rankA - rankB;
-    const nameA =
-      a.name || states[a.entity_id]?.attributes?.friendly_name || a.entity_id;
-    const nameB =
-      b.name || states[b.entity_id]?.attributes?.friendly_name || b.entity_id;
-    return nameA.localeCompare(nameB);
+    return rankA - rankB;
   });
 }
 
@@ -109,12 +118,31 @@ export function filterEntitiesInArea(
 
 export function sortByName(list, states) {
   return (list || []).sort((a, b) => {
-    const nameA =
-      a.name || states[a.entity_id]?.attributes?.friendly_name || a.entity_id;
-    const nameB =
-      b.name || states[b.entity_id]?.attributes?.friendly_name || b.entity_id;
+    const nameA = getEntityDisplayName(a, states);
+    const nameB = getEntityDisplayName(b, states);
     return nameA.localeCompare(nameB);
   });
+}
+
+export function sortEntities(list, states) {
+  const ordered = [];
+  const unordered = [];
+
+  (list || []).forEach((entity) => {
+    if (getOrderLabelNumber(entity) !== Infinity) {
+      ordered.push(entity);
+    } else {
+      unordered.push(entity);
+    }
+  });
+
+  ordered.sort((a, b) => {
+    return getOrderLabelNumber(a) - getOrderLabelNumber(b);
+  });
+
+  sortByName(unordered, states);
+
+  return [...ordered, ...unordered];
 }
 
 export function findFirstEntityByPrefix(entities, prefix) {
