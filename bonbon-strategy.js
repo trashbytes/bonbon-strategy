@@ -26,6 +26,7 @@ const {
   getVisiblePersons,
   getFavorites,
   findFirstEntityByPrefix,
+  getEntitiesByDeviceId,
 } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
 
 export class BonbonStrategy {
@@ -34,14 +35,22 @@ export class BonbonStrategy {
     const states = hass.states;
     const devices = hass.devices;
     const labels = Object.values(entities).reduce((acc, e) => {
+      const allLabels = [];
       if (e.labels && Array.isArray(e.labels)) {
-        e.labels.forEach((label) => {
-          if (!acc[label]) {
-            acc[label] = [];
-          }
-          acc[label].push(e);
-        });
+        allLabels.push(...e.labels);
       }
+      if (e.device_id && devices[e.device_id]?.labels) {
+        const deviceLabels = devices[e.device_id].labels;
+        if (Array.isArray(deviceLabels)) {
+          allLabels.push(...deviceLabels);
+        }
+      }
+      allLabels.forEach((label) => {
+        if (!acc[label]) {
+          acc[label] = [];
+        }
+        acc[label].push(e);
+      });
       return acc;
     }, {});
 
@@ -198,7 +207,7 @@ export class BonbonStrategy {
               }
               break;
             case 'bonbon_persons':
-              const persons = getVisiblePersons(entities);
+              const persons = getVisiblePersons(entities, devices);
               if (persons.length) {
                 if (sectionConfig.show_separator) {
                   section.cards.push(
@@ -223,7 +232,7 @@ export class BonbonStrategy {
               }
               break;
             case 'bonbon_favorites':
-              const favorites = getFavorites(entities);
+              const favorites = getFavorites(entities, devices);
 
               if (favorites.length) {
                 if (sectionConfig.show_separator) {
@@ -262,7 +271,7 @@ export class BonbonStrategy {
                 return floor;
               });
 
-              const nightlights = getNightlights(entities);
+              const nightlights = getNightlights(entities, devices);
 
               const areas = Object.values(hass.areas)
                 .filter(
@@ -328,6 +337,7 @@ export class BonbonStrategy {
                       devices,
                       categorizedEntityIds,
                     ),
+                    devices,
                     states,
                   );
                   area._switches = sortEntities(
@@ -338,6 +348,7 @@ export class BonbonStrategy {
                       devices,
                       categorizedEntityIds,
                     ),
+                    devices,
                     states,
                   );
                   area._openings = sortEntities(
@@ -350,6 +361,7 @@ export class BonbonStrategy {
                       devices,
                       categorizedEntityIds,
                     ),
+                    devices,
                     states,
                   );
 
@@ -361,6 +373,7 @@ export class BonbonStrategy {
                       devices,
                       categorizedEntityIds,
                     ),
+                    devices,
                     states,
                   );
 
@@ -372,6 +385,7 @@ export class BonbonStrategy {
                       devices,
                       categorizedEntityIds,
                     ),
+                    devices,
                     states,
                   );
 
@@ -383,6 +397,7 @@ export class BonbonStrategy {
                       devices,
                       categorizedEntityIds,
                     ),
+                    devices,
                     states,
                   );
 
@@ -390,16 +405,13 @@ export class BonbonStrategy {
                     filterEntitiesInArea(
                       entities,
                       (e) => {
-                        const isLight = isEntityType(e, 'light.');
-                        const isNightlight =
-                          e.labels?.includes('nightlight') ||
-                          e.labels?.includes('bonbon_nightlight');
-                        return !isLight && !isNightlight;
+                        return true;
                       },
                       area.area_id,
                       devices,
                       categorizedEntityIds,
                     ),
+                    devices,
                     states,
                   );
                   return area;
@@ -923,6 +935,11 @@ export class BonbonStrategy {
                               if (typeof c === 'string' && entities[c]) {
                                 return createButton(c);
                               }
+                              if (typeof c === 'string' && devices[c]) {
+                                return getEntitiesByDeviceId(c).map((e) =>
+                                  createButton(e, entities, states, styles),
+                                );
+                              }
                               if (typeof c === 'string' && labels[c]) {
                                 return labels[c].map((e) =>
                                   createButton(e, entities, states, styles),
@@ -1006,6 +1023,11 @@ export class BonbonStrategy {
                     }
                     if (typeof c === 'string' && entities[c]) {
                       return createButton(c);
+                    }
+                    if (typeof c === 'string' && devices[c]) {
+                      return getEntitiesByDeviceId(c).map((e) =>
+                        createButton(e, entities, states, styles),
+                      );
                     }
                     if (typeof c === 'string' && labels[c]) {
                       return labels[c].map((e) =>
