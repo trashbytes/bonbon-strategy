@@ -114,6 +114,9 @@ Complete configuration for maximum control:
 strategy:
   type: custom:bonbon-strategy
   options:
+    background_image_light: none
+    background_image_dark: none
+    auto_light_dark_mode: false
     views:
       bonbon_home:
         max_columns: 1
@@ -252,4 +255,6 @@ death_star_controls:
     - switch.arm
 ```
 
-To add a section to a specific area, make sure that the entities in your top level cards of the custom section are assigned to that area or add `area_id: area_id` to the custom section.
+### Auto Light/Dark Mode
+
+If your theme supports it and `auto_light_dark_mode` is set to `true`, then Bonbon Strategy will try to automatically switch between light and dark mode depending on the state of the sun. It should work independently from your browser and operating system.
