@@ -233,7 +233,7 @@ strategy:
           bonbon_miscellaneous:
             name: Miscellaneous
             icon: mdi:dots-horizontal-circle-outline
-            order: 1000
+            order: Infinity
             show_separator: true
             min_columns: 1
             max_columns: 2
