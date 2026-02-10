@@ -1,4 +1,7 @@
 export const defaultConfig = {
+  background_image_light: false,
+  background_image_dark: false,
+  auto_light_dark_mode: false,
   views: {
     bonbon_home: {
       max_columns: 1,

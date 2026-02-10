@@ -31,15 +31,28 @@ const {
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
+    const entities = hass.entities;
+    const states = hass.states;
+    const devices = hass.devices;
+    const labels = Object.values(entities).reduce((acc, e) => {
+      if (e.labels && Array.isArray(e.labels)) {
+        e.labels.forEach((label) => {
+          if (!acc[label]) {
+            acc[label] = [];
+          }
+          acc[label].push(e);
+        });
+      }
+      return acc;
+    }, {});
+
     androidGesturesFix();
     const ha = document.querySelector('home-assistant');
-    const autoDarkMode = () => {
-      if (
-        hass?.states['sun.sun']?.state == 'below_horizon' &&
-        hass?.selectedTheme &&
-        !hass?.selectedTheme?.dark
-      ) {
-        hass.selectedTheme.dark = true;
+    const autoLightDarkMode = () => {
+      const desiredDark = states['sun.sun']?.state === 'below_horizon';
+      if (!hass?.selectedTheme) return;
+      if (hass.selectedTheme.dark !== desiredDark) {
+        hass.selectedTheme.dark = desiredDark;
         ha._applyTheme();
       }
     };
@@ -52,10 +65,38 @@ export class BonbonStrategy {
           ?.title ||
         hass?.config?.location_name ||
         'Home';
-
-      if (config.auto_dark_mode) {
-        autoDarkMode();
-        setInterval(autoDarkMode, 2000);
+      if (
+        config.auto_light_dark_mode &&
+        states['sun.sun'] &&
+        hass?.selectedTheme
+      ) {
+        autoLightDarkMode();
+        try {
+          if (hass?.connection?.subscribeEvents) {
+            hass.connection.subscribeEvents((event) => {
+              if (
+                event?.event_type === 'state_changed' &&
+                event?.data?.entity_id === 'sun.sun'
+              ) {
+                autoLightDarkMode();
+              }
+            }, 'state_changed');
+          } else {
+            const pollInterval = 60 * 1000;
+            setInterval(() => {
+              if (document.visibilityState === 'visible') {
+                autoLightDarkMode();
+              }
+            }, pollInterval);
+          }
+        } catch (e) {
+          const pollInterval = 60 * 1000;
+          setInterval(() => {
+            if (document.visibilityState === 'visible') {
+              autoLightDarkMode();
+            }
+          }, pollInterval);
+        }
       }
 
       const isDark =
@@ -65,21 +106,6 @@ export class BonbonStrategy {
 
       const styles = getStyles(isDark);
       let globalStyles = styles.global;
-
-      const entities = hass.entities;
-      const states = hass.states;
-      const devices = hass.devices;
-      const labels = Object.values(entities).reduce((acc, e) => {
-        if (e.labels && Array.isArray(e.labels)) {
-          e.labels.forEach((label) => {
-            if (!acc[label]) {
-              acc[label] = [];
-            }
-            acc[label].push(e);
-          });
-        }
-        return acc;
-      }, {});
 
       // `getLightRank` and `createButton` moved to `bonbon-strategy-builders.js`
 
