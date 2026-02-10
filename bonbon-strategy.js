@@ -936,7 +936,11 @@ export class BonbonStrategy {
                                 return createButton(c);
                               }
                               if (typeof c === 'string' && devices[c]) {
-                                return getEntitiesByDeviceId(c).map((e) =>
+                                return getEntitiesByDeviceId(
+                                  entities,
+                                  c,
+                                  devices,
+                                ).map((e) =>
                                   createButton(e, entities, states, styles),
                                 );
                               }
@@ -1025,8 +1029,8 @@ export class BonbonStrategy {
                       return createButton(c);
                     }
                     if (typeof c === 'string' && devices[c]) {
-                      return getEntitiesByDeviceId(c).map((e) =>
-                        createButton(e, entities, states, styles),
+                      return getEntitiesByDeviceId(entities, c, devices).map(
+                        (e) => createButton(e, entities, states, styles),
                       );
                     }
                     if (typeof c === 'string' && labels[c]) {
