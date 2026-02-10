@@ -252,7 +252,7 @@ death_star_controls:
   min_columns: 1
   max_columns: 2
   hidden: false
-  cards: # can be cards, entity_ids or labels
+  cards: # can be cards, entity_ids, device_ids or labels
     - light.death_star
     - switch.arm
 ```

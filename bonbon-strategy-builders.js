@@ -5,8 +5,8 @@ export function createButton(e, entities, states, styles) {
   const isMeasurement =
     states[e.entity_id]?.attributes?.unit_of_measurement != null;
   const isToggle =
-    e.entity_id.startsWith('light.') || e.entity_id.startsWith('switch.');
-  const isBinary = e.entity_id.startsWith('binary_sensor.');
+    e.entity_id?.startsWith('light.') || e.entity_id?.startsWith('switch.');
+  const isBinary = e.entity_id?.startsWith('binary_sensor.');
   const opts = {
     card_type: 'button',
     entity: e.entity_id,
