@@ -233,7 +233,7 @@ strategy:
           bonbon_miscellaneous:
             name: Miscellaneous
             icon: mdi:dots-horizontal-circle-outline
-            order: 1000
+            order: Infinity
             show_separator: true
             min_columns: 1
             max_columns: 2
@@ -256,6 +256,8 @@ death_star_controls:
     - light.death_star
     - switch.arm
 ```
+
+When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area or if you want to force this section to show up in a specific area then add `area_id: <area_id>` to the section.
 
 ### Auto Light/Dark Mode
 
