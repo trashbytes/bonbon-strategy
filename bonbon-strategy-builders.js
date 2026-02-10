@@ -1,4 +1,3 @@
-// Builders / helpers ausgelagert für Modularisierung
 export function createButton(e, entities, states, styles) {
   if (typeof e === 'string' && entities[e]) {
     e = entities[e];
