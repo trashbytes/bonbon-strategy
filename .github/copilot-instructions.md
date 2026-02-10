@@ -8,6 +8,8 @@ This repository implements a Home Assistant Lovelace "strategy" that generates a
   - [bonbon-strategy-config.js](bonbon-strategy-config.js#L1-L200) — `defaultConfig` structure (views → sections → cards).
   - [bonbon-strategy-styles.js](bonbon-strategy-styles.js#L1-L80) — `getStyles(isDark)` and `css` helper for theme-aware styles.
   - [bonbon-strategy-utils.js](bonbon-strategy-utils.js#L1-L200) — small helpers: `mergeDeep`, `getAllEntityIds`, `androidGesturesFix`.
+  - [bonbon-strategy-builders.js](bonbon-strategy-builders.js#L1-L200) — builder helpers used to assemble cards and sections from config fragments.
+  - [bonbon-strategy-entities.js](bonbon-strategy-entities.js#L1-L200) — entity mapping, normalization and lookup helpers.
   - [bonbon-strategy-loader.js](bonbon-strategy-loader.js#L1-L40) — simple cache-busting loader used for local installs.
 
 - **Key patterns and conventions** (do not change without checking related code):
@@ -20,6 +22,7 @@ This repository implements a Home Assistant Lovelace "strategy" that generates a
 - **Integration / dependencies**:
   - Requires `custom:bubble-card`. `mini-graph-card` and `card-mod` are recommended but optional (see README installation section).
   - The loader appends `?hacstag=<timestamp>` to imports for cache-busting — preserve this for dev/test reloads.
+  - This repository includes `hacs.json` and is prepared for HACS packaging; if you add HACS-related metadata, keep `hacs.json` in sync with release notes.
 
 - **Developer workflows** (doc the practical steps):
   - No build step — the JS files are ES modules consumed by the browser/HA frontend. To test locally, copy `bonbon-strategy.js` to `<config>/www/bonbon-strategy.js` and use `bonbon-strategy-loader.js` or add `/local/bonbon-strategy.js` as a HA resource (see [README.md](README.md#L1-L40)).
