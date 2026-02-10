@@ -28,7 +28,7 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 - Miscellaneous (almost everything that isn't part of the above)
 
 You can hide anything with the label `hidden` or by disabling the `Visible` setting.
-All entities are ordered alphabetically by default, though there is an additional rule for lights: If lights have the label `mainlight` they are listed first, if they have the label `nightlight` they are listed last. The latter are also excluded from the area or floor toggles.
+All entities are ordered alphabetically by default but are grouped by device, if they are in the same section. Though there is an additional rule for lights: If lights have the label `mainlight` they are listed first, if they have the label `nightlight` they are listed last. The latter are also excluded from the area or floor toggles.
 You can override the order by adding labels like `order_1`, `order_2`, etc.
 You can add the prefix `bonbon_` to any of these labels in case it interferes with your setup.
 
