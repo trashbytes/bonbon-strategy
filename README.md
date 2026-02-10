@@ -257,6 +257,8 @@ death_star_controls:
     - switch.arm
 ```
 
+When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area or if you want to force this section to show up in a specific area then add `area_id: <area_id>` to the section.
+
 ### Auto Light/Dark Mode
 
 If your theme supports it and `auto_light_dark_mode` is set to `true`, then Bonbon Strategy will try to automatically switch between light and dark mode depending on the state of the sun. It should work independently from your browser and operating system.

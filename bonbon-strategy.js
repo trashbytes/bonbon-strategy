@@ -285,7 +285,7 @@ export class BonbonStrategy {
                   area.reglrColor = colors.reglrColor;
                   area.shadeColor = colors.shadeColor;
 
-                  const categorizedEntityIds = [
+                  area.categorizedEntityIds = [
                     area.temperature_entity_id,
                     area.humidity_entity_id,
                   ];
@@ -300,7 +300,7 @@ export class BonbonStrategy {
                           'ppm'),
                     area.area_id,
                     devices,
-                    categorizedEntityIds,
+                    area.categorizedEntityIds,
                   ) || [])[0]?.entity_id;
 
                   Object.values(config?.views?.bonbon_area?.sections)
@@ -315,16 +315,16 @@ export class BonbonStrategy {
                       if (c !== null && typeof c === 'object') {
                         getAllEntityIds(c).forEach(function (entity_id) {
                           if (entities[entity_id]) {
-                            categorizedEntityIds.push(entity_id);
+                            area.categorizedEntityIds.push(entity_id);
                           }
                         });
                       }
                       if (typeof c === 'string' && entities[c]) {
-                        categorizedEntityIds.push(c);
+                        area.categorizedEntityIds.push(c);
                       }
                       if (typeof c === 'string' && labels[c]) {
                         labels[c].forEach((e) => {
-                          categorizedEntityIds.push(e.entity_id);
+                          area.categorizedEntityIds.push(e.entity_id);
                         });
                       }
                     });
@@ -335,7 +335,7 @@ export class BonbonStrategy {
                       (e) => isEntityType(e, 'light.'),
                       area.area_id,
                       devices,
-                      categorizedEntityIds,
+                      area.categorizedEntityIds,
                     ),
                     devices,
                     states,
@@ -346,7 +346,7 @@ export class BonbonStrategy {
                       (e) => isEntityType(e, 'switch.'),
                       area.area_id,
                       devices,
-                      categorizedEntityIds,
+                      area.categorizedEntityIds,
                     ),
                     devices,
                     states,
@@ -359,7 +359,7 @@ export class BonbonStrategy {
                         e.entity_id.endsWith('_contact'),
                       area.area_id,
                       devices,
-                      categorizedEntityIds,
+                      area.categorizedEntityIds,
                     ),
                     devices,
                     states,
@@ -371,7 +371,7 @@ export class BonbonStrategy {
                       (e) => isEntityType(e, 'media_player.'),
                       area.area_id,
                       devices,
-                      categorizedEntityIds,
+                      area.categorizedEntityIds,
                     ),
                     devices,
                     states,
@@ -383,7 +383,7 @@ export class BonbonStrategy {
                       (e) => isEntityType(e, 'cover.'),
                       area.area_id,
                       devices,
-                      categorizedEntityIds,
+                      area.categorizedEntityIds,
                     ),
                     devices,
                     states,
@@ -395,7 +395,7 @@ export class BonbonStrategy {
                       (e) => isEntityType(e, 'climate.'),
                       area.area_id,
                       devices,
-                      categorizedEntityIds,
+                      area.categorizedEntityIds,
                     ),
                     devices,
                     states,
@@ -409,7 +409,7 @@ export class BonbonStrategy {
                       },
                       area.area_id,
                       devices,
-                      categorizedEntityIds,
+                      area.categorizedEntityIds,
                     ),
                     devices,
                     states,
@@ -894,7 +894,12 @@ export class BonbonStrategy {
                         }
                         break;
                       case 'bonbon_miscellaneous':
-                        if (area._misc.length) {
+                        const miscCards = area._misc
+                          .filter((e) => !area.categorizedEntityIds.includes(e))
+                          .map((e) =>
+                            createButton(e, entities, states, styles),
+                          );
+                        if (miscCards.length) {
                           if (sectionConfig.show_separator) {
                             section.cards.push(
                               createSeparatorCard(
@@ -903,9 +908,6 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const miscCards = area._misc.map((e) =>
-                            createButton(e, entities, states, styles),
-                          );
                           section.cards.push(
                             createGrid(
                               miscCards,
@@ -953,20 +955,23 @@ export class BonbonStrategy {
                             })
                             .flat()
                             .filter((c) => {
-                              if (sectionConfig.area == area.area_id) {
+                              if (sectionConfig.area_id == area.area_id) {
                                 return true;
                               }
                               const e = c.entity
                                 ? entities[c.entity]
-                                : undefined;
+                                : c.entity_id
+                                  ? entities[c.entity_id]
+                                  : undefined;
                               if (e) {
+                                area.categorizedEntityIds.push(e);
                                 const inArea = e.area_id === area.area_id;
                                 const device = devices[e.device_id];
                                 const deviceInArea =
                                   device && device.area_id === area.area_id;
                                 return inArea || deviceInArea;
                               }
-                              return true;
+                              return false;
                             });
                           if (userCards.length) {
                             if (sectionConfig.show_separator) {
