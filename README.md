@@ -26,6 +26,7 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 - Openings (Doors & Windows)
 - Covers (Shutters & Shades)
 - Miscellaneous (almost everything that isn't part of the above)
+- Custom views, sections and cards (see configuration)
 
 You can hide anything with the label `hidden` or by disabling the `Visible` setting.
 All entities are ordered alphabetically by default but are grouped by device, if they are in the same section. Though there is an additional rule for lights: If lights have the label `mainlight` they are listed first, if they have the label `nightlight` they are listed last. The latter are also excluded from the area or floor toggles.
@@ -131,7 +132,11 @@ strategy:
             show_separator: true
             min_columns: 1
             max_columns: 1
-            style: inline
+            show_inline: true
+            show_card: false
+            card_show_current: true
+            card_show_forecast: true
+            card_forecast_type: daily
             hidden: false
           bonbon_persons:
             name: Persons
@@ -174,7 +179,7 @@ strategy:
             show_separator: true
             min_columns: 1
             max_columns: 3
-            style: graph
+            show_graphs: true
             show_temperature: true
             show_humidity: true
             show_co2: true
@@ -240,39 +245,39 @@ strategy:
 
 ```
 
-You can add custom sections like this:
-
-```
-      death_star_controls:
-        name: Death Star
-        icon: mdi:death-star
-        order: 3
-        show_separator: true
-        min_columns: 1
-        max_columns: 2
-        hidden: false
-        cards: # can be cards, entity_ids (including *wildcards*), device_ids or labels
-          - light.death_star
-          - switch.arm
-```
-
-When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section.
-
 You can add custom views like this:
 
 ```
-  batteries:
-    name: Batteries
-    sections:
       batteries:
         name: Batteries
-        icon: mdi:battery
-        show_separator: true
-        min_columns: 2
-        max_columns: 2
-        cards:
-          - sensor.*battery
+        sections:
+          batteries:
+            name: Batteries
+            icon: mdi:battery
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            cards:
+              - sensor.*battery
 ```
+
+You can add custom sections like this:
+
+```
+          death_star_controls:
+            name: Death Star
+            icon: mdi:death-star
+            order: 3
+            show_separator: true
+            min_columns: 1
+            max_columns: 2
+            hidden: false
+            cards: # can be cards, entity_ids (including *wildcards*), device_ids or labels
+              - light.death_star
+              - switch.arm
+```
+
+When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section.
 
 It will be added as a tab. Ideal in combination with wildcards to quickly create views for all your doors, windows, leak sensors and more.
 
