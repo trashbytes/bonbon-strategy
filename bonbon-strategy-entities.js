@@ -132,23 +132,50 @@ export function sortByName(list, states) {
 }
 
 export function sortEntities(list, devices, states) {
-  return (list || []).sort((a, b) => {
+  const withOrder = [];
+  const withoutOrder = [];
+
+  (list || []).forEach((entity) => {
+    const order = getOrderLabelNumber(entity, devices);
+    if (order !== Infinity) {
+      withOrder.push(entity);
+    } else {
+      withoutOrder.push(entity);
+    }
+  });
+  withOrder.sort((a, b) => {
     const orderA = getOrderLabelNumber(a, devices);
     const orderB = getOrderLabelNumber(b, devices);
-    if (orderA !== orderB) return orderA - orderB;
-    const devIdA = a.device_id || '__no_device__';
-    const devIdB = b.device_id || '__no_device__';
-    if (devIdA !== devIdB) {
-      const deviceA = devices?.[devIdA];
-      const deviceB = devices?.[devIdB];
-      const deviceOrderA = getOrderLabelNumber(deviceA, devices);
-      const deviceOrderB = getOrderLabelNumber(deviceB, devices);
-      if (deviceOrderA !== deviceOrderB) return deviceOrderA - deviceOrderB;
-    }
-    const nameA = getEntityDisplayName(a, states || {});
-    const nameB = getEntityDisplayName(b, states || {});
-    return nameA.localeCompare(nameB);
+    return orderA - orderB;
   });
+  const groups = {};
+  withoutOrder.forEach((entity) => {
+    const devId = entity.device_id || '__no_device__';
+    if (!groups[devId]) groups[devId] = [];
+    groups[devId].push(entity);
+  });
+
+  Object.keys(groups).forEach((devId) => {
+    groups[devId] = sortByName(groups[devId], states || {});
+  });
+  const groupEntries = Object.keys(groups).map((devId) => ({
+    devId,
+    device: devices?.[devId] || null,
+    entities: groups[devId],
+  }));
+  groupEntries.sort((a, b) => {
+    const firstA =
+      a.entities && a.entities.length
+        ? getEntityDisplayName(a.entities[0], states || {})
+        : '';
+    const firstB =
+      b.entities && b.entities.length
+        ? getEntityDisplayName(b.entities[0], states || {})
+        : '';
+    return firstA.localeCompare(firstB);
+  });
+  const groupedEntities = groupEntries.flatMap((g) => g.entities);
+  return [...withOrder, ...groupedEntities];
 }
 
 export function findFirstEntityByPrefix(entities, prefix) {
