@@ -143,37 +143,55 @@ export class BonbonStrategy {
               }
               if (weather_entity_id && states[weather_entity_id]) {
                 if (sectionConfig.show_separator) {
-                  const sepName =
-                    sectionConfig.style == 'inline'
-                      ? entities[weather_entity_id]?.name ||
-                        states[weather_entity_id]?.attributes?.friendly_name ||
-                        devices[entities[weather_entity_id]?.device_id]?.name ||
-                        sectionConfig.name
-                      : sectionConfig.name;
-                  const sepIcon =
-                    sectionConfig.style == 'inline'
-                      ? getWeatherIcon(states[weather_entity_id]?.state)
-                      : sectionConfig.icon;
-                  const sepSubButton =
-                    sectionConfig.style == 'inline'
-                      ? [
-                          {
+                  const sepName = sectionConfig.show_inline
+                    ? entities[weather_entity_id]?.name ||
+                      states[weather_entity_id]?.attributes?.friendly_name ||
+                      devices[entities[weather_entity_id]?.device_id]?.name ||
+                      sectionConfig.name
+                    : sectionConfig.name;
+                  const sepIcon = sectionConfig.show_inline
+                    ? getWeatherIcon(states[weather_entity_id]?.state)
+                    : sectionConfig.icon;
+                  const sepSubButton = sectionConfig.show_inline
+                    ? [
+                        {
+                          entity: weather_entity_id,
+                          show_attribute: true,
+                          attribute: 'temperature',
+                          icon: 'mdi:thermometer',
+                          show_state: false,
+                          show_background: false,
+                          tap_action: {
+                            action: 'more-info',
                             entity: weather_entity_id,
-                            show_attribute: true,
-                            attribute: 'temperature',
-                            icon: 'mdi:thermometer',
-                            show_state: false,
-                            show_background: false,
-                            tap_action: {
-                              action: 'more-info',
-                              entity: weather_entity_id,
-                            },
                           },
-                        ]
-                      : false;
+                        },
+                      ]
+                    : false;
                   section.cards.push(
                     createSeparatorCard(sepName, sepIcon, sepSubButton),
                   );
+                  if (sectionConfig.show_card) {
+                    section.cards.push(
+                      createGrid(
+                        [
+                          {
+                            type: 'weather-forecast',
+                            entity: weather_entity_id,
+                            show_current: !!sectionConfig.card_show_current,
+                            show_forecast: !!sectionConfig.card_show_forecast,
+                            forecast_type: sectionConfig.card_forecast_type,
+                            card_mod: {
+                              style: styles.weatherCard,
+                            },
+                          },
+                        ],
+                        sectionConfig,
+                        1,
+                        false,
+                      ),
+                    );
+                  }
                 }
                 switch (sectionConfig.style) {
                   case 'button':
@@ -621,15 +639,29 @@ export class BonbonStrategy {
                           area.co2_entity_id,
                         ]
                           .filter((e_id) => e_id)
-                          .map((e_id) =>
-                            sectionConfig.style == 'graph' &&
-                            window.customCards
-                              ?.map((cc) => cc.type)
-                              .includes('mini-graph-card')
+                          .map((e_id) => {
+                            return sectionConfig.show_graphs &&
+                              window.customCards
+                                ?.map((cc) => cc.type)
+                                .includes('mini-graph-card')
                               ? {
                                   type: 'custom:mini-graph-card',
-                                  font_size: 60,
-                                  entities: [e_id],
+                                  height: 56,
+                                  entities: [
+                                    {
+                                      entity: e_id,
+                                      show_line: false,
+                                    },
+                                  ],
+                                  line_color: 'var(--bubble-default-color)',
+                                  show: {
+                                    points: false,
+                                    labels: false,
+                                    labels_secondary: false,
+                                  },
+                                  card_mod: {
+                                    style: styles.environmentGraphCard,
+                                  },
                                 }
                               : createBubbleCard(
                                   {
@@ -644,8 +676,8 @@ export class BonbonStrategy {
                                     },
                                   },
                                   styles.bubbleButtonNonBinary,
-                                ),
-                          );
+                                );
+                          });
                         section.cards.push(
                           createGrid(
                             envCards,

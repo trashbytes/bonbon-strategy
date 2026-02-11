@@ -2,6 +2,18 @@ export const css = (strings, ...values) =>
   strings.reduce((acc, str, i) => acc + str + (values[i] || ''), '');
 
 export const getStyles = (isDark) => {
+  const shadowOverlay = css`
+    border-radius: var(--bubble-button-border-radius);
+    pointer-events: none;
+    display: block;
+    content: '';
+    inset: 0;
+    position: absolute;
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'}),
+      inset 0 0.5px 0 0 rgba(255, 255, 255, ${isDark ? '0.01' : '0.2'}),
+      inset 0 -0.5px 0 0 rgba(0, 0, 0, ${isDark ? '0.8' : '0.10'});
+  `;
   const styles = {
     global: css`
       *,
@@ -39,17 +51,13 @@ export const getStyles = (isDark) => {
         opacity: 1 !important;
       }
       ha-card {
+        position: relative;
         border: none;
-        border-top: 0.5px solid rgba(255, 255, 255, ${isDark ? '0.01' : '0.2'});
-        border-bottom: 0.5px solid rgba(0, 0, 0, ${isDark ? '0.8' : '0.12'});
-        box-shadow: 0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'});
-      }
-      ha-card .graph {
-        margin-bottom: -1px;
       }
       .bubble-main-icon-container {
         pointer-events: none;
       }
+      .bubble-container,
       .bubble-button-container {
         overflow: visible;
       }
@@ -58,12 +66,14 @@ export const getStyles = (isDark) => {
       .bubble-climate-container,
       .bubble-cover-container,
       .bubble-media-player-container {
-        box-shadow: 0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'});
         border-radius: var(--bubble-button-border-radius);
       }
-      .bubble-background {
-        border-top: 0.5px solid rgba(255, 255, 255, ${isDark ? '0.01' : '0.1'});
-        border-bottom: 0.5px solid rgba(0, 0, 0, ${isDark ? '0.8' : '0.12'});
+      .bubble-sub-buttons-container .bubble-sub-button:after,
+      .bubble-button-container:not(.bubble-buttons-container):after,
+      .bubble-climate-container:after,
+      .bubble-cover-container:after,
+      .bubble-media-player-container:after {
+        ${shadowOverlay}
       }
       mwc-list-item[selected],
       mwc-list-item[selected] ha-icon,
@@ -335,6 +345,120 @@ export const getStyles = (isDark) => {
         .bubble-sub-button[data-tap-action*='light.turn_on']
         ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
         display: none !important;
+      }
+    `,
+    environmentGraphCard: css`
+      :host * {
+        transition: none !important;
+      }
+      ha-card {
+        padding: 0 !important;
+        min-height: 56px !important;
+        overflow: visible !important;
+      }
+      ha-card:after {
+        ${shadowOverlay}
+      }
+      ha-card:hover:before {
+        content: '';
+        display: block;
+        inset: 0;
+        position: absolute;
+        background-color: var(
+          --md-ripple-hover-color,
+          var(--md-sys-color-on-surface, #5e5e5e)
+        );
+        opacity: var(--md-ripple-hover-opacity, 0.04);
+        border-radius: var(--bubble-button-border-radius);
+      }
+      .header {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 56px !important;
+        z-index: 1;
+      }
+      .icon {
+        color: var(--primary-text-color) !important;
+        border-radius: var(
+          --bubble-button-icon-border-radius,
+          var(--bubble-icon-border-radius, var(--bubble-border-radius, 50%))
+        ) !important;
+        background-color: var(
+          --bubble-button-icon-background-color,
+          var(
+            --bubble-icon-background-color,
+            var(
+              --bubble-secondary-background-color,
+              var(--card-background-color, var(--ha-card-background))
+            )
+          )
+        ) !important;
+        padding: 9px !important;
+      }
+      .name {
+        padding: 0 !important;
+        position: absolute !important;
+        bottom: 50%;
+        left: 60px !important;
+      }
+      .states {
+        padding: 0 !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 60px !important;
+      }
+      .name .ellipsis,
+      .state span {
+        display: block;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        line-height: 18px !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        opacity: 1 !important;
+        min-height: 0 !important;
+        max-height: none !important;
+      }
+      .state span {
+        font-size: 12px !important;
+        font-weight: normal !important;
+        opacity: 0.7 !important;
+      }
+      .graph {
+        overflow: hidden;
+        pointer-events: none !important;
+        opacity: 1 !important;
+        border-bottom-left-radius: var(--bubble-button-border-radius);
+        border-bottom-right-radius: var(--bubble-button-border-radius);
+        z-index: 2;
+      }
+    `,
+    weatherCard: css`
+      :host * {
+        transition: none !important;
+      }
+      ha-card {
+        overflow: visible !important;
+      }
+      ha-card:after {
+        ${shadowOverlay}
+      }
+      ha-card:hover:before {
+        content: '';
+        display: block;
+        inset: 0;
+        position: absolute;
+        background-color: var(
+          --md-ripple-hover-color,
+          var(--md-sys-color-on-surface, #5e5e5e)
+        );
+        opacity: var(--md-ripple-hover-opacity, 0.04);
+        border-radius: var(--bubble-button-border-radius);
       }
     `,
   };
