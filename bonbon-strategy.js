@@ -925,35 +925,45 @@ export class BonbonStrategy {
                           (!sectionConfig.area_id ||
                             sectionConfig.area_id == area.area_id)
                         ) {
-                          const userCards = (
-                            Array.isArray(sectionConfig.cards)
+                          const userCards = sortEntities(
+                            (Array.isArray(sectionConfig.cards)
                               ? sectionConfig.cards
                               : [sectionConfig.cards]
+                            )
+                              .map(function (c) {
+                                if (c !== null && typeof c === 'object') {
+                                  return c;
+                                }
+                                if (typeof c === 'string' && entities[c]) {
+                                  return c;
+                                }
+                                if (typeof c === 'string' && devices[c]) {
+                                  return getEntitiesByDeviceId(
+                                    entities,
+                                    c,
+                                    devices,
+                                  );
+                                }
+                                if (typeof c === 'string' && labels[c]) {
+                                  return labels[c];
+                                }
+                                return false;
+                              })
+                              .flat(),
+                            devices,
+                            states,
                           )
                             .map(function (c) {
-                              if (c !== null && typeof c === 'object') {
+                              if (c.type) {
                                 return c;
                               }
-                              if (typeof c === 'string' && entities[c]) {
-                                return createButton(c);
-                              }
-                              if (typeof c === 'string' && devices[c]) {
-                                return getEntitiesByDeviceId(
-                                  entities,
-                                  c,
-                                  devices,
-                                ).map((e) =>
-                                  createButton(e, entities, states, styles),
-                                );
-                              }
-                              if (typeof c === 'string' && labels[c]) {
-                                return labels[c].map((e) =>
-                                  createButton(e, entities, states, styles),
-                                );
-                              }
-                              return false;
+                              return createButton(
+                                c.entity_id,
+                                entities,
+                                states,
+                                styles,
+                              );
                             })
-                            .flat()
                             .filter((c) => {
                               if (sectionConfig.area_id == area.area_id) {
                                 return true;
@@ -1021,31 +1031,36 @@ export class BonbonStrategy {
               break;
             default:
               if (sectionConfig.cards && sectionConfig.cards.length) {
-                const userCards = (
-                  Array.isArray(sectionConfig.cards)
+                const userCards = sortEntities(
+                  (Array.isArray(sectionConfig.cards)
                     ? sectionConfig.cards
                     : [sectionConfig.cards]
+                  )
+                    .map(function (c) {
+                      if (c !== null && typeof c === 'object') {
+                        return c;
+                      }
+                      if (typeof c === 'string' && entities[c]) {
+                        return c;
+                      }
+                      if (typeof c === 'string' && devices[c]) {
+                        return getEntitiesByDeviceId(entities, c, devices);
+                      }
+                      if (typeof c === 'string' && labels[c]) {
+                        return labels[c];
+                      }
+                      return false;
+                    })
+                    .flat(),
+                  devices,
+                  states,
                 )
                   .map(function (c) {
-                    if (c !== null && typeof c === 'object') {
+                    if (c.type) {
                       return c;
                     }
-                    if (typeof c === 'string' && entities[c]) {
-                      return createButton(c);
-                    }
-                    if (typeof c === 'string' && devices[c]) {
-                      return getEntitiesByDeviceId(entities, c, devices).map(
-                        (e) => createButton(e, entities, states, styles),
-                      );
-                    }
-                    if (typeof c === 'string' && labels[c]) {
-                      return labels[c].map((e) =>
-                        createButton(e, entities, states, styles),
-                      );
-                    }
-                    return false;
+                    return createButton(c.entity_id, entities, states, styles);
                   })
-                  .flat()
                   .filter((c) => c);
                 if (userCards.length) {
                   if (sectionConfig.show_separator) {

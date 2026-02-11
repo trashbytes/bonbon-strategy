@@ -44,7 +44,8 @@ function getEntityDisplayName(entity, states) {
   return (
     entity?.name ||
     states?.[entity?.entity_id]?.attributes?.friendly_name ||
-    entity?.entity_id
+    entity?.entity_id ||
+    ''
   );
 }
 
@@ -135,24 +136,24 @@ export function sortEntities(list, devices, states) {
   const withOrder = [];
   const withoutOrder = [];
 
-  (list || []).forEach((entity) => {
-    const order = getOrderLabelNumber(entity, devices);
+  (list || []).forEach((c) => {
+    const order = c.bonbon_order || c.order || getOrderLabelNumber(c, devices);
     if (order !== Infinity) {
-      withOrder.push(entity);
+      withOrder.push(c);
     } else {
-      withoutOrder.push(entity);
+      withoutOrder.push(c);
     }
   });
   withOrder.sort((a, b) => {
-    const orderA = getOrderLabelNumber(a, devices);
-    const orderB = getOrderLabelNumber(b, devices);
+    const orderA = a.bonbon_order || a.order || getOrderLabelNumber(a, devices);
+    const orderB = b.bonbon_order || b.order || getOrderLabelNumber(b, devices);
     return orderA - orderB;
   });
   const groups = {};
-  withoutOrder.forEach((entity) => {
-    const devId = entity.device_id || '__no_device__';
+  withoutOrder.forEach((c) => {
+    const devId = c.device_id || '__no_device__';
     if (!groups[devId]) groups[devId] = [];
-    groups[devId].push(entity);
+    groups[devId].push(c);
   });
 
   Object.keys(groups).forEach((devId) => {
