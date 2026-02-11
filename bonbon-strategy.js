@@ -934,18 +934,27 @@ export class BonbonStrategy {
                                 if (c !== null && typeof c === 'object') {
                                   return c;
                                 }
-                                if (typeof c === 'string' && entities[c]) {
-                                  return c;
-                                }
-                                if (typeof c === 'string' && devices[c]) {
-                                  return getEntitiesByDeviceId(
-                                    entities,
-                                    c,
-                                    devices,
-                                  );
-                                }
-                                if (typeof c === 'string' && labels[c]) {
-                                  return labels[c];
+                                if (typeof c === 'string') {
+                                  if (c.includes('*')) {
+                                    const esc = (s) =>
+                                      s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
+                                    const pattern =
+                                      '^' +
+                                      c.split('*').map(esc).join('.*') +
+                                      '$';
+                                    const re = new RegExp(pattern);
+                                    return Object.values(entities).filter((e) =>
+                                      re.test(e.entity_id),
+                                    );
+                                  }
+                                  if (entities[c]) return entities[c];
+                                  if (devices[c])
+                                    return getEntitiesByDeviceId(
+                                      entities,
+                                      c,
+                                      devices,
+                                    );
+                                  if (labels[c]) return labels[c];
                                 }
                                 return false;
                               })
@@ -965,7 +974,11 @@ export class BonbonStrategy {
                               );
                             })
                             .filter((c) => {
-                              if (sectionConfig.area_id == area.area_id) {
+                              if (
+                                sectionConfig.area_id == area.area_id ||
+                                c.bonbon_area_id == area.area_id ||
+                                c.area_id == area.area_id
+                              ) {
                                 return true;
                               }
                               const e = c.entity
@@ -1040,14 +1053,21 @@ export class BonbonStrategy {
                       if (c !== null && typeof c === 'object') {
                         return c;
                       }
-                      if (typeof c === 'string' && entities[c]) {
-                        return c;
-                      }
-                      if (typeof c === 'string' && devices[c]) {
-                        return getEntitiesByDeviceId(entities, c, devices);
-                      }
-                      if (typeof c === 'string' && labels[c]) {
-                        return labels[c];
+                      if (typeof c === 'string') {
+                        if (c.includes('*')) {
+                          const esc = (s) =>
+                            s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
+                          const pattern =
+                            '^' + c.split('*').map(esc).join('.*') + '$';
+                          const re = new RegExp(pattern);
+                          return Object.values(entities).filter((e) =>
+                            re.test(e.entity_id),
+                          );
+                        }
+                        if (entities[c]) return entities[c];
+                        if (devices[c])
+                          return getEntitiesByDeviceId(entities, c, devices);
+                        if (labels[c]) return labels[c];
                       }
                       return false;
                     })
@@ -1106,6 +1126,103 @@ export class BonbonStrategy {
         sections: homeSections,
       };
       views.unshift(homeView);
+
+      Object.keys(config.views || {})
+        .filter((k) => k !== 'bonbon_home' && k !== 'bonbon_area')
+        .forEach((viewKey) => {
+          const viewConfig = config.views[viewKey] || {};
+          const sections = Object.keys(viewConfig.sections || {})
+            .filter((s) => !viewConfig.sections[s].hidden)
+            .sort((aKey, bKey) => {
+              const orderA = viewConfig.sections[aKey].order ?? 999;
+              const orderB = viewConfig.sections[bKey].order ?? 999;
+              return orderA - orderB;
+            })
+            .map((key) => {
+              const sectionConfig = viewConfig.sections[key];
+              const section = { cards: [] };
+              if (sectionConfig.cards && sectionConfig.cards.length) {
+                const userCards = (
+                  Array.isArray(sectionConfig.cards)
+                    ? sectionConfig.cards
+                    : [sectionConfig.cards]
+                )
+                  .map(function (c) {
+                    if (c !== null && typeof c === 'object') {
+                      return c;
+                    }
+                    if (typeof c === 'string') {
+                      if (c.includes('*')) {
+                        const esc = (s) =>
+                          s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
+                        const pattern =
+                          '^' + c.split('*').map(esc).join('.*') + '$';
+                        const re = new RegExp(pattern);
+                        return Object.values(entities).filter((e) =>
+                          re.test(e.entity_id),
+                        );
+                      }
+                      if (entities[c]) return entities[c];
+                      if (devices[c])
+                        return getEntitiesByDeviceId(entities, c, devices);
+                      if (labels[c]) return labels[c];
+                    }
+                    return false;
+                  })
+                  .flat()
+                  .filter((c) => c);
+
+                const sortedCards = sortEntities(userCards, devices, states)
+                  .map(function (c) {
+                    if (c.type) return c;
+                    return createButton(c.entity_id, entities, states, styles);
+                  })
+                  .filter((c) => c);
+
+                if (sortedCards.length) {
+                  if (sectionConfig.show_separator) {
+                    section.cards.push(
+                      createSeparatorCard(
+                        sectionConfig.name || 'Custom Section',
+                        sectionConfig.icon || 'mdi:view-dashboard-edit',
+                      ),
+                    );
+                  }
+                  section.cards.push(
+                    createGrid(
+                      sortedCards,
+                      sectionConfig,
+                      sortedCards.length,
+                      false,
+                    ),
+                  );
+                }
+              }
+              return section.cards.length ? section : false;
+            })
+            .filter((s) => s);
+
+          if (sections.length) {
+            views.push({
+              title: viewConfig.name || viewKey,
+              background: isDark
+                ? config.background_image_dark
+                  ? 'top / cover no-repeat fixed url("' +
+                    config.background_image_dark +
+                    '")'
+                  : ''
+                : config.background_image_light
+                  ? 'top / cover no-repeat fixed url("' +
+                    config.background_image_light +
+                    '")'
+                  : '',
+              path: viewConfig.path || viewKey,
+              type: 'sections',
+              max_columns: viewConfig.max_columns || 1,
+              sections,
+            });
+          }
+        });
 
       const applyGlobalStyles = (data) => {
         if (!Array.isArray(data)) return data;
