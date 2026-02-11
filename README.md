@@ -130,9 +130,6 @@ strategy:
             order: 1
             entity_id: auto
             show_separator: true
-            min_columns: 1
-            max_columns: 1
-            show_inline: true
             show_card: false
             card_show_current: true
             card_show_forecast: true

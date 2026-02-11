@@ -143,16 +143,16 @@ export class BonbonStrategy {
               }
               if (weather_entity_id && states[weather_entity_id]) {
                 if (sectionConfig.show_separator) {
-                  const sepName = sectionConfig.show_inline
+                  const sepName = !sectionConfig.show_card
                     ? entities[weather_entity_id]?.name ||
                       states[weather_entity_id]?.attributes?.friendly_name ||
                       devices[entities[weather_entity_id]?.device_id]?.name ||
                       sectionConfig.name
                     : sectionConfig.name;
-                  const sepIcon = sectionConfig.show_inline
+                  const sepIcon = !sectionConfig.show_card
                     ? getWeatherIcon(states[weather_entity_id]?.state)
                     : sectionConfig.icon;
-                  const sepSubButton = sectionConfig.show_inline
+                  const sepSubButton = !sectionConfig.show_card
                     ? [
                         {
                           entity: weather_entity_id,
