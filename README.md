@@ -165,7 +165,6 @@ strategy:
             always_show_area_lights_toggle: false
             hidden: false
       bonbon_area:
-        subview: true
         max_columns: 1
         sections:
           bonbon_environment:
@@ -244,20 +243,38 @@ strategy:
 You can add custom sections like this:
 
 ```
-death_star_controls:
-  name: Death Star
-  icon: mdi:death-star
-  order: 3
-  show_separator: true
-  min_columns: 1
-  max_columns: 2
-  hidden: false
-  cards: # can be cards, entity_ids, device_ids or labels
-    - light.death_star
-    - switch.arm
+      death_star_controls:
+        name: Death Star
+        icon: mdi:death-star
+        order: 3
+        show_separator: true
+        min_columns: 1
+        max_columns: 2
+        hidden: false
+        cards: # can be cards, entity_ids (including *wildcards*), device_ids or labels
+          - light.death_star
+          - switch.arm
 ```
 
-When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area or if you want to force this section to show up in a specific area then add `area_id: <area_id>` to the section.
+When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section.
+
+You can add custom views like this:
+
+```
+  batteries:
+    name: Batteries
+    sections:
+      batteries:
+        name: Batteries
+        icon: mdi:battery
+        show_separator: true
+        min_columns: 2
+        max_columns: 2
+        cards:
+          - sensor.*battery
+```
+
+It will be added as a tab. Ideal in combination with wildcards to quickly create views for all your doors, windows, leak sensors and more.
 
 ### Auto Light/Dark Mode
 
