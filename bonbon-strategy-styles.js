@@ -9,90 +9,99 @@ export const getStyles = (isDark) => {
     content: '';
     inset: 0;
     position: absolute;
-    box-shadow:
-      0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'}),
-      inset 0 0.5px 0 0 rgba(255, 255, 255, ${isDark ? '0.01' : '0.2'}),
-      inset 0 -0.5px 0 0 rgba(0, 0, 0, ${isDark ? '0.8' : '0.10'});
+    box-shadow: var(--bonbon-box-shadow);
+  `;
+  const globalStyles = css`
+    :host {
+      --primary-text-color: ${isDark ? '#eee' : '#111'};
+      --bubble-line-background-color: rgba(0, 0, 0, 0.05);
+      --bubble-main-background-color: var(
+        --ha-card-background,
+        var(--card-background-color, #fff)
+      );
+      --bubble-border-radius: var(--ha-card-border-radius, 12px);
+      --bubble-icon-border-radius: 8px;
+      --bubble-sub-button-border-radius: 8px;
+      --bubble-button-border-radius: var(--bubble-border-radius);
+      --bonbon-box-shadow:
+        0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'}),
+        inset 0 0.5px 0 0 rgba(255, 255, 255, ${isDark ? '0.01' : '0.2'}),
+        inset 0 -0.5px 0 0 rgba(0, 0, 0, ${isDark ? '0.8' : '0.10'});
+    }
+    *,
+    *:before,
+    *:after {
+      --bubble-default-color: #9373c9;
+    }
   `;
   const styles = {
-    global: css`
-      *,
-      *:before,
-      *:after {
-        --bubble-default-color: #9373c9;
-        transition: all 0.3s ease-out !important;
-      }
-      .bubble-sub-button-name-container {
-        white-space: nowrap !important;
-      }
-      .is-off .bubble-main-icon {
-        opacity: 1;
-      }
-      :host {
-        --primary-text-color: ${isDark ? '#eee' : '#111'};
-        --bubble-line-background-color: rgba(0, 0, 0, 0.05);
-        --bubble-main-background-color: var(
-          --ha-card-background,
-          var(--card-background-color, #fff)
-        );
-        --bubble-border-radius: var(--ha-card-border-radius, 12px);
-        --bubble-icon-border-radius: 8px;
-        --bubble-sub-button-border-radius: 8px;
-        --bubble-button-border-radius: var(--bubble-border-radius);
-      }
-      .bubble-button-background {
-        background-color: var(
-          --ha-card-background,
-          var(--card-background-color, #fff)
-        );
-      }
-      .is-on .bubble-button-background {
-        background-color: var(--bubble-default-color) !important;
-        opacity: 1 !important;
-      }
-      ha-card {
-        position: relative;
-        border: none;
-      }
-      .bubble-main-icon-container {
-        pointer-events: none;
-      }
-      .bubble-container,
-      .bubble-button-container {
-        overflow: visible;
-      }
-      .bubble-sub-buttons-container .bubble-sub-button,
-      .bubble-button-container:not(.bubble-buttons-container),
-      .bubble-climate-container,
-      .bubble-cover-container,
-      .bubble-media-player-container {
-        border-radius: var(--bubble-button-border-radius);
-      }
-      .bubble-sub-buttons-container .bubble-sub-button:after,
-      .bubble-button-container:not(.bubble-buttons-container):after,
-      .bubble-climate-container:after,
-      .bubble-cover-container:after,
-      .bubble-media-player-container:after {
-        ${shadowOverlay}
-      }
-      mwc-list-item[selected],
-      mwc-list-item[selected] ha-icon,
-      .is-on
-        :not(.bubble-media-player)
-        > .bubble-content-container
-        .bubble-name-container {
-        color: #fff !important;
-      }
-      .bubble-dropdown-inner-border {
-        display: none !important;
-      }
-      .bubble-separator .bubble-sub-button-container {
-        right: 0;
-      }
-      .bubble-separator .bubble-sub-button {
-        border-radius: 10px;
-      }
-    `,
+    cardmodGlobal: globalStyles,
+    bubbleGlobal:
+      globalStyles +
+      css`
+        *,
+        *:before,
+        *:after {
+          transition: all 0.3s ease-out !important;
+        }
+        .bubble-sub-button-name-container {
+          white-space: nowrap !important;
+        }
+        .is-off .bubble-main-icon {
+          opacity: 1;
+        }
+        .bubble-button-background {
+          background-color: var(
+            --ha-card-background,
+            var(--card-background-color, #fff)
+          );
+        }
+        .is-on .bubble-button-background {
+          background-color: var(--bubble-default-color) !important;
+          opacity: 1 !important;
+        }
+        ha-card {
+          position: relative;
+        }
+        .bubble-main-icon-container {
+          pointer-events: none;
+        }
+        .bubble-container,
+        .bubble-button-container {
+          overflow: visible;
+        }
+        .bubble-sub-buttons-container .bubble-sub-button,
+        .bubble-button-container:not(.bubble-buttons-container),
+        .bubble-climate-container,
+        .bubble-cover-container,
+        .bubble-media-player-container {
+          border-radius: var(--bubble-button-border-radius);
+        }
+        .bubble-sub-buttons-container .bubble-sub-button:after,
+        .bubble-button-container:not(.bubble-buttons-container):after,
+        .bubble-climate-container:after,
+        .bubble-cover-container:after,
+        .bubble-media-player-container:after {
+          ${shadowOverlay}
+        }
+        mwc-list-item[selected],
+        mwc-list-item[selected] ha-icon,
+        .is-on
+          :not(.bubble-media-player)
+          > .bubble-content-container
+          .bubble-name-container {
+          color: #fff !important;
+        }
+        .bubble-dropdown-inner-border {
+          display: none !important;
+        }
+        .bubble-separator .bubble-sub-button-container {
+          right: 0;
+        }
+        .bubble-separator .bubble-sub-button {
+          border-radius: 10px;
+        }
+      `,
     bubbleButtonNonBinary: css`
       .is-on
         :not(.bubble-media-player)
@@ -355,6 +364,7 @@ export const getStyles = (isDark) => {
         padding: 0 !important;
         min-height: 56px !important;
         overflow: visible !important;
+        border: none !important;
       }
       ha-card:after {
         ${shadowOverlay}
@@ -427,7 +437,7 @@ export const getStyles = (isDark) => {
       .state span {
         font-size: 12px !important;
         font-weight: normal !important;
-        opacity: 0.7 !important;
+        opacity: 0.85 !important;
       }
       .graph {
         overflow: hidden;
@@ -436,6 +446,15 @@ export const getStyles = (isDark) => {
         border-bottom-left-radius: var(--bubble-button-border-radius);
         border-bottom-right-radius: var(--bubble-button-border-radius);
         z-index: 2;
+        container-type: inline-size;
+      }
+      @supports (width: 1cqw) {
+        .graph__container {
+          height: 56px !important;
+          width: 500px !important;
+          transform-origin: left;
+          transform: scaleX(calc(100cqw / 500px));
+        }
       }
     `,
     weatherCard: css`
@@ -444,6 +463,7 @@ export const getStyles = (isDark) => {
       }
       ha-card {
         overflow: visible !important;
+        border: none !important;
       }
       ha-card:after {
         ${shadowOverlay}

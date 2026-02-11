@@ -113,7 +113,6 @@ export class BonbonStrategy {
           ?.getAttribute('content') === 'dark';
 
       const styles = getStyles(isDark);
-      let globalStyles = styles.global;
 
       const homeSections = Object.keys(config?.views?.bonbon_home?.sections)
         .filter((key) => {
@@ -1264,11 +1263,11 @@ export class BonbonStrategy {
             newStruct.type &&
             newStruct.type.startsWith('custom:bubble-card')
           ) {
-            newStruct.styles = globalStyles + (newStruct.styles || '');
+            newStruct.styles = styles.bubbleGlobal + (newStruct.styles || '');
           }
           if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {
-              style: (newStruct.card_mod?.style || '') + globalStyles,
+              style: (newStruct.card_mod?.style || '') + styles.cardmodGlobal,
             };
           }
           if (newStruct.elements && Array.isArray(newStruct.elements)) {

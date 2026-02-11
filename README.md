@@ -258,6 +258,8 @@ You can add custom views like this:
               - sensor.*battery
 ```
 
+Custom views will be added as tabs at the top. In combination with wildcards you can create views to keep an eye on batteries, doors, shutters, etc. in just a few lines. Or create entirely custom views with your own cards.
+
 You can add custom sections like this:
 
 ```
@@ -276,7 +278,7 @@ You can add custom sections like this:
 
 When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section.
 
-It will be added as a tab. Ideal in combination with wildcards to quickly create views for all your doors, windows, leak sensors and more.
+When using your own cards you can use card_mod to style them to look like the rest of Bonbon Strategy. Some variables will be available to you, like `--bonbon-box-shadow` and `--bubble-button-border-radius`, which should get you most of the way there.
 
 ### Auto Light/Dark Mode
 
