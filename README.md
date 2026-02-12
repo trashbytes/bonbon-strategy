@@ -268,6 +268,7 @@ You can add custom sections like this:
             icon: mdi:death-star
             order: 3
             show_separator: true
+            custom_separator_buttons: false # can be an array of Bubble `sub_button`s, entity_ids (including *wildcards*), device_ids or labels
             min_columns: 1
             max_columns: 2
             hidden: false
@@ -276,7 +277,7 @@ You can add custom sections like this:
               - switch.arm
 ```
 
-When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section.
+When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section. Same goes for custom separator cards in areas, though they can also be added to floors in the home view and restricted to a specific one the same way with `floor_id: <floor_id>` and `bonbon_floor_id: <floor_id>` respectively.
 
 When using your own cards you can use card_mod to style them to look like the rest of Bonbon Strategy. Some variables will be available to you, like `--bonbon-box-shadow` and `--bubble-button-border-radius`, which should get you most of the way there.
 

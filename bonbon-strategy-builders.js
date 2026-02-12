@@ -39,6 +39,17 @@ export function createSeparatorCard(
   return card;
 }
 
+export function createSubButton(entity) {
+  console.log(entity);
+  const isToggle =
+    entity?.entity_id.startsWith('light.') ||
+    entity?.entity_id.startsWith('switch.');
+  return {
+    entity: entity.entity_id,
+    tap_action: { action: isToggle ? 'toggle' : 'more-info' },
+  };
+}
+
 export function resolveColumns(sectionConfig, count) {
   return (
     sectionConfig.columns ||

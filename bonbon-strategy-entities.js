@@ -194,3 +194,26 @@ export function getEntitiesByDeviceId(entities, device_id, devices) {
       !isHiddenEntity(e, devices),
   );
 }
+
+export function resolveEntities(c, entities, devices, labels) {
+  return (Array.isArray(c) ? c : [c])
+    .map(function (c) {
+      if (c !== null && typeof c === 'object') {
+        return c;
+      }
+      if (typeof c === 'string') {
+        if (c.includes('*')) {
+          const esc = (s) => s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
+          const pattern = '^' + c.split('*').map(esc).join('.*') + '$';
+          const re = new RegExp(pattern);
+          return Object.values(entities).filter((e) => re.test(e.entity_id));
+        }
+        if (entities[c]) return entities[c];
+        if (devices[c]) return getEntitiesByDeviceId(entities, c, devices);
+        if (labels[c]) return labels[c];
+      }
+      return false;
+    })
+    .flat()
+    .filter((c) => c);
+}
