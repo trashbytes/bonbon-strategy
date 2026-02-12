@@ -31,7 +31,6 @@ const {
   getVisiblePersons,
   getFavorites,
   findFirstEntityByPrefix,
-  getEntitiesByDeviceId,
   resolveEntities,
 } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
 
