@@ -25,7 +25,7 @@ export function createButton(e, entities, states, styles) {
 export function createSeparatorCard(
   name,
   icon,
-  sub_button = false,
+  groups = false,
   styles = undefined,
 ) {
   const card = {
@@ -33,7 +33,7 @@ export function createSeparatorCard(
     card_type: 'separator',
     name: name,
     icon: icon,
-    sub_button: sub_button,
+    sub_button: { main: groups.map((g) => ({ group: g })) },
   };
   if (styles) card.styles = styles;
   return card;

@@ -148,13 +148,13 @@ export class BonbonStrategy {
               }
               if (weather_entity_id && states[weather_entity_id]) {
                 if (sectionConfig.show_separator) {
-                  const sepName = !sectionConfig.show_card
+                  const separatorName = !sectionConfig.show_card
                     ? entities[weather_entity_id]?.name ||
                       states[weather_entity_id]?.attributes?.friendly_name ||
                       devices[entities[weather_entity_id]?.device_id]?.name ||
                       sectionConfig.name
                     : sectionConfig.name;
-                  const sepIcon = !sectionConfig.show_card
+                  const separatorIcon = !sectionConfig.show_card
                     ? getWeatherIcon(states[weather_entity_id]?.state)
                     : sectionConfig.icon;
                   const userSubButtons = sortEntities(
@@ -174,36 +174,30 @@ export class BonbonStrategy {
                       return createSubButton(c);
                     })
                     .filter((c) => c);
-                  const sepSubButton = {
-                    main: [
-                      {
-                        group: !sectionConfig.show_card
-                          ? [
-                              {
-                                entity: weather_entity_id,
-                                show_attribute: true,
-                                attribute: 'temperature',
-                                icon: 'mdi:thermometer',
-                                show_state: false,
-                                show_background: false,
-                                tap_action: {
-                                  action: 'more-info',
-                                  entity: weather_entity_id,
-                                },
-                              },
-                            ]
-                          : [],
-                      },
-                      {
-                        group: userSubButtons,
-                      },
-                    ],
-                  };
+                  const separatorSubButton = [
+                    !sectionConfig.show_card
+                      ? [
+                          {
+                            entity: weather_entity_id,
+                            show_attribute: true,
+                            attribute: 'temperature',
+                            icon: 'mdi:thermometer',
+                            show_state: false,
+                            show_background: false,
+                            tap_action: {
+                              action: 'more-info',
+                              entity: weather_entity_id,
+                            },
+                          },
+                        ]
+                      : [],
+                    userSubButtons,
+                  ];
                   section.cards.push(
                     createSeparatorCard(
-                      sepName,
-                      sepIcon,
-                      sepSubButton,
+                      separatorName,
+                      separatorIcon,
+                      separatorSubButton,
                       styles.bubbleSeparatorSubButtonBase,
                     ),
                   );
@@ -256,13 +250,7 @@ export class BonbonStrategy {
                     createSeparatorCard(
                       sectionConfig.name,
                       sectionConfig.icon,
-                      {
-                        main: [
-                          {
-                            group: userSubButtons,
-                          },
-                        ],
-                      },
+                      [userSubButtons],
                       styles.bubbleSeparatorSubButtonBase,
                     ),
                   );
@@ -310,13 +298,7 @@ export class BonbonStrategy {
                     createSeparatorCard(
                       sectionConfig.name,
                       sectionConfig.icon,
-                      {
-                        main: [
-                          {
-                            group: userSubButtons,
-                          },
-                        ],
-                      },
+                      [userSubButtons],
                       styles.bubbleSeparatorSubButtonBase,
                     ),
                   );
@@ -545,8 +527,8 @@ export class BonbonStrategy {
                           .map((nightlight) => nightlight.entity_id)
                           .indexOf(e.entity_id) == -1,
                     );
-                    const sepName = floor.name;
-                    const sepIcon =
+                    const separatorName = floor.name;
+                    const separatorIcon =
                       floor.icon ||
                       'mdi:home-floor-' +
                         String(floor.level).replace('-', 'negative-');
@@ -578,27 +560,21 @@ export class BonbonStrategy {
                             })
                             .flat()
                         : [];
-                    const sepSubButton = {
-                      main: [
-                        {
-                          group: floorLightsSubButtons,
-                        },
-                        {
-                          group: userSubButtons,
-                        },
-                      ],
-                    };
-                    const sepStyles = floorLightsSubButtons.length
+                    const separatorSubButton = [
+                      floorLightsSubButtons,
+                      userSubButtons,
+                    ];
+                    const separatorStyles = floorLightsSubButtons.length
                       ? sectionConfig.always_show_floor_lights_toggle
                         ? styles.bubbleSeparatorLightsSubButtonAlways
                         : styles.bubbleSeparatorLightsSubButtonDefault
                       : '';
                     section.cards.push(
                       createSeparatorCard(
-                        sepName,
-                        sepIcon,
-                        sepSubButton,
-                        styles.bubbleSeparatorSubButtonBase + sepStyles,
+                        separatorName,
+                        separatorIcon,
+                        separatorSubButton,
+                        styles.bubbleSeparatorSubButtonBase + separatorStyles,
                       ),
                     );
                   }
@@ -776,13 +752,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                {
-                                  main: [
-                                    {
-                                      group: userSubButtons,
-                                    },
-                                  ],
-                                },
+                                [userSubButtons],
                                 styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
@@ -885,13 +855,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                {
-                                  main: [
-                                    {
-                                      group: userSubButtons,
-                                    },
-                                  ],
-                                },
+                                [userSubButtons],
                                 styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
@@ -996,17 +960,11 @@ export class BonbonStrategy {
                                   return inArea || deviceInArea;
                                 }
                               });
-                            const sepSubButton = {
-                              main: [
-                                {
-                                  group: areaLightsSubButtons,
-                                },
-                                {
-                                  group: userSubButtons,
-                                },
-                              ],
-                            };
-                            const sepStyles = areaLightsSubButtons.length
+                            const separatorSubButton = [
+                              areaLightsSubButtons,
+                              userSubButtons,
+                            ];
+                            const separatorStyles = areaLightsSubButtons.length
                               ? sectionConfig.always_show_area_lights_toggle
                                 ? styles.bubbleSeparatorLightsSubButtonAlways
                                 : styles.bubbleSeparatorLightsSubButtonDefault
@@ -1015,8 +973,9 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                sepSubButton,
-                                styles.bubbleSeparatorSubButtonBase + sepStyles,
+                                separatorSubButton,
+                                styles.bubbleSeparatorSubButtonBase +
+                                  separatorStyles,
                               ),
                             );
                           }
@@ -1084,13 +1043,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                {
-                                  main: [
-                                    {
-                                      group: userSubButtons,
-                                    },
-                                  ],
-                                },
+                                [userSubButtons],
                                 styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
@@ -1159,13 +1112,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                {
-                                  main: [
-                                    {
-                                      group: userSubButtons,
-                                    },
-                                  ],
-                                },
+                                [userSubButtons],
                                 styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
@@ -1237,13 +1184,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                {
-                                  main: [
-                                    {
-                                      group: userSubButtons,
-                                    },
-                                  ],
-                                },
+                                [userSubButtons],
                                 styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
@@ -1315,13 +1256,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                {
-                                  main: [
-                                    {
-                                      group: userSubButtons,
-                                    },
-                                  ],
-                                },
+                                [userSubButtons],
                                 styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
@@ -1400,13 +1335,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                {
-                                  main: [
-                                    {
-                                      group: userSubButtons,
-                                    },
-                                  ],
-                                },
+                                [userSubButtons],
                                 styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
@@ -1516,13 +1445,7 @@ export class BonbonStrategy {
                                   sectionConfig.name || 'Custom Section',
                                   sectionConfig.icon ||
                                     'mdi:view-dashboard-edit',
-                                  {
-                                    main: [
-                                      {
-                                        group: userSubButtons,
-                                      },
-                                    ],
-                                  },
+                                  [userSubButtons],
                                   styles.bubbleSeparatorSubButtonBase,
                                 ),
                               );
@@ -1605,13 +1528,7 @@ export class BonbonStrategy {
                       createSeparatorCard(
                         sectionConfig.name || 'Custom Section',
                         sectionConfig.icon || 'mdi:view-dashboard-edit',
-                        {
-                          main: [
-                            {
-                              group: userSubButtons,
-                            },
-                          ],
-                        },
+                        [userSubButtons],
                         styles.bubbleSeparatorSubButtonBase,
                       ),
                     );
@@ -1708,13 +1625,7 @@ export class BonbonStrategy {
                       createSeparatorCard(
                         sectionConfig.name || 'Custom Section',
                         sectionConfig.icon || 'mdi:view-dashboard-edit',
-                        {
-                          main: [
-                            {
-                              group: userSubButtons,
-                            },
-                          ],
-                        },
+                        [userSubButtons],
                         styles.bubbleSeparatorSubButtonBase,
                       ),
                     );
