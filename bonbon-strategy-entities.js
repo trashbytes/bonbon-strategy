@@ -1,8 +1,8 @@
-function hasLabel(entity, label) {
+export function hasLabel(entity, label) {
   const labels = [label, `bonbon_${label}`];
-  if (entity?.labels?.some((l) => labels.includes(l))) return true;
+  if (entity.labels?.some((l) => labels.includes(l))) return true;
   if (
-    entity?.device_id &&
+    entity.device_id &&
     window._bonbon.devices?.[entity.device_id]?.labels?.some((l) =>
       labels.includes(l),
     )
@@ -11,27 +11,30 @@ function hasLabel(entity, label) {
   return false;
 }
 
-function getLightRank(e) {
-  if (hasLabel(e, 'mainlight')) return 1;
-  if (hasLabel(e, 'nightlight')) return 3;
-  return 2;
+function isHidden(entity) {
+  return entity.hidden || hasLabel(entity, 'hidden');
 }
 
-function isHiddenEntity(e) {
-  return e?.hidden || hasLabel(e, 'hidden');
+function isUserFacing(entity) {
+  return !entity.entity_category;
 }
 
-function isUserEntity(e) {
-  return !e?.entity_category;
-}
-
-function getOrderLabelNumber(entity) {
+function getOrderNumber(c) {
   const allLabels = [];
-  if (entity?.labels) allLabels.push(...entity.labels);
-  if (entity?.device_id && window._bonbon.devices?.[entity.device_id]?.labels) {
-    allLabels.push(...window._bonbon.devices[entity.device_id].labels);
+  if (c?.object?.bonbon_order || c?.object?.order) {
+    allLabels.push(
+      'order_' + parseInt(c?.object?.bonbon_order || c?.object?.order),
+    );
   }
-
+  if (c?.entity?.labels) {
+    allLabels.push(...c.entity.labels);
+  }
+  if (
+    c?.entity?.device_id &&
+    window._bonbon.devices?.[c?.entity.device_id]?.labels
+  ) {
+    allLabels.push(...window._bonbon.devices[c?.entity.device_id].labels);
+  }
   const orderLabel = allLabels.find((label) =>
     /^bonbon_order_\d+$|^order_\d+$/.test(label),
   );
@@ -42,85 +45,21 @@ function getOrderLabelNumber(entity) {
   return Infinity;
 }
 
-function getEntityDisplayName(entity) {
-  return (
-    entity?.name ||
-    window._bonbon.states?.[entity?.entity_id]?.attributes?.friendly_name ||
-    entity?.entity_id ||
-    ''
-  );
+function getEntityDisplayName(c) {
+  const name =
+    c?.entity?.name ||
+    window._bonbon.states?.[c?.entity?.entity_id]?.attributes?.friendly_name ||
+    c?.entity?.entity_id ||
+    '';
+  return name;
 }
 
-export function isEntityType(e, domain, suffix) {
-  if (!e?.entity_id) return false;
+export function isEntityType(c, domain, suffix) {
+  if (!c?.entity?.entity_id) return false;
   const prefix = (domain || '').endsWith('.') ? domain : (domain || '') + '.';
-  if (!e.entity_id.startsWith(prefix)) return false;
-  if (suffix) return e.entity_id.endsWith(suffix);
+  if (!c.entity.entity_id.startsWith(prefix)) return false;
+  if (suffix) return c.entity.entity_id.endsWith(suffix);
   return true;
-}
-
-export function getNightlights() {
-  return Object.values(window._bonbon.entities || {}).filter((e) => {
-    return (
-      isEntityType(e, 'light') &&
-      hasLabel(e, 'nightlight') &&
-      isUserEntity(e) &&
-      !isHiddenEntity(e)
-    );
-  });
-}
-
-export function getLightsOnFloor(floor) {
-  const lights = Object.values(window._bonbon.entities || {}).filter((e) => {
-    const isLight = isEntityType(e, 'light');
-    const device = window._bonbon.devices?.[e.device_id];
-    const area_id = e.area_id || device?.area_id;
-    const area = window._bonbon.areas[area_id];
-    const onFloor = area?.floor_id == floor.floor_id;
-    return isLight && isUserEntity(e) && onFloor && !isHiddenEntity(e);
-  });
-  let result = sortByName(lights, {});
-  result = sortLights(result);
-  result = sortEntities(result);
-  return result;
-}
-
-export function sortLights(list) {
-  return (list || []).sort((a, b) => {
-    const rankA = getLightRank(a);
-    const rankB = getLightRank(b);
-    return rankA - rankB;
-  });
-}
-
-export function getVisiblePersons() {
-  return Object.values(window._bonbon.entities || {}).filter(
-    (e) => isEntityType(e, 'person') && !isHiddenEntity(e) && isUserEntity(e),
-  );
-}
-
-export function getFavorites() {
-  return Object.values(window._bonbon.entities || {}).filter((e) => {
-    const isFavorite = hasLabel(e, 'favorite');
-    return isFavorite && isUserEntity(e) && !isHiddenEntity(e);
-  });
-}
-
-export function filterEntitiesInArea(predicate, area) {
-  const area_id = area?.area_id;
-  const categorizedEntityIds = area?.categorizedEntityIds;
-  return Object.values(window._bonbon.entities || {}).filter((e) => {
-    const inArea = e.area_id === area_id;
-    const device = window._bonbon.devices?.[e.device_id];
-    const deviceInArea = device && device.area_id === area_id;
-    if (!predicate(e)) return false;
-    if (!isUserEntity(e) || isHiddenEntity(e)) return false;
-    if (!(inArea || deviceInArea)) return false;
-    if (categorizedEntityIds && categorizedEntityIds.includes(e.entity_id))
-      return false;
-    if (categorizedEntityIds) categorizedEntityIds.push(e.entity_id);
-    return true;
-  });
 }
 
 export function sortByName(list) {
@@ -136,7 +75,7 @@ export function sortEntities(list) {
   const withoutOrder = [];
 
   (list || []).forEach((c) => {
-    const order = c.bonbon_order || c.order || getOrderLabelNumber(c);
+    const order = getOrderNumber(c);
     if (order !== Infinity) {
       withOrder.push(c);
     } else {
@@ -144,13 +83,13 @@ export function sortEntities(list) {
     }
   });
   withOrder.sort((a, b) => {
-    const orderA = a.bonbon_order || a.order || getOrderLabelNumber(a);
-    const orderB = b.bonbon_order || b.order || getOrderLabelNumber(b);
+    const orderA = getOrderNumber(a);
+    const orderB = getOrderNumber(b);
     return orderA - orderB;
   });
   const groups = {};
   withoutOrder.forEach((c) => {
-    const devId = c.device_id || '__no_device__';
+    const devId = c.entity?.device_id || '__no_device__';
     if (!groups[devId]) groups[devId] = [];
     groups[devId].push(c);
   });
@@ -161,58 +100,113 @@ export function sortEntities(list) {
   const groupEntries = Object.keys(groups).map((devId) => ({
     devId,
     device: window._bonbon.devices?.[devId] || null,
-    entities: groups[devId],
+    objects: groups[devId],
   }));
   groupEntries.sort((a, b) => {
     const firstA =
-      a.entities && a.entities.length
-        ? getEntityDisplayName(a.entities[0])
-        : '';
+      a.objects && a.objects.length ? getEntityDisplayName(a.objects[0]) : '';
     const firstB =
-      b.entities && b.entities.length
-        ? getEntityDisplayName(b.entities[0])
-        : '';
+      b.objects && b.objects.length ? getEntityDisplayName(b.objects[0]) : '';
     return firstA.localeCompare(firstB);
   });
-  const groupedEntities = groupEntries.flatMap((g) => g.entities);
-  return [...withOrder, ...groupedEntities];
-}
-
-export function findFirstEntityByPrefix(prefix) {
-  return (
-    Object.values(window._bonbon.entities || {}).find((e) =>
-      e.entity_id.startsWith(prefix),
-    )?.entity_id || false
-  );
-}
-
-export function getEntitiesByDeviceId(device_id) {
-  return Object.values(window._bonbon.entities || {}).filter(
-    (e) => e.device_id === device_id && isUserEntity(e) && !isHiddenEntity(e),
-  );
+  const groupedObjects = groupEntries.flatMap((g) => g.objects);
+  return [...withOrder, ...groupedObjects];
 }
 
 export function resolveEntities(c) {
-  return (Array.isArray(c) ? c : [c])
-    .map(function (c) {
-      if (c !== null && typeof c === 'object') {
-        return c;
-      }
-      if (typeof c === 'string') {
-        if (c.includes('*')) {
-          const esc = (s) => s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
-          const pattern = '^' + c.split('*').map(esc).join('.*') + '$';
-          const re = new RegExp(pattern);
-          return Object.values(window._bonbon.entities || {}).filter((e) =>
-            re.test(e.entity_id),
-          );
+  return sortEntities(
+    (Array.isArray(c) ? c : [c])
+      .map(function (c) {
+        if (c) {
+          const elements = [];
+          if (typeof c === 'string') {
+            if (c.includes('*')) {
+              const esc = (s) => s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
+              const pattern = '^' + c.split('*').map(esc).join('.*') + '$';
+              const re = new RegExp(pattern);
+              Object.values(window._bonbon.entities || {})
+                .filter((e) => re.test(e.entity_id))
+                .forEach((e) => {
+                  if (isUserFacing(e) && !isHidden(e)) {
+                    elements.push({ entity: e });
+                  }
+                });
+            } else {
+              if (
+                window._bonbon.entities?.[c] &&
+                isUserFacing(window._bonbon.entities?.[c]) &&
+                !isHidden(window._bonbon.entities?.[c])
+              ) {
+                elements.push({ entity: window._bonbon.entities?.[c] });
+              }
+              if (window._bonbon.devices?.[c]) {
+                Object.values(window._bonbon.entities || {}).forEach((e) => {
+                  if (e.device_id === c && isUserFacing(e) && !isHidden(e)) {
+                    elements.push({ entity: e });
+                  }
+                });
+              }
+              if (window._bonbon.labels?.[c]) {
+                window._bonbon.labels[c].forEach((e) => {
+                  if (isUserFacing(e) && !isHidden(e)) {
+                    elements.push({ entity: e });
+                  }
+                });
+              }
+              if (window._bonbon.labels?.['bonbon_' + c]) {
+                window._bonbon.labels['bonbon_' + c].forEach((e) => {
+                  if (isUserFacing(e) && !isHidden(e)) {
+                    elements.push({ entity: e });
+                  }
+                });
+              }
+            }
+          } else if (
+            (c.entity_id || c.entity) &&
+            (window._bonbon.entities[c.entity_id] ||
+              window._bonbon.entities[c.entity])
+          ) {
+            elements.push({
+              entity:
+                window._bonbon.entities[c.entity_id] ||
+                window._bonbon.entities[c.entity],
+              object: c,
+            });
+          } else {
+            elements.push({
+              object: c,
+            });
+          }
+          return elements;
         }
-        if (window._bonbon.entities?.[c]) return window._bonbon.entities[c];
-        if (window._bonbon.devices?.[c]) return getEntitiesByDeviceId(c);
-        if (window._bonbon.labels?.[c]) return window._bonbon.labels[c];
-      }
-      return false;
-    })
-    .flat()
-    .filter((c) => c);
+      })
+      .flat()
+      .filter((c) => c),
+  );
+}
+
+export function resolveEntity(c) {
+  return resolveEntities(c)[0];
+}
+
+export function inArea(c, area) {
+  if (c && area) {
+    const inArea =
+      c.entity?.area_id === (area.area_id || area) ||
+      c.object?.area_id === (area.area_id || area);
+    const device = window._bonbon.devices[c.entity?.device_id];
+    const deviceInArea = device && device.area_id === (area.area_id || area);
+    return inArea || deviceInArea;
+  }
+  return false;
+}
+
+export function onFloor(c, floor) {
+  if (c && floor) {
+    const areasOnFloor = Object.values(window._bonbon.areas).filter((area) => {
+      return area.floor_id == (floor.floor_id || floor);
+    });
+    return areasOnFloor.some((area) => inArea(c, area));
+  }
+  return false;
 }

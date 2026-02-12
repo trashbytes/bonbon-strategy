@@ -6,13 +6,8 @@ const { defaultConfig } = await import(
 const { css, getStyles } = await import(
   `./bonbon-strategy-styles.js?hacstag=${hacstag}`
 );
-const {
-  getWeatherIcon,
-  androidGesturesFix,
-  mergeDeep,
-  getAllEntityIds,
-  getAreaColors,
-} = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
+const { getWeatherIcon, androidGesturesFix, mergeDeep, getAreaColors } =
+  await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const {
   createButton,
   createSeparatorCard,
@@ -21,18 +16,8 @@ const {
   createSubButton,
 } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
 
-const {
-  isEntityType,
-  getNightlights,
-  getLightsOnFloor,
-  sortLights,
-  sortEntities,
-  filterEntitiesInArea,
-  getVisiblePersons,
-  getFavorites,
-  findFirstEntityByPrefix,
-  resolveEntities,
-} = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
+const { resolveEntity, resolveEntities, onFloor, inArea, hasLabel } =
+  await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
@@ -74,14 +59,6 @@ export class BonbonStrategy {
 
     androidGesturesFix();
     const ha = document.querySelector('home-assistant');
-    const autoLightDarkMode = () => {
-      const desiredDark = states['sun.sun']?.state === 'below_horizon';
-      if (!hass?.selectedTheme) return;
-      if (hass.selectedTheme.dark !== desiredDark) {
-        hass.selectedTheme.dark = desiredDark;
-        ha._applyTheme();
-      }
-    };
 
     try {
       const views = [];
@@ -91,43 +68,6 @@ export class BonbonStrategy {
           ?.title ||
         hass?.config?.location_name ||
         'Home';
-      if (
-        config.auto_light_dark_mode &&
-        states['sun.sun'] &&
-        hass?.selectedTheme
-      ) {
-        autoLightDarkMode();
-        const pollInterval = 60 * 1000;
-        let _bonbonSunPollTimer = null;
-        function _bonbonStartSunPoll() {
-          if (_bonbonSunPollTimer) return;
-          if (document.visibilityState !== 'visible') return;
-          _bonbonSunPollTimer = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-              autoLightDarkMode();
-            }
-          }, pollInterval);
-        }
-        function _bonbonStopSunPoll() {
-          if (_bonbonSunPollTimer) {
-            clearInterval(_bonbonSunPollTimer);
-            _bonbonSunPollTimer = null;
-          }
-        }
-        if (document.visibilityState === 'visible') {
-          autoLightDarkMode();
-          _bonbonStartSunPoll();
-        }
-
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            autoLightDarkMode();
-            _bonbonStartSunPoll();
-          } else {
-            _bonbonStopSunPoll();
-          }
-        });
-      }
 
       const isDark =
         document
@@ -157,7 +97,7 @@ export class BonbonStrategy {
                 !weather_entity_id ||
                 !weather_entity_id.startsWith('weather.')
               ) {
-                weather_entity_id = findFirstEntityByPrefix('weather.');
+                weather_entity_id = resolveEntity('weather.*').entity.entity_id;
               }
               if (weather_entity_id && states[weather_entity_id]) {
                 if (sectionConfig.show_separator) {
@@ -170,16 +110,11 @@ export class BonbonStrategy {
                   const separatorIcon = !sectionConfig.show_card
                     ? getWeatherIcon(states[weather_entity_id]?.state)
                     : sectionConfig.icon;
-                  const userSubButtons = sortEntities(
-                    resolveEntities(sectionConfig.custom_separator_buttons),
-                  )
-                    .map(function (c) {
-                      if (c.entity) {
-                        return c;
-                      }
-                      return createSubButton(c);
-                    })
-                    .filter((c) => c);
+                  const userSubButtons = resolveEntities(
+                    sectionConfig.custom_separator_buttons,
+                  ).map(function (c) {
+                    return createSubButton(c);
+                  });
                   const separatorSubButton = [
                     !sectionConfig.show_card
                       ? [
@@ -230,19 +165,14 @@ export class BonbonStrategy {
               }
               break;
             case 'bonbon_persons':
-              const persons = getVisiblePersons();
+              const persons = resolveEntities('person.*');
               if (persons.length) {
                 if (sectionConfig.show_separator) {
-                  const userSubButtons = sortEntities(
-                    resolveEntities(sectionConfig.custom_separator_buttons),
-                  )
-                    .map(function (c) {
-                      if (c.entity) {
-                        return c;
-                      }
-                      return createSubButton(c);
-                    })
-                    .filter((c) => c);
+                  const userSubButtons = resolveEntities(
+                    sectionConfig.custom_separator_buttons,
+                  ).map(function (c) {
+                    return createSubButton(c);
+                  });
                   section.cards.push(
                     createSeparatorCard(
                       sectionConfig.name,
@@ -254,11 +184,11 @@ export class BonbonStrategy {
                 }
                 section.cards.push(
                   createGrid(
-                    persons.map((e) =>
+                    persons.map((c) =>
                       createBubbleCard({
                         card_type: 'button',
                         button_type: 'state',
-                        entity: e.entity_id,
+                        entity: c.entity.entity_id,
                         show_state: true,
                       }),
                     ),
@@ -268,20 +198,15 @@ export class BonbonStrategy {
               }
               break;
             case 'bonbon_favorites':
-              const favorites = getFavorites();
+              const favorites = resolveEntities('favorite');
 
               if (favorites.length) {
                 if (sectionConfig.show_separator) {
-                  const userSubButtons = sortEntities(
-                    resolveEntities(sectionConfig.custom_separator_buttons),
-                  )
-                    .map(function (c) {
-                      if (c.entity) {
-                        return c;
-                      }
-                      return createSubButton(c);
-                    })
-                    .filter((c) => c);
+                  const userSubButtons = resolveEntities(
+                    sectionConfig.custom_separator_buttons,
+                  ).map(function (c) {
+                    return createSubButton(c);
+                  });
                   section.cards.push(
                     createSeparatorCard(
                       sectionConfig.name,
@@ -293,7 +218,7 @@ export class BonbonStrategy {
                 }
                 section.cards.push(
                   createGrid(
-                    favorites.map((e) => createButton(e, styles)),
+                    favorites.map((c) => createButton(c.entity, styles)),
                     sectionConfig,
                   ),
                 );
@@ -309,11 +234,22 @@ export class BonbonStrategy {
                   level: 99,
                 },
               }).map((floor, index, floors) => {
-                floor._lights = getLightsOnFloor(floor);
+                floor._lights = resolveEntities('light.*').filter((c) => {
+                  return onFloor(c, floor);
+                });
                 return floor;
               });
 
-              const nightlights = getNightlights();
+              const nightlights = [];
+              const notNightlights = [];
+
+              resolveEntities('light.*').forEach((c) => {
+                if (hasLabel(c.entity, 'nightlight')) {
+                  nightlights.push(c);
+                } else {
+                  notNightlights.push(c);
+                }
+              });
 
               const _areas = Object.values(areas)
                 .filter(
@@ -332,79 +268,69 @@ export class BonbonStrategy {
                     area.humidity_entity_id,
                   ];
 
-                  area.co2_entity_id = (filterEntitiesInArea(
-                    (e) =>
-                      states[e.entity_id]?.attributes?.device_class ===
-                        'carbon_dioxide' ||
-                      (e.entity_id.includes('co2') &&
-                        states[e.entity_id]?.attributes?.unit_of_measurement ===
-                          'ppm'),
-                    area,
-                  ) || [])[0]?.entity_id;
+                  area.co2_entity_id = resolveEntities('sensor.*').filter(
+                    (c) => {
+                      return (
+                        inArea(c, area) &&
+                        (states[c.entity.entity_id]?.attributes
+                          ?.device_class === 'carbon_dioxide' ||
+                          (c.entity.entity_id.includes('co2') &&
+                            states[c.entity.entity_id]?.attributes
+                              ?.unit_of_measurement === 'ppm'))
+                      );
+                    },
+                  )[0];
 
-                  Object.values(config?.views?.bonbon_area?.sections)
-                    .filter((s) => {
-                      return !s.hidden;
-                    })
-                    .map((s) => {
-                      return s.cards;
-                    })
-                    .flat()
-                    .forEach((c) => {
-                      if (c !== null && typeof c === 'object') {
-                        getAllEntityIds(c).forEach(function (entity_id) {
-                          if (entities[entity_id]) {
-                            area.categorizedEntityIds.push(entity_id);
-                          }
-                        });
-                      }
-                      if (typeof c === 'string' && entities[c]) {
-                        area.categorizedEntityIds.push(c);
-                      }
-                      if (typeof c === 'string' && labels[c]) {
-                        labels[c].forEach((e) => {
-                          area.categorizedEntityIds.push(e.entity_id);
-                        });
-                      }
-                    });
+                  area._lights = resolveEntities('light.*').filter((c) => {
+                    return (
+                      inArea(c, area) &&
+                      area.categorizedEntityIds.push(c.entity.entity_id)
+                    );
+                  });
+                  area._switches = resolveEntities('switch.*').filter((c) => {
+                    return (
+                      inArea(c, area) &&
+                      area.categorizedEntityIds.push(c.entity.entity_id)
+                    );
+                  });
+                  area._openings = resolveEntities(
+                    'binary_sensor.*_contact',
+                  ).filter((c) => {
+                    return (
+                      inArea(c, area) &&
+                      area.categorizedEntityIds.push(c.entity.entity_id)
+                    );
+                  });
 
-                  area._lights = sortLights(
-                    filterEntitiesInArea((e) => isEntityType(e, 'light'), area),
-                  );
-                  area._switches = sortEntities(
-                    filterEntitiesInArea(
-                      (e) => isEntityType(e, 'switch'),
-                      area,
-                    ),
-                  );
-                  area._openings = sortEntities(
-                    filterEntitiesInArea(
-                      (e) => isEntityType(e, 'binary_sensor', '_contact'),
-                      area,
-                    ),
+                  area._media = resolveEntities('media_player.*').filter(
+                    (c) => {
+                      return (
+                        inArea(c, area) &&
+                        area.categorizedEntityIds.push(c.entity.entity_id)
+                      );
+                    },
                   );
 
-                  area._media = sortEntities(
-                    filterEntitiesInArea(
-                      (e) => isEntityType(e, 'media_player'),
-                      area,
-                    ),
-                  );
+                  area._covers = resolveEntities('cover.*').filter((c) => {
+                    return (
+                      inArea(c, area) &&
+                      area.categorizedEntityIds.push(c.entity.entity_id)
+                    );
+                  });
 
-                  area._covers = sortEntities(
-                    filterEntitiesInArea((e) => isEntityType(e, 'cover'), area),
-                  );
+                  area._climates = resolveEntities('climate.*').filter((c) => {
+                    return (
+                      inArea(c, area) &&
+                      area.categorizedEntityIds.push(c.entity.entity_id)
+                    );
+                  });
 
-                  area._climates = sortEntities(
-                    filterEntitiesInArea(
-                      (e) => isEntityType(e, 'climate'),
-                      area,
-                    ),
-                  );
-
-                  area._misc = sortEntities(
-                    filterEntitiesInArea((e) => true, area),
-                  );
+                  area._misc = resolveEntities('*').filter((c) => {
+                    return (
+                      inArea(c, area) &&
+                      !area.categorizedEntityIds.includes(c.entity.entity_id)
+                    );
+                  });
                   return area;
                 });
 
@@ -414,53 +340,31 @@ export class BonbonStrategy {
                 );
                 if (floorAreas.length) {
                   if (sectionConfig.show_separator) {
-                    const userSubButtons = sortEntities(
-                      resolveEntities(sectionConfig.custom_separator_buttons),
+                    const userSubButtons = resolveEntities(
+                      sectionConfig.custom_separator_buttons,
                     )
-                      .map(function (c) {
-                        if (c.entity) {
-                          return c;
-                        }
-                        return createSubButton(c);
-                      })
                       .filter((c) => {
-                        if (
-                          c.bonbon_floor_id == floor.floor_id ||
-                          c.floor_id == floor.floor_id
-                        ) {
-                          return true;
-                        }
-                        const e = c.entity
-                          ? entities[c.entity]
-                          : c.entity_id
-                            ? entities[c.entity_id]
-                            : undefined;
-                        if (e) {
-                          const area = _areas[e.area_id];
-                          const onFloor = area?.floor_id == floor.floor_id;
-                          return onFloor;
-                        }
+                        return onFloor(c, floor);
+                      })
+                      .map(function (c) {
+                        return createSubButton(c);
                       });
 
-                    const notNightlights = (floor._lights || []).filter(
-                      (e) =>
-                        nightlights
-                          .map((nightlight) => nightlight.entity_id)
-                          .indexOf(e.entity_id) == -1,
-                    );
+                    const notNightlightsOnFloor = notNightlights.filter((c) => {
+                      return onFloor(c, floor);
+                    });
                     const separatorName = floor.name;
                     const separatorIcon =
                       floor.icon ||
                       'mdi:home-floor-' +
                         String(floor.level).replace('-', 'negative-');
-
                     const floorLightsSubButtons =
                       sectionConfig.show_floor_lights_toggle
-                        ? (notNightlights || [])
-                            .map((e, index, filtered) => {
+                        ? (notNightlightsOnFloor || [])
+                            .map((c, index, filtered) => {
                               return ['off', 'on'].map((state) => {
                                 return {
-                                  entity: e.entity_id,
+                                  entity: c.entity.entity_id,
                                   show_state: false,
                                   content_layout: 'icon-left',
                                   use_accent_color: true,
@@ -472,7 +376,7 @@ export class BonbonStrategy {
                                     service: 'light.turn_' + state,
                                     target: {
                                       entity_id: filtered.map(
-                                        (e) => e.entity_id,
+                                        (c) => c.entity.entity_id,
                                       ),
                                     },
                                   },
@@ -501,12 +405,9 @@ export class BonbonStrategy {
                   }
 
                   const floorCards = floorAreas.map((area) => {
-                    const notNightlights = (area._lights || []).filter(
-                      (e) =>
-                        nightlights
-                          .map((n) => n.entity_id)
-                          .indexOf(e.entity_id) == -1,
-                    );
+                    const notNightlightsInArea = notNightlights.filter((c) => {
+                      return inArea(c, area);
+                    });
                     return createBubbleCard({
                       card_type: 'button',
                       button_type: 'name',
@@ -524,10 +425,10 @@ export class BonbonStrategy {
                       },
                       sub_button: {
                         main: sectionConfig.show_area_lights_toggle
-                          ? (notNightlights || [])
-                              .map((e, index, filtered) => {
+                          ? (notNightlightsInArea || [])
+                              .map((c, index, filtered) => {
                                 return ['off', 'on'].map((state) => ({
-                                  entity: e.entity_id,
+                                  entity: c.entity.entity_id,
                                   show_state: false,
                                   content_layout: 'icon-left',
                                   use_accent_color: true,
@@ -539,7 +440,7 @@ export class BonbonStrategy {
                                     service: 'light.turn_' + state,
                                     target: {
                                       entity_id: filtered.map(
-                                        (e) => e.entity_id,
+                                        (c) => c.entity.entity_id,
                                       ),
                                     },
                                   },
@@ -625,37 +526,14 @@ export class BonbonStrategy {
                           area.co2_entity_id
                         )
                           if (sectionConfig.show_separator) {
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             section.cards.push(
                               createSeparatorCard(
@@ -716,37 +594,14 @@ export class BonbonStrategy {
                       case 'bonbon_climate':
                         if (area._climates.length) {
                           if (sectionConfig.show_separator) {
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             section.cards.push(
                               createSeparatorCard(
@@ -757,10 +612,10 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const climateCards = area._climates.map((e) =>
+                          const climateCards = area._climates.map((c) =>
                             createBubbleCard({
                               card_type: 'climate',
-                              entity: e.entity_id,
+                              entity: c.entity.entity_id,
                               show_state: true,
                               state_color: true,
                               show_last_changed: true,
@@ -780,20 +635,19 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_lights':
                         if (area._lights.length) {
-                          const notNightlights = (area._lights || []).filter(
-                            (e) =>
-                              nightlights
-                                .map((nightlight) => nightlight.entity_id)
-                                .indexOf(e.entity_id) == -1,
+                          const notNightlightsInArea = notNightlights.filter(
+                            (c) => {
+                              return inArea(c, area);
+                            },
                           );
                           if (sectionConfig.show_separator) {
                             const areaLightsSubButtons =
                               sectionConfig.show_area_lights_toggle
-                                ? (notNightlights || [])
-                                    .map((e, index, filtered) => {
+                                ? (notNightlightsInArea || [])
+                                    .map((c, index, filtered) => {
                                       return ['off', 'on'].map((state) => {
                                         return {
-                                          entity: e.entity_id,
+                                          entity: c.entity.entity_id,
                                           show_state: false,
                                           content_layout: 'icon-left',
                                           use_accent_color: true,
@@ -805,7 +659,7 @@ export class BonbonStrategy {
                                             service: 'light.turn_' + state,
                                             target: {
                                               entity_id: filtered.map(
-                                                (e) => e.entity_id,
+                                                (c) => c.entity.entity_id,
                                               ),
                                             },
                                           },
@@ -815,37 +669,14 @@ export class BonbonStrategy {
                                     .flat()
                                 : [];
 
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             const separatorSubButton = [
                               areaLightsSubButtons,
@@ -866,10 +697,10 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const lightCards = area._lights.map((e) =>
+                          const lightCards = area._lights.map((c) =>
                             createBubbleCard({
                               card_type: 'button',
-                              entity: e.entity_id,
+                              entity: c.entity.entity_id,
                               show_state: true,
                               show_last_changed: true,
                               use_accent_color: true,
@@ -884,37 +715,14 @@ export class BonbonStrategy {
                       case 'bonbon_switches':
                         if (area._switches.length) {
                           if (sectionConfig.show_separator) {
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             section.cards.push(
                               createSeparatorCard(
@@ -925,10 +733,10 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const switchCards = area._switches.map((e) =>
+                          const switchCards = area._switches.map((c) =>
                             createBubbleCard({
                               card_type: 'button',
-                              entity: e.entity_id,
+                              entity: c.entity.entity_id,
                               show_state: true,
                               show_last_changed: true,
                               use_accent_color: true,
@@ -943,37 +751,14 @@ export class BonbonStrategy {
                       case 'bonbon_media':
                         if (area._media.length) {
                           if (sectionConfig.show_separator) {
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             section.cards.push(
                               createSeparatorCard(
@@ -984,10 +769,10 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const mediaCards = area._media.map((e) =>
+                          const mediaCards = area._media.map((c) =>
                             createBubbleCard({
                               card_type: 'media-player',
-                              entity: e.entity_id,
+                              entity: c.entity.entity_id,
                               show_state: true,
                               show_last_changed: true,
                               use_accent_color: true,
@@ -1005,37 +790,14 @@ export class BonbonStrategy {
                       case 'bonbon_openings':
                         if (area._openings.length) {
                           if (sectionConfig.show_separator) {
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             section.cards.push(
                               createSeparatorCard(
@@ -1046,10 +808,10 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const openingCards = area._openings.map((e) =>
+                          const openingCards = area._openings.map((c) =>
                             createBubbleCard({
                               card_type: 'button',
-                              entity: e.entity_id,
+                              entity: c.entity.entity_id,
                               show_state: true,
                               show_last_changed: true,
                               use_accent_color: true,
@@ -1067,37 +829,14 @@ export class BonbonStrategy {
                       case 'bonbon_covers':
                         if (area._covers.length) {
                           if (sectionConfig.show_separator) {
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             section.cards.push(
                               createSeparatorCard(
@@ -1108,10 +847,10 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const coverCards = area._covers.map((e) =>
+                          const coverCards = area._covers.map((c) =>
                             createBubbleCard({
                               card_type: 'cover',
-                              entity: e.entity_id,
+                              entity: c.entity.entity_id,
                               show_state: true,
                               show_last_changed: true,
                               use_accent_color: true,
@@ -1130,41 +869,23 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_miscellaneous':
                         const miscCards = area._misc
-                          .filter((e) => !area.categorizedEntityIds.includes(e))
-                          .map((e) => createButton(e, styles));
+                          .filter(
+                            (c) =>
+                              !area.categorizedEntityIds.includes(
+                                c.entity.entity_id,
+                              ),
+                          )
+                          .map((c) => createButton(c.entity, styles));
                         if (miscCards.length) {
                           if (sectionConfig.show_separator) {
-                            const userSubButtons = sortEntities(
-                              resolveEntities(
-                                sectionConfig.custom_separator_buttons,
-                              ),
+                            const userSubButtons = resolveEntities(
+                              sectionConfig.custom_separator_buttons,
                             )
-                              .map(function (c) {
-                                if (c.entity) {
-                                  return c;
-                                }
-                                return createSubButton(c);
-                              })
                               .filter((c) => {
-                                if (
-                                  c.bonbon_area_id == area.area_id ||
-                                  c.area_id == area.area_id
-                                ) {
-                                  return true;
-                                }
-
-                                const e = c.entity
-                                  ? entities[c.entity]
-                                  : c.entity_id
-                                    ? entities[c.entity_id]
-                                    : undefined;
-                                if (e) {
-                                  const inArea = e.area_id === area.area_id;
-                                  const device = devices[e.device_id];
-                                  const deviceInArea =
-                                    device && device.area_id === area.area_id;
-                                  return inArea || deviceInArea;
-                                }
+                                return inArea(c);
+                              })
+                              .map(function (c) {
+                                return createSubButton(c);
                               });
                             section.cards.push(
                               createSeparatorCard(
@@ -1187,44 +908,22 @@ export class BonbonStrategy {
                           (!sectionConfig.area_id ||
                             sectionConfig.area_id == area.area_id)
                         ) {
-                          const userCards = sortEntities(
-                            resolveEntities(sectionConfig.cards),
-                          )
-                            .map(function (c) {
-                              if (c.type) {
-                                return c;
-                              }
-                              return createButton(c.entity_id, styles);
-                            })
+                          const userCards = resolveEntities(sectionConfig.cards)
                             .filter((c) => {
-                              if (
-                                sectionConfig.area_id == area.area_id ||
-                                c.bonbon_area_id == area.area_id ||
-                                c.area_id == area.area_id
-                              ) {
-                                return true;
-                              }
-                              const e = c.entity
-                                ? entities[c.entity]
-                                : c.entity_id
-                                  ? entities[c.entity_id]
-                                  : undefined;
-                              if (e) {
-                                area.categorizedEntityIds.push(e);
-                                const inArea = e.area_id === area.area_id;
-                                const device = devices[e.device_id];
-                                const deviceInArea =
-                                  device && device.area_id === area.area_id;
-                                return inArea || deviceInArea;
-                              }
-                              return false;
+                              return (
+                                inArea(c) &&
+                                area.categorizedEntityIds.push(
+                                  c?.entity?.entity_id,
+                                )
+                              );
+                            })
+                            .map(function (c) {
+                              return c.object || createButton(c.entity, styles);
                             });
                           if (userCards.length) {
                             if (sectionConfig.show_separator) {
-                              const userSubButtons = sortEntities(
-                                resolveEntities(
-                                  sectionConfig.custom_separator_buttons,
-                                ),
+                              const userSubButtons = resolveEntities(
+                                sectionConfig.custom_separator_buttons,
                               )
                                 .map(function (c) {
                                   if (c.entity) {
@@ -1239,19 +938,7 @@ export class BonbonStrategy {
                                   ) {
                                     return true;
                                   }
-
-                                  const e = c.entity
-                                    ? entities[c.entity]
-                                    : c.entity_id
-                                      ? entities[c.entity_id]
-                                      : undefined;
-                                  if (e) {
-                                    const inArea = e.area_id === area.area_id;
-                                    const device = devices[e.device_id];
-                                    const deviceInArea =
-                                      device && device.area_id === area.area_id;
-                                    return inArea || deviceInArea;
-                                  }
+                                  return inArea(c);
                                 });
                               section.cards.push(
                                 createSeparatorCard(
@@ -1296,20 +983,15 @@ export class BonbonStrategy {
               break;
             default:
               if (sectionConfig.cards && sectionConfig.cards.length) {
-                const userCards = sortEntities(
-                  resolveEntities(sectionConfig.cards),
-                )
-                  .map(function (c) {
-                    if (c.type) {
-                      return c;
-                    }
-                    return createButton(c.entity_id, styles);
-                  })
-                  .filter((c) => c);
+                const userCards = resolveEntities(sectionConfig.cards).map(
+                  function (c) {
+                    return c.object || createButton(c.entity, styles);
+                  },
+                );
                 if (userCards.length) {
                   if (sectionConfig.show_separator) {
-                    const userSubButtons = sortEntities(
-                      resolveEntities(sectionConfig.custom_separator_buttons),
+                    const userSubButtons = resolveEntities(
+                      sectionConfig.custom_separator_buttons,
                     )
                       .map(function (c) {
                         if (c.entity) {
@@ -1371,29 +1053,19 @@ export class BonbonStrategy {
               const sectionConfig = viewConfig.sections[key];
               const section = { cards: [] };
               if (sectionConfig.cards && sectionConfig.cards.length) {
-                const userCards = sortEntities(
-                  resolveEntities(sectionConfig.cards),
-                )
-                  .map(function (c) {
-                    if (c.type) {
-                      return c;
-                    }
-                    return createButton(c.entity_id, styles);
-                  })
-                  .filter((c) => c);
+                const userCards = resolveEntities(sectionConfig.cards).map(
+                  function (c) {
+                    return c.object || createButton(c.entity, styles);
+                  },
+                );
 
                 if (userCards.length) {
                   if (sectionConfig.show_separator) {
-                    const userSubButtons = sortEntities(
-                      resolveEntities(sectionConfig.custom_separator_buttons),
-                    )
-                      .map(function (c) {
-                        if (c.entity) {
-                          return c;
-                        }
-                        return createSubButton(c);
-                      })
-                      .filter((c) => c);
+                    const userSubButtons = resolveEntities(
+                      sectionConfig.custom_separator_buttons,
+                    ).map(function (c) {
+                      return createSubButton(c);
+                    });
                     section.cards.push(
                       createSeparatorCard(
                         sectionConfig.name || 'Custom Section',

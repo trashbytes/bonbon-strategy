@@ -20,7 +20,7 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 - Areas (add the label `hidden` to hide an area)
 - Temperature, Humidity and CO2
 - Climate (HVAC)
-- Lights (add the labels `mainlight` and `nightlight` if needed)
+- Lights
 - Switches
 - Media Players
 - Openings (Doors & Windows)
@@ -29,9 +29,10 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 - Custom views, sections and cards (see configuration)
 
 You can hide anything with the label `hidden` or by disabling the `Visible` setting.
-All entities are ordered alphabetically by default but are grouped by device, if they are in the same section. Though there is an additional rule for lights: If lights have the label `mainlight` they are listed first, if they have the label `nightlight` they are listed last. The latter are also excluded from the area or floor toggles.
+All entities are ordered alphabetically by default but are grouped by device, if they are in the same section.
 You can override the order by adding labels like `order_1`, `order_2`, etc.
 You can add the prefix `bonbon_` to any of these labels in case it interferes with your setup.
+You can add the label `nightlight` to lights to exclude them from area and floor toggles.
 
 ## Dependencies
 
@@ -280,7 +281,3 @@ You can add custom sections like this:
 When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section. Same goes for custom separator cards in areas, though they can also be added to floors in the home view and restricted to a specific one the same way with `floor_id: <floor_id>` and `bonbon_floor_id: <floor_id>` respectively.
 
 When using your own cards you can use card_mod to style them to look like the rest of Bonbon Strategy. Some variables will be available to you, like `--bonbon-box-shadow` and `--bubble-button-border-radius`, which should get you most of the way there.
-
-### Auto Light/Dark Mode
-
-If your theme supports it and `auto_light_dark_mode` is set to `true`, then Bonbon Strategy will try to automatically switch between light and dark mode depending on the state of the sun. It should work independently from your browser and operating system.

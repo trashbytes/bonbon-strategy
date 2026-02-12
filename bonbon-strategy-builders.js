@@ -40,12 +40,15 @@ export function createSeparatorCard(
   return card;
 }
 
-export function createSubButton(entity) {
+export function createSubButton(c) {
+  if (c.object) {
+    return c.object;
+  }
   const isToggle =
-    entity?.entity_id.startsWith('light.') ||
-    entity?.entity_id.startsWith('switch.');
+    c?.entity?.entity_id.startsWith('light.') ||
+    c?.entity?.entity_id.startsWith('switch.');
   return {
-    entity: entity.entity_id,
+    entity: c?.entity.entity_id,
     tap_action: { action: isToggle ? 'toggle' : 'more-info' },
   };
 }
