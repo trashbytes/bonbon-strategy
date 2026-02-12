@@ -40,7 +40,6 @@ export function createSeparatorCard(
 }
 
 export function createSubButton(entity) {
-  console.log(entity);
   const isToggle =
     entity?.entity_id.startsWith('light.') ||
     entity?.entity_id.startsWith('switch.');
