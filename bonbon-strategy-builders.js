@@ -54,17 +54,17 @@ export function resolveColumns(sectionConfig, count) {
   return (
     sectionConfig.columns ||
     Math.min(
-      Math.max(sectionConfig.min_columns || 1, count),
+      Math.max(sectionConfig.min_columns || 1, count || 0),
       sectionConfig.max_columns || 1,
     )
   );
 }
 
-export function createGrid(cardsArray, sectionConfig, count, square = false) {
+export function createGrid(cardsArray, sectionConfig) {
   return {
     type: 'grid',
-    columns: resolveColumns(sectionConfig, count),
-    square: square,
+    columns: resolveColumns(sectionConfig, cardsArray?.length),
+    square: false,
     cards: cardsArray,
   };
 }

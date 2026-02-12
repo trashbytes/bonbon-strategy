@@ -40,6 +40,8 @@ export class BonbonStrategy {
     const entities = hass.entities;
     const states = hass.states;
     const devices = hass.devices;
+    const floors = hass.floors;
+    const areas = hass.areas;
     const labels = Object.values(entities).reduce((acc, e) => {
       const allLabels = [];
       if (e.labels && Array.isArray(e.labels)) {
@@ -61,7 +63,14 @@ export class BonbonStrategy {
     }, {});
 
     if (typeof window !== 'undefined') {
-      window._bonbon = window._bonbon || { entities, devices, states, labels };
+      window._bonbon = window._bonbon || {
+        entities,
+        devices,
+        states,
+        labels,
+        floors,
+        areas,
+      };
     }
 
     androidGesturesFix();
@@ -211,8 +220,6 @@ export class BonbonStrategy {
                           },
                         ],
                         sectionConfig,
-                        1,
-                        false,
                       ),
                     );
                   }
@@ -253,8 +260,6 @@ export class BonbonStrategy {
                       }),
                     ),
                     sectionConfig,
-                    persons.length,
-                    false,
                   ),
                 );
               }
@@ -287,15 +292,13 @@ export class BonbonStrategy {
                   createGrid(
                     favorites.map((e) => createButton(e, styles)),
                     sectionConfig,
-                    favorites.length,
-                    false,
                   ),
                 );
               }
               break;
             case 'bonbon_areas':
-              const floors = Object.values({
-                ...(hass.floors || {}),
+              const _floors = Object.values({
+                ...(floors || {}),
                 _areas: {
                   name: sectionConfig.name,
                   floor_id: '_areas',
@@ -303,13 +306,13 @@ export class BonbonStrategy {
                   level: 99,
                 },
               }).map((floor, index, floors) => {
-                floor._lights = getLightsOnFloor(floor, hass.areas);
+                floor._lights = getLightsOnFloor(floor);
                 return floor;
               });
 
               const nightlights = getNightlights();
 
-              const areas = Object.values(hass.areas)
+              const _areas = Object.values(areas)
                 .filter(
                   (a) =>
                     !a.labels?.includes('hidden') &&
@@ -421,8 +424,8 @@ export class BonbonStrategy {
                   return area;
                 });
 
-              floors.forEach((floor, index, floors) => {
-                const floorAreas = areas.filter(
+              _floors.forEach((floor, index, floors) => {
+                const floorAreas = _areas.filter(
                   (area) => area.floor_id == floor.floor_id,
                 );
                 if (floorAreas.length) {
@@ -449,7 +452,7 @@ export class BonbonStrategy {
                             ? entities[c.entity_id]
                             : undefined;
                         if (e) {
-                          const area = areas[e.area_id];
+                          const area = _areas[e.area_id];
                           const onFloor = area?.floor_id == floor.floor_id;
                           return onFloor;
                         }
@@ -606,18 +609,11 @@ export class BonbonStrategy {
                           : styles.bubbleAreaSubButtonAlways),
                     });
                   });
-                  section.cards.push(
-                    createGrid(
-                      floorCards,
-                      sectionConfig,
-                      floorCards.length,
-                      false,
-                    ),
-                  );
+                  section.cards.push(createGrid(floorCards, sectionConfig));
                 }
               });
 
-              areas.forEach((area) => {
+              _areas.forEach((area) => {
                 const areaSections = Object.keys(
                   config?.views?.bonbon_area?.sections,
                 )
@@ -731,14 +727,7 @@ export class BonbonStrategy {
                                   styles.bubbleButtonNonBinary,
                                 );
                           });
-                        section.cards.push(
-                          createGrid(
-                            envCards,
-                            sectionConfig,
-                            envCards.length,
-                            false,
-                          ),
-                        );
+                        section.cards.push(createGrid(envCards, sectionConfig));
                         break;
                       case 'bonbon_climate':
                         if (area._climates.length) {
@@ -801,12 +790,7 @@ export class BonbonStrategy {
                             }),
                           );
                           section.cards.push(
-                            createGrid(
-                              climateCards,
-                              sectionConfig,
-                              climateCards.length,
-                              false,
-                            ),
+                            createGrid(climateCards, sectionConfig),
                           );
                         }
                         break;
@@ -909,12 +893,7 @@ export class BonbonStrategy {
                             }),
                           );
                           section.cards.push(
-                            createGrid(
-                              lightCards,
-                              sectionConfig,
-                              lightCards.length,
-                              false,
-                            ),
+                            createGrid(lightCards, sectionConfig),
                           );
                         }
                         break;
@@ -973,12 +952,7 @@ export class BonbonStrategy {
                             }),
                           );
                           section.cards.push(
-                            createGrid(
-                              switchCards,
-                              sectionConfig,
-                              switchCards.length,
-                              false,
-                            ),
+                            createGrid(switchCards, sectionConfig),
                           );
                         }
                         break;
@@ -1040,12 +1014,7 @@ export class BonbonStrategy {
                             }),
                           );
                           section.cards.push(
-                            createGrid(
-                              mediaCards,
-                              sectionConfig,
-                              mediaCards.length,
-                              false,
-                            ),
+                            createGrid(mediaCards, sectionConfig),
                           );
                         }
                         break;
@@ -1107,12 +1076,7 @@ export class BonbonStrategy {
                             }),
                           );
                           section.cards.push(
-                            createGrid(
-                              openingCards,
-                              sectionConfig,
-                              openingCards.length,
-                              false,
-                            ),
+                            createGrid(openingCards, sectionConfig),
                           );
                         }
                         break;
@@ -1176,12 +1140,7 @@ export class BonbonStrategy {
                             }),
                           );
                           section.cards.push(
-                            createGrid(
-                              coverCards,
-                              sectionConfig,
-                              coverCards.length,
-                              false,
-                            ),
+                            createGrid(coverCards, sectionConfig),
                           );
                         }
                         break;
@@ -1233,12 +1192,7 @@ export class BonbonStrategy {
                             );
                           }
                           section.cards.push(
-                            createGrid(
-                              miscCards,
-                              sectionConfig,
-                              miscCards.length,
-                              false,
-                            ),
+                            createGrid(miscCards, sectionConfig),
                           );
                         }
                         break;
@@ -1326,12 +1280,7 @@ export class BonbonStrategy {
                               );
                             }
                             section.cards.push(
-                              createGrid(
-                                userCards,
-                                sectionConfig,
-                                userCards.length,
-                                false,
-                              ),
+                              createGrid(userCards, sectionConfig),
                             );
                           }
                         }
@@ -1394,14 +1343,7 @@ export class BonbonStrategy {
                       ),
                     );
                   }
-                  section.cards.push(
-                    createGrid(
-                      userCards,
-                      sectionConfig,
-                      userCards.length,
-                      false,
-                    ),
-                  );
+                  section.cards.push(createGrid(userCards, sectionConfig));
                 }
               }
               break;
@@ -1477,14 +1419,7 @@ export class BonbonStrategy {
                       ),
                     );
                   }
-                  section.cards.push(
-                    createGrid(
-                      userCards,
-                      sectionConfig,
-                      userCards.length,
-                      false,
-                    ),
-                  );
+                  section.cards.push(createGrid(userCards, sectionConfig));
                 }
               }
               return section.cards.length ? section : false;

@@ -66,12 +66,12 @@ export function getNightlights() {
   });
 }
 
-export function getLightsOnFloor(floor, areas) {
+export function getLightsOnFloor(floor) {
   const lights = Object.values(window._bonbon.entities || {}).filter((e) => {
     const isLight = isEntityType(e, 'light.');
     const device = window._bonbon.devices?.[e.device_id];
     const area_id = e.area_id || device?.area_id;
-    const area = areas[area_id];
+    const area = window._bonbon.areas[area_id];
     const onFloor = area?.floor_id == floor.floor_id;
     return isLight && isUserEntity(e) && onFloor && !isHiddenEntity(e);
   });
