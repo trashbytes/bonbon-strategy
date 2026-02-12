@@ -102,7 +102,9 @@ export function getFavorites() {
   });
 }
 
-export function filterEntitiesInArea(predicate, area_id, categorizedEntityIds) {
+export function filterEntitiesInArea(predicate, area) {
+  const area_id = area?.area_id;
+  const categorizedEntityIds = area?.categorizedEntityIds;
   return Object.values(window._bonbon.entities || {}).filter((e) => {
     const inArea = e.area_id === area_id;
     const device = window._bonbon.devices?.[e.device_id];

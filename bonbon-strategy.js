@@ -335,8 +335,7 @@ export class BonbonStrategy {
                       (e.entity_id.includes('co2') &&
                         states[e.entity_id]?.attributes?.unit_of_measurement ===
                           'ppm'),
-                    area.area_id,
-                    area.categorizedEntityIds,
+                    area,
                   ) || [])[0]?.entity_id;
 
                   Object.values(config?.views?.bonbon_area?.sections)
@@ -368,15 +367,13 @@ export class BonbonStrategy {
                   area._lights = sortLights(
                     filterEntitiesInArea(
                       (e) => isEntityType(e, 'light.'),
-                      area.area_id,
-                      area.categorizedEntityIds,
+                      area,
                     ),
                   );
                   area._switches = sortEntities(
                     filterEntitiesInArea(
                       (e) => isEntityType(e, 'switch.'),
-                      area.area_id,
-                      area.categorizedEntityIds,
+                      area,
                     ),
                   );
                   area._openings = sortEntities(
@@ -384,41 +381,33 @@ export class BonbonStrategy {
                       (e) =>
                         isEntityType(e, 'binary_sensor.') &&
                         e.entity_id.endsWith('_contact'),
-                      area.area_id,
-                      area.categorizedEntityIds,
+                      area,
                     ),
                   );
 
                   area._media = sortEntities(
                     filterEntitiesInArea(
                       (e) => isEntityType(e, 'media_player.'),
-                      area.area_id,
-                      area.categorizedEntityIds,
+                      area,
                     ),
                   );
 
                   area._covers = sortEntities(
                     filterEntitiesInArea(
                       (e) => isEntityType(e, 'cover.'),
-                      area.area_id,
-                      area.categorizedEntityIds,
+                      area,
                     ),
                   );
 
                   area._climates = sortEntities(
                     filterEntitiesInArea(
                       (e) => isEntityType(e, 'climate.'),
-                      area.area_id,
-                      area.categorizedEntityIds,
+                      area,
                     ),
                   );
 
                   area._misc = sortEntities(
-                    filterEntitiesInArea(
-                      (e) => true,
-                      area.area_id,
-                      area.categorizedEntityIds,
-                    ),
+                    filterEntitiesInArea((e) => true, area),
                   );
                   return area;
                 });
