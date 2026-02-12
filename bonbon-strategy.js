@@ -365,43 +365,35 @@ export class BonbonStrategy {
                     });
 
                   area._lights = sortLights(
-                    filterEntitiesInArea(
-                      (e) => isEntityType(e, 'light.'),
-                      area,
-                    ),
+                    filterEntitiesInArea((e) => isEntityType(e, 'light'), area),
                   );
                   area._switches = sortEntities(
                     filterEntitiesInArea(
-                      (e) => isEntityType(e, 'switch.'),
+                      (e) => isEntityType(e, 'switch'),
                       area,
                     ),
                   );
                   area._openings = sortEntities(
                     filterEntitiesInArea(
-                      (e) =>
-                        isEntityType(e, 'binary_sensor.') &&
-                        e.entity_id.endsWith('_contact'),
+                      (e) => isEntityType(e, 'binary_sensor', '_contact'),
                       area,
                     ),
                   );
 
                   area._media = sortEntities(
                     filterEntitiesInArea(
-                      (e) => isEntityType(e, 'media_player.'),
+                      (e) => isEntityType(e, 'media_player'),
                       area,
                     ),
                   );
 
                   area._covers = sortEntities(
-                    filterEntitiesInArea(
-                      (e) => isEntityType(e, 'cover.'),
-                      area,
-                    ),
+                    filterEntitiesInArea((e) => isEntityType(e, 'cover'), area),
                   );
 
                   area._climates = sortEntities(
                     filterEntitiesInArea(
-                      (e) => isEntityType(e, 'climate.'),
+                      (e) => isEntityType(e, 'climate'),
                       area,
                     ),
                   );

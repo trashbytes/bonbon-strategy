@@ -1,5 +1,5 @@
-function hasLabel(entity, labelToCheck) {
-  const labels = [labelToCheck, `bonbon_${labelToCheck}`];
+function hasLabel(entity, label) {
+  const labels = [label, `bonbon_${label}`];
   if (entity?.labels?.some((l) => labels.includes(l))) return true;
   if (
     entity?.device_id &&
@@ -51,14 +51,18 @@ function getEntityDisplayName(entity) {
   );
 }
 
-export function isEntityType(e, prefix) {
-  return !!(e?.entity_id && e.entity_id.startsWith(prefix));
+export function isEntityType(e, domain, suffix) {
+  if (!e?.entity_id) return false;
+  const prefix = (domain || '').endsWith('.') ? domain : (domain || '') + '.';
+  if (!e.entity_id.startsWith(prefix)) return false;
+  if (suffix) return e.entity_id.endsWith(suffix);
+  return true;
 }
 
 export function getNightlights() {
   return Object.values(window._bonbon.entities || {}).filter((e) => {
     return (
-      isEntityType(e, 'light.') &&
+      isEntityType(e, 'light') &&
       hasLabel(e, 'nightlight') &&
       isUserEntity(e) &&
       !isHiddenEntity(e)
@@ -68,7 +72,7 @@ export function getNightlights() {
 
 export function getLightsOnFloor(floor) {
   const lights = Object.values(window._bonbon.entities || {}).filter((e) => {
-    const isLight = isEntityType(e, 'light.');
+    const isLight = isEntityType(e, 'light');
     const device = window._bonbon.devices?.[e.device_id];
     const area_id = e.area_id || device?.area_id;
     const area = window._bonbon.areas[area_id];
@@ -91,7 +95,7 @@ export function sortLights(list) {
 
 export function getVisiblePersons() {
   return Object.values(window._bonbon.entities || {}).filter(
-    (e) => isEntityType(e, 'person.') && !isHiddenEntity(e) && isUserEntity(e),
+    (e) => isEntityType(e, 'person') && !isHiddenEntity(e) && isUserEntity(e),
   );
 }
 
