@@ -117,25 +117,3 @@ export function mergeDeep(target, ...sources) {
 
   return mergeDeep(target, ...sources);
 }
-
-export function getAllEntityIds(obj, foundIds = []) {
-  if (!obj || typeof obj !== 'object') return foundIds;
-
-  if (Array.isArray(obj)) {
-    obj.forEach((item) => getAllEntityIds(item, foundIds));
-  } else {
-    if (obj.entity_id) {
-      if (Array.isArray(obj.entity_id)) {
-        foundIds.push(...obj.entity_id);
-      } else {
-        foundIds.push(obj.entity_id);
-      }
-    }
-    Object.values(obj).forEach((value) => {
-      if (typeof value === 'object') {
-        getAllEntityIds(value, foundIds);
-      }
-    });
-  }
-  return [...new Set(foundIds)];
-}
