@@ -97,32 +97,36 @@ export class BonbonStrategy {
         hass?.selectedTheme
       ) {
         autoLightDarkMode();
-        try {
-          if (hass?.connection?.subscribeEvents) {
-            hass.connection.subscribeEvents((event) => {
-              if (
-                event?.event_type === 'state_changed' &&
-                event?.data?.entity_id === 'sun.sun'
-              ) {
-                autoLightDarkMode();
-              }
-            }, 'state_changed');
-          } else {
-            const pollInterval = 60 * 1000;
-            setInterval(() => {
-              if (document.visibilityState === 'visible') {
-                autoLightDarkMode();
-              }
-            }, pollInterval);
-          }
-        } catch (e) {
-          const pollInterval = 60 * 1000;
-          setInterval(() => {
+        const pollInterval = 60 * 1000;
+        let _bonbonSunPollTimer = null;
+        function _bonbonStartSunPoll() {
+          if (_bonbonSunPollTimer) return;
+          if (document.visibilityState !== 'visible') return;
+          _bonbonSunPollTimer = setInterval(() => {
             if (document.visibilityState === 'visible') {
               autoLightDarkMode();
             }
           }, pollInterval);
         }
+        function _bonbonStopSunPoll() {
+          if (_bonbonSunPollTimer) {
+            clearInterval(_bonbonSunPollTimer);
+            _bonbonSunPollTimer = null;
+          }
+        }
+        if (document.visibilityState === 'visible') {
+          autoLightDarkMode();
+          _bonbonStartSunPoll();
+        }
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            autoLightDarkMode();
+            _bonbonStartSunPoll();
+          } else {
+            _bonbonStopSunPoll();
+          }
+        });
       }
 
       const isDark =
