@@ -1,33 +1,35 @@
-function hasLabel(entity, devices, labelToCheck) {
+function hasLabel(entity, labelToCheck) {
   const labels = [labelToCheck, `bonbon_${labelToCheck}`];
   if (entity?.labels?.some((l) => labels.includes(l))) return true;
   if (
     entity?.device_id &&
-    devices?.[entity.device_id]?.labels?.some((l) => labels.includes(l))
+    window._bonbon.devices?.[entity.device_id]?.labels?.some((l) =>
+      labels.includes(l),
+    )
   )
     return true;
   return false;
 }
 
-function getLightRank(e, devices) {
-  if (hasLabel(e, devices, 'mainlight')) return 1;
-  if (hasLabel(e, devices, 'nightlight')) return 3;
+function getLightRank(e) {
+  if (hasLabel(e, 'mainlight')) return 1;
+  if (hasLabel(e, 'nightlight')) return 3;
   return 2;
 }
 
-function isHiddenEntity(e, devices) {
-  return e?.hidden || hasLabel(e, devices, 'hidden');
+function isHiddenEntity(e) {
+  return e?.hidden || hasLabel(e, 'hidden');
 }
 
 function isUserEntity(e) {
   return !e?.entity_category;
 }
 
-function getOrderLabelNumber(entity, devices) {
+function getOrderLabelNumber(entity) {
   const allLabels = [];
   if (entity?.labels) allLabels.push(...entity.labels);
-  if (entity?.device_id && devices?.[entity.device_id]?.labels) {
-    allLabels.push(...devices[entity.device_id].labels);
+  if (entity?.device_id && window._bonbon.devices?.[entity.device_id]?.labels) {
+    allLabels.push(...window._bonbon.devices[entity.device_id].labels);
   }
 
   const orderLabel = allLabels.find((label) =>
@@ -40,10 +42,10 @@ function getOrderLabelNumber(entity, devices) {
   return Infinity;
 }
 
-function getEntityDisplayName(entity, states) {
+function getEntityDisplayName(entity) {
   return (
     entity?.name ||
-    states?.[entity?.entity_id]?.attributes?.friendly_name ||
+    window._bonbon.states?.[entity?.entity_id]?.attributes?.friendly_name ||
     entity?.entity_id ||
     ''
   );
@@ -53,69 +55,60 @@ export function isEntityType(e, prefix) {
   return !!(e?.entity_id && e.entity_id.startsWith(prefix));
 }
 
-export function getNightlights(entities, devices) {
-  return Object.values(entities).filter((e) => {
+export function getNightlights() {
+  return Object.values(window._bonbon.entities || {}).filter((e) => {
     return (
       isEntityType(e, 'light.') &&
-      hasLabel(e, devices, 'nightlight') &&
+      hasLabel(e, 'nightlight') &&
       isUserEntity(e) &&
-      !isHiddenEntity(e, devices)
+      !isHiddenEntity(e)
     );
   });
 }
 
-export function getLightsOnFloor(entities, floor, areas, devices) {
-  const lights = Object.values(entities).filter((e) => {
+export function getLightsOnFloor(floor, areas) {
+  const lights = Object.values(window._bonbon.entities || {}).filter((e) => {
     const isLight = isEntityType(e, 'light.');
-    const device = devices[e.device_id];
+    const device = window._bonbon.devices?.[e.device_id];
     const area_id = e.area_id || device?.area_id;
     const area = areas[area_id];
     const onFloor = area?.floor_id == floor.floor_id;
-    return isLight && isUserEntity(e) && onFloor && !isHiddenEntity(e, devices);
+    return isLight && isUserEntity(e) && onFloor && !isHiddenEntity(e);
   });
   let result = sortByName(lights, {});
-  result = sortLights(result, devices);
-  result = sortEntities(result, devices);
+  result = sortLights(result);
+  result = sortEntities(result);
   return result;
 }
 
-export function sortLights(list, devices) {
+export function sortLights(list) {
   return (list || []).sort((a, b) => {
-    const rankA = getLightRank(a, devices);
-    const rankB = getLightRank(b, devices);
+    const rankA = getLightRank(a);
+    const rankB = getLightRank(b);
     return rankA - rankB;
   });
 }
 
-export function getVisiblePersons(entities, devices) {
-  return Object.values(entities).filter(
-    (e) =>
-      isEntityType(e, 'person.') &&
-      !isHiddenEntity(e, devices) &&
-      isUserEntity(e),
+export function getVisiblePersons() {
+  return Object.values(window._bonbon.entities || {}).filter(
+    (e) => isEntityType(e, 'person.') && !isHiddenEntity(e) && isUserEntity(e),
   );
 }
 
-export function getFavorites(entities, devices) {
-  return Object.values(entities).filter((e) => {
-    const isFavorite = hasLabel(e, devices, 'favorite');
-    return isFavorite && isUserEntity(e) && !isHiddenEntity(e, devices);
+export function getFavorites() {
+  return Object.values(window._bonbon.entities || {}).filter((e) => {
+    const isFavorite = hasLabel(e, 'favorite');
+    return isFavorite && isUserEntity(e) && !isHiddenEntity(e);
   });
 }
 
-export function filterEntitiesInArea(
-  entities,
-  predicate,
-  area_id,
-  devices,
-  categorizedEntityIds,
-) {
-  return Object.values(entities).filter((e) => {
+export function filterEntitiesInArea(predicate, area_id, categorizedEntityIds) {
+  return Object.values(window._bonbon.entities || {}).filter((e) => {
     const inArea = e.area_id === area_id;
-    const device = devices[e.device_id];
+    const device = window._bonbon.devices?.[e.device_id];
     const deviceInArea = device && device.area_id === area_id;
     if (!predicate(e)) return false;
-    if (!isUserEntity(e) || isHiddenEntity(e, devices)) return false;
+    if (!isUserEntity(e) || isHiddenEntity(e)) return false;
     if (!(inArea || deviceInArea)) return false;
     if (categorizedEntityIds && categorizedEntityIds.includes(e.entity_id))
       return false;
@@ -124,20 +117,20 @@ export function filterEntitiesInArea(
   });
 }
 
-export function sortByName(list, states) {
+export function sortByName(list) {
   return (list || []).sort((a, b) => {
-    const nameA = getEntityDisplayName(a, states);
-    const nameB = getEntityDisplayName(b, states);
+    const nameA = getEntityDisplayName(a);
+    const nameB = getEntityDisplayName(b);
     return nameA.localeCompare(nameB);
   });
 }
 
-export function sortEntities(list, devices, states) {
+export function sortEntities(list) {
   const withOrder = [];
   const withoutOrder = [];
 
   (list || []).forEach((c) => {
-    const order = c.bonbon_order || c.order || getOrderLabelNumber(c, devices);
+    const order = c.bonbon_order || c.order || getOrderLabelNumber(c);
     if (order !== Infinity) {
       withOrder.push(c);
     } else {
@@ -145,8 +138,8 @@ export function sortEntities(list, devices, states) {
     }
   });
   withOrder.sort((a, b) => {
-    const orderA = a.bonbon_order || a.order || getOrderLabelNumber(a, devices);
-    const orderB = b.bonbon_order || b.order || getOrderLabelNumber(b, devices);
+    const orderA = a.bonbon_order || a.order || getOrderLabelNumber(a);
+    const orderB = b.bonbon_order || b.order || getOrderLabelNumber(b);
     return orderA - orderB;
   });
   const groups = {};
@@ -157,21 +150,21 @@ export function sortEntities(list, devices, states) {
   });
 
   Object.keys(groups).forEach((devId) => {
-    groups[devId] = sortByName(groups[devId], states || {});
+    groups[devId] = sortByName(groups[devId]);
   });
   const groupEntries = Object.keys(groups).map((devId) => ({
     devId,
-    device: devices?.[devId] || null,
+    device: window._bonbon.devices?.[devId] || null,
     entities: groups[devId],
   }));
   groupEntries.sort((a, b) => {
     const firstA =
       a.entities && a.entities.length
-        ? getEntityDisplayName(a.entities[0], states || {})
+        ? getEntityDisplayName(a.entities[0])
         : '';
     const firstB =
       b.entities && b.entities.length
-        ? getEntityDisplayName(b.entities[0], states || {})
+        ? getEntityDisplayName(b.entities[0])
         : '';
     return firstA.localeCompare(firstB);
   });
@@ -179,23 +172,21 @@ export function sortEntities(list, devices, states) {
   return [...withOrder, ...groupedEntities];
 }
 
-export function findFirstEntityByPrefix(entities, prefix) {
+export function findFirstEntityByPrefix(prefix) {
   return (
-    Object.values(entities).find((e) => e.entity_id.startsWith(prefix))
-      ?.entity_id || false
+    Object.values(window._bonbon.entities || {}).find((e) =>
+      e.entity_id.startsWith(prefix),
+    )?.entity_id || false
   );
 }
 
-export function getEntitiesByDeviceId(entities, device_id, devices) {
-  return Object.values(entities).filter(
-    (e) =>
-      e.device_id === device_id &&
-      isUserEntity(e) &&
-      !isHiddenEntity(e, devices),
+export function getEntitiesByDeviceId(device_id) {
+  return Object.values(window._bonbon.entities || {}).filter(
+    (e) => e.device_id === device_id && isUserEntity(e) && !isHiddenEntity(e),
   );
 }
 
-export function resolveEntities(c, entities, devices, labels) {
+export function resolveEntities(c) {
   return (Array.isArray(c) ? c : [c])
     .map(function (c) {
       if (c !== null && typeof c === 'object') {
@@ -206,11 +197,13 @@ export function resolveEntities(c, entities, devices, labels) {
           const esc = (s) => s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
           const pattern = '^' + c.split('*').map(esc).join('.*') + '$';
           const re = new RegExp(pattern);
-          return Object.values(entities).filter((e) => re.test(e.entity_id));
+          return Object.values(window._bonbon.entities || {}).filter((e) =>
+            re.test(e.entity_id),
+          );
         }
-        if (entities[c]) return entities[c];
-        if (devices[c]) return getEntitiesByDeviceId(entities, c, devices);
-        if (labels[c]) return labels[c];
+        if (window._bonbon.entities?.[c]) return window._bonbon.entities[c];
+        if (window._bonbon.devices?.[c]) return getEntitiesByDeviceId(c);
+        if (window._bonbon.labels?.[c]) return window._bonbon.labels[c];
       }
       return false;
     })

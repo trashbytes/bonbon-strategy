@@ -60,6 +60,10 @@ export class BonbonStrategy {
       return acc;
     }, {});
 
+    if (typeof window !== 'undefined') {
+      window._bonbon = window._bonbon || { entities, devices, states, labels };
+    }
+
     androidGesturesFix();
     const ha = document.querySelector('home-assistant');
     const autoLightDarkMode = () => {
@@ -141,10 +145,7 @@ export class BonbonStrategy {
                 !weather_entity_id ||
                 !weather_entity_id.startsWith('weather.')
               ) {
-                weather_entity_id = findFirstEntityByPrefix(
-                  entities,
-                  'weather.',
-                );
+                weather_entity_id = findFirstEntityByPrefix('weather.');
               }
               if (weather_entity_id && states[weather_entity_id]) {
                 if (sectionConfig.show_separator) {
@@ -158,14 +159,7 @@ export class BonbonStrategy {
                     ? getWeatherIcon(states[weather_entity_id]?.state)
                     : sectionConfig.icon;
                   const userSubButtons = sortEntities(
-                    resolveEntities(
-                      sectionConfig.custom_separator_buttons,
-                      entities,
-                      devices,
-                      labels,
-                    ),
-                    devices,
-                    states,
+                    resolveEntities(sectionConfig.custom_separator_buttons),
                   )
                     .map(function (c) {
                       if (c.entity) {
@@ -226,18 +220,11 @@ export class BonbonStrategy {
               }
               break;
             case 'bonbon_persons':
-              const persons = getVisiblePersons(entities, devices);
+              const persons = getVisiblePersons();
               if (persons.length) {
                 if (sectionConfig.show_separator) {
                   const userSubButtons = sortEntities(
-                    resolveEntities(
-                      sectionConfig.custom_separator_buttons,
-                      entities,
-                      devices,
-                      labels,
-                    ),
-                    devices,
-                    states,
+                    resolveEntities(sectionConfig.custom_separator_buttons),
                   )
                     .map(function (c) {
                       if (c.entity) {
@@ -273,19 +260,12 @@ export class BonbonStrategy {
               }
               break;
             case 'bonbon_favorites':
-              const favorites = getFavorites(entities, devices);
+              const favorites = getFavorites();
 
               if (favorites.length) {
                 if (sectionConfig.show_separator) {
                   const userSubButtons = sortEntities(
-                    resolveEntities(
-                      sectionConfig.custom_separator_buttons,
-                      entities,
-                      devices,
-                      labels,
-                    ),
-                    devices,
-                    states,
+                    resolveEntities(sectionConfig.custom_separator_buttons),
                   )
                     .map(function (c) {
                       if (c.entity) {
@@ -305,9 +285,7 @@ export class BonbonStrategy {
                 }
                 section.cards.push(
                   createGrid(
-                    favorites.map((e) =>
-                      createButton(e, entities, states, styles),
-                    ),
+                    favorites.map((e) => createButton(e, styles)),
                     sectionConfig,
                     favorites.length,
                     false,
@@ -325,16 +303,11 @@ export class BonbonStrategy {
                   level: 99,
                 },
               }).map((floor, index, floors) => {
-                floor._lights = getLightsOnFloor(
-                  entities,
-                  floor,
-                  hass.areas,
-                  devices,
-                );
+                floor._lights = getLightsOnFloor(floor, hass.areas);
                 return floor;
               });
 
-              const nightlights = getNightlights(entities, devices);
+              const nightlights = getNightlights();
 
               const areas = Object.values(hass.areas)
                 .filter(
@@ -354,7 +327,6 @@ export class BonbonStrategy {
                   ];
 
                   area.co2_entity_id = (filterEntitiesInArea(
-                    entities,
                     (e) =>
                       states[e.entity_id]?.attributes?.device_class ===
                         'carbon_dioxide' ||
@@ -362,7 +334,6 @@ export class BonbonStrategy {
                         states[e.entity_id]?.attributes?.unit_of_measurement ===
                           'ppm'),
                     area.area_id,
-                    devices,
                     area.categorizedEntityIds,
                   ) || [])[0]?.entity_id;
 
@@ -394,88 +365,58 @@ export class BonbonStrategy {
 
                   area._lights = sortLights(
                     filterEntitiesInArea(
-                      entities,
                       (e) => isEntityType(e, 'light.'),
                       area.area_id,
-                      devices,
                       area.categorizedEntityIds,
                     ),
-                    devices,
-                    states,
                   );
                   area._switches = sortEntities(
                     filterEntitiesInArea(
-                      entities,
                       (e) => isEntityType(e, 'switch.'),
                       area.area_id,
-                      devices,
                       area.categorizedEntityIds,
                     ),
-                    devices,
-                    states,
                   );
                   area._openings = sortEntities(
                     filterEntitiesInArea(
-                      entities,
                       (e) =>
                         isEntityType(e, 'binary_sensor.') &&
                         e.entity_id.endsWith('_contact'),
                       area.area_id,
-                      devices,
                       area.categorizedEntityIds,
                     ),
-                    devices,
-                    states,
                   );
 
                   area._media = sortEntities(
                     filterEntitiesInArea(
-                      entities,
                       (e) => isEntityType(e, 'media_player.'),
                       area.area_id,
-                      devices,
                       area.categorizedEntityIds,
                     ),
-                    devices,
-                    states,
                   );
 
                   area._covers = sortEntities(
                     filterEntitiesInArea(
-                      entities,
                       (e) => isEntityType(e, 'cover.'),
                       area.area_id,
-                      devices,
                       area.categorizedEntityIds,
                     ),
-                    devices,
-                    states,
                   );
 
                   area._climates = sortEntities(
                     filterEntitiesInArea(
-                      entities,
                       (e) => isEntityType(e, 'climate.'),
                       area.area_id,
-                      devices,
                       area.categorizedEntityIds,
                     ),
-                    devices,
-                    states,
                   );
 
                   area._misc = sortEntities(
                     filterEntitiesInArea(
-                      entities,
-                      (e) => {
-                        return true;
-                      },
+                      (e) => true,
                       area.area_id,
-                      devices,
                       area.categorizedEntityIds,
                     ),
-                    devices,
-                    states,
                   );
                   return area;
                 });
@@ -487,14 +428,7 @@ export class BonbonStrategy {
                 if (floorAreas.length) {
                   if (sectionConfig.show_separator) {
                     const userSubButtons = sortEntities(
-                      resolveEntities(
-                        sectionConfig.custom_separator_buttons,
-                        entities,
-                        devices,
-                        labels,
-                      ),
-                      devices,
-                      states,
+                      resolveEntities(sectionConfig.custom_separator_buttons),
                     )
                       .map(function (c) {
                         if (c.entity) {
@@ -714,12 +648,7 @@ export class BonbonStrategy {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -817,12 +746,7 @@ export class BonbonStrategy {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -926,12 +850,7 @@ export class BonbonStrategy {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -1005,12 +924,7 @@ export class BonbonStrategy {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -1074,12 +988,7 @@ export class BonbonStrategy {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -1146,12 +1055,7 @@ export class BonbonStrategy {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -1218,12 +1122,7 @@ export class BonbonStrategy {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -1289,20 +1188,13 @@ export class BonbonStrategy {
                       case 'bonbon_miscellaneous':
                         const miscCards = area._misc
                           .filter((e) => !area.categorizedEntityIds.includes(e))
-                          .map((e) =>
-                            createButton(e, entities, states, styles),
-                          );
+                          .map((e) => createButton(e, styles));
                         if (miscCards.length) {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = sortEntities(
                               resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                entities,
-                                devices,
-                                labels,
                               ),
-                              devices,
-                              states,
                             )
                               .map(function (c) {
                                 if (c.entity) {
@@ -1358,25 +1250,13 @@ export class BonbonStrategy {
                             sectionConfig.area_id == area.area_id)
                         ) {
                           const userCards = sortEntities(
-                            resolveEntities(
-                              sectionConfig.cards,
-                              entities,
-                              devices,
-                              labels,
-                            ),
-                            devices,
-                            states,
+                            resolveEntities(sectionConfig.cards),
                           )
                             .map(function (c) {
                               if (c.type) {
                                 return c;
                               }
-                              return createButton(
-                                c.entity_id,
-                                entities,
-                                states,
-                                styles,
-                              );
+                              return createButton(c.entity_id, styles);
                             })
                             .filter((c) => {
                               if (
@@ -1406,12 +1286,7 @@ export class BonbonStrategy {
                               const userSubButtons = sortEntities(
                                 resolveEntities(
                                   sectionConfig.custom_separator_buttons,
-                                  entities,
-                                  devices,
-                                  labels,
                                 ),
-                                devices,
-                                states,
                               )
                                 .map(function (c) {
                                   if (c.entity) {
@@ -1489,33 +1364,19 @@ export class BonbonStrategy {
             default:
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = sortEntities(
-                  resolveEntities(
-                    sectionConfig.cards,
-                    entities,
-                    devices,
-                    labels,
-                  ),
-                  devices,
-                  states,
+                  resolveEntities(sectionConfig.cards),
                 )
                   .map(function (c) {
                     if (c.type) {
                       return c;
                     }
-                    return createButton(c.entity_id, entities, states, styles);
+                    return createButton(c.entity_id, styles);
                   })
                   .filter((c) => c);
                 if (userCards.length) {
                   if (sectionConfig.show_separator) {
                     const userSubButtons = sortEntities(
-                      resolveEntities(
-                        sectionConfig.custom_separator_buttons,
-                        entities,
-                        devices,
-                        labels,
-                      ),
-                      devices,
-                      states,
+                      resolveEntities(sectionConfig.custom_separator_buttons),
                     )
                       .map(function (c) {
                         if (c.entity) {
@@ -1585,34 +1446,20 @@ export class BonbonStrategy {
               const section = { cards: [] };
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = sortEntities(
-                  resolveEntities(
-                    sectionConfig.cards,
-                    entities,
-                    devices,
-                    labels,
-                  ),
-                  devices,
-                  states,
+                  resolveEntities(sectionConfig.cards),
                 )
                   .map(function (c) {
                     if (c.type) {
                       return c;
                     }
-                    return createButton(c.entity_id, entities, states, styles);
+                    return createButton(c.entity_id, styles);
                   })
                   .filter((c) => c);
 
                 if (userCards.length) {
                   if (sectionConfig.show_separator) {
                     const userSubButtons = sortEntities(
-                      resolveEntities(
-                        sectionConfig.custom_separator_buttons,
-                        entities,
-                        devices,
-                        labels,
-                      ),
-                      devices,
-                      states,
+                      resolveEntities(sectionConfig.custom_separator_buttons),
                     )
                       .map(function (c) {
                         if (c.entity) {

@@ -1,15 +1,16 @@
-export function createButton(e, entities, states, styles) {
-  if (typeof e === 'string' && entities[e]) {
-    e = entities[e];
+export function createButton(e, styles) {
+  if (typeof e === 'string' && window._bonbon.entities[e]) {
+    e = window._bonbon.entities[e];
   }
   const isMeasurement =
-    states[e.entity_id]?.attributes?.unit_of_measurement != null;
+    window._bonbon.states[e?.entity_id]?.attributes?.unit_of_measurement !=
+    null;
   const isToggle =
-    e.entity_id?.startsWith('light.') || e.entity_id?.startsWith('switch.');
-  const isBinary = e.entity_id?.startsWith('binary_sensor.');
+    e?.entity_id?.startsWith('light.') || e?.entity_id?.startsWith('switch.');
+  const isBinary = e?.entity_id?.startsWith('binary_sensor.');
   const opts = {
     card_type: 'button',
-    entity: e.entity_id,
+    entity: e?.entity_id,
     show_state: true,
     show_last_changed: isToggle,
     use_accent_color: true,
