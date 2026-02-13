@@ -77,9 +77,11 @@ export class BonbonStrategy {
         })
         .sort((aKey, bKey) => {
           const orderA =
-            config.views.bonbon_home.sections[aKey].order ?? Infinity;
+            config.views.bonbon_home.sections[aKey].order ??
+            Number.MAX_SAFE_INTEGER;
           const orderB =
-            config.views.bonbon_home.sections[bKey].order ?? Infinity;
+            config.views.bonbon_home.sections[bKey].order ??
+            Number.MAX_SAFE_INTEGER;
           return orderA - orderB;
         })
         .map((key) => {
@@ -90,22 +92,30 @@ export class BonbonStrategy {
           switch (key) {
             case 'bonbon_weather':
               let weather_entity_id = sectionConfig.weather_entity_id;
+              let weather_entity;
               if (
                 !weather_entity_id ||
                 !weather_entity_id.startsWith('weather.')
               ) {
-                weather_entity_id = resolveEntity('weather.*').entity.entity_id;
+                weather_entity = resolveEntity('weather.*');
+              } else {
+                weather_entity = resolveEntity(weather_entity_id);
               }
-              if (weather_entity_id && states[weather_entity_id]) {
+              if (weather_entity && states[weather_entity?.entity?.entity_id]) {
                 if (sectionConfig.show_separator) {
                   const separatorName = !sectionConfig.show_card
-                    ? entities[weather_entity_id]?.name ||
-                      states[weather_entity_id]?.attributes?.friendly_name ||
-                      devices[entities[weather_entity_id]?.device_id]?.name ||
+                    ? entities[weather_entity?.entity?.entity_id]?.name ||
+                      states[weather_entity?.entity?.entity_id]?.attributes
+                        ?.friendly_name ||
+                      devices[
+                        entities[weather_entity?.entity?.entity_id]?.device_id
+                      ]?.name ||
                       sectionConfig.name
                     : sectionConfig.name;
                   const separatorIcon = !sectionConfig.show_card
-                    ? getWeatherIcon(states[weather_entity_id]?.state)
+                    ? getWeatherIcon(
+                        states[weather_entity?.entity?.entity_id]?.state,
+                      )
                     : sectionConfig.icon;
                   const userSubButtons = resolveEntities(
                     sectionConfig.custom_separator_buttons,
@@ -115,18 +125,11 @@ export class BonbonStrategy {
                   const separatorSubButtons = [
                     !sectionConfig.show_card
                       ? [
-                          {
-                            entity: weather_entity_id,
-                            show_attribute: true,
-                            attribute: 'temperature',
-                            icon: 'mdi:thermometer',
-                            show_state: false,
-                            show_background: false,
-                            tap_action: {
-                              action: 'more-info',
-                              entity: weather_entity_id,
-                            },
-                          },
+                          createSubButton(
+                            weather_entity,
+                            'temperature',
+                            'mdi:thermometer',
+                          ),
                         ]
                       : [],
                     userSubButtons,
@@ -228,7 +231,7 @@ export class BonbonStrategy {
                   name: sectionConfig.name,
                   floor_id: '_areas',
                   icon: sectionConfig.icon || 'mdi:sofa',
-                  level: Infinity,
+                  level: Number.MAX_SAFE_INTEGER,
                 },
               }).map((floor, index, floors) => {
                 floor._lights = resolveEntities('light.*').filter((c) => {
@@ -504,9 +507,11 @@ export class BonbonStrategy {
                   })
                   .sort((aKey, bKey) => {
                     const orderA =
-                      config.views.bonbon_area.sections[aKey].order ?? Infinity;
+                      config.views.bonbon_area.sections[aKey].order ??
+                      Number.MAX_SAFE_INTEGER;
                     const orderB =
-                      config.views.bonbon_area.sections[bKey].order ?? Infinity;
+                      config.views.bonbon_area.sections[bKey].order ??
+                      Number.MAX_SAFE_INTEGER;
                     return orderA - orderB;
                   })
                   .map((key) => {
@@ -530,7 +535,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -601,7 +606,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -679,7 +684,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -728,7 +733,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -767,7 +772,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -809,7 +814,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -851,7 +856,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -903,7 +908,7 @@ export class BonbonStrategy {
                               sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
-                                return inArea(c);
+                                return inArea(c, area);
                               })
                               .map(function (c) {
                                 return createSubButton(c);
@@ -936,8 +941,9 @@ export class BonbonStrategy {
                             sectionConfig.include_diagnostic,
                           )
                             .filter((c) => {
+                              console.log(c);
                               return (
-                                inArea(c) &&
+                                inArea(c, area) &&
                                 area.categorizedEntityIds.push(
                                   c?.entity?.entity_id,
                                 )
@@ -967,7 +973,7 @@ export class BonbonStrategy {
                                   ) {
                                     return true;
                                   }
-                                  return inArea(c);
+                                  return inArea(c, area);
                                 });
                               section.cards.push(
                                 createSeparatorCard(
@@ -1080,8 +1086,10 @@ export class BonbonStrategy {
           const sections = Object.keys(viewConfig.sections || {})
             .filter((s) => !viewConfig.sections[s].hidden)
             .sort((aKey, bKey) => {
-              const orderA = viewConfig.sections[aKey].order ?? Infinity;
-              const orderB = viewConfig.sections[bKey].order ?? Infinity;
+              const orderA =
+                viewConfig.sections[aKey].order ?? Number.MAX_SAFE_INTEGER;
+              const orderB =
+                viewConfig.sections[bKey].order ?? Number.MAX_SAFE_INTEGER;
               return orderA - orderB;
             })
             .map((key) => {

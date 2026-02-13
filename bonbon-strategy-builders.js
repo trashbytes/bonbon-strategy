@@ -12,7 +12,7 @@ export function createButton(e, styles) {
     card_type: 'button',
     entity: e?.entity_id,
     show_state: true,
-    show_last_changed: isToggle,
+    show_last_changed: isToggle || isBinary,
     use_accent_color: true,
     tap_action: { action: 'none' },
     button_action: {
@@ -40,7 +40,7 @@ export function createSeparatorCard(
   return card;
 }
 
-export function createSubButton(c) {
+export function createSubButton(c, attribute = false, icon = false) {
   if (c.object) {
     return c.object;
   }
@@ -49,6 +49,10 @@ export function createSubButton(c) {
     c?.entity?.entity_id.startsWith('switch.');
   return {
     entity: c?.entity.entity_id,
+    show_background: isToggle,
+    show_state: !isToggle && !attribute,
+    ...(attribute && { show_attribute: true, attribute: attribute }),
+    ...(icon && { icon: icon }),
     tap_action: { action: isToggle ? 'toggle' : 'more-info' },
   };
 }

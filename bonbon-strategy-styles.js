@@ -118,9 +118,7 @@ export const getStyles = (isDark) => {
       }
     `,
     bubbleSeparatorSubButtonBase: css`
-      .bubble-sub-button,
-      .bubble-sub-button-container:not(:has(.background-on))
-        .bubble-sub-button {
+      .bubble-sub-button[class*='background'] {
         background-color: var(
           --ha-card-background,
           var(--card-background-color, #fff)
