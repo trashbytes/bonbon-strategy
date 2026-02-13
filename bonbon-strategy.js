@@ -21,27 +21,23 @@ const { resolveEntity, resolveEntities, onFloor, inArea, hasLabel } =
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
-    const entities = hass.entities;
     const states = hass.states;
     const devices = hass.devices;
     const floors = hass.floors;
     const areas = hass.areas;
+    const entities = hass.entities;
+    Object.keys(hass.entities).forEach((entity_id) => {
+      const entity = entities[entity_id];
+      const device = devices?.[entity?.device_id];
+      entity.area_id = entity?.area_id || device?.area_id;
+      if (entity?.area_id) {
+        entity.floor_id = areas?.[entity.area_id]?.floor_id;
+      }
+      entity.labels = [...(entity?.labels || []), ...(device?.labels || [])];
+    });
     const labels = Object.values(entities).reduce((acc, e) => {
-      const allLabels = [];
-      if (e.labels && Array.isArray(e.labels)) {
-        allLabels.push(...e.labels);
-      }
-      if (e.device_id && devices[e.device_id]?.labels) {
-        const deviceLabels = devices[e.device_id].labels;
-        if (Array.isArray(deviceLabels)) {
-          allLabels.push(...deviceLabels);
-        }
-      }
-      allLabels.forEach((label) => {
-        if (!acc[label]) {
-          acc[label] = [];
-        }
-        acc[label].push(e);
+      (e.labels ?? []).forEach((label) => {
+        (acc[label] ??= []).push(e);
       });
       return acc;
     }, {});

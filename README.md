@@ -267,25 +267,6 @@ strategy:
 
 ```
 
-You can add custom views like this:
-
-```
-      batteries:
-        name: Batteries
-        sections:
-          batteries:
-            name: Batteries
-            icon: mdi:battery
-            show_separator: true
-            min_columns: 2
-            max_columns: 2
-            include_diagnostic: true
-            cards:
-              - sensor.*battery
-```
-
-Custom views will be added as tabs at the top. In combination with wildcards you can create views to keep an eye on batteries, doors, shutters, etc. in just a few lines. Or create entirely custom views with your own cards.
-
 You can add custom sections like this:
 
 ```
@@ -304,5 +285,61 @@ You can add custom sections like this:
 ```
 
 When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section. Same goes for custom separator cards in areas, though they can also be added to floors in the home view and restricted to a specific one the same way with `floor_id: <floor_id>` and `bonbon_floor_id: <floor_id>` respectively.
+
+You can even add entire custom views like this:
+
+```
+      openings:
+        name: Doors & Windows
+        sections:
+          doors:
+            name: Doors
+            icon: mdi:door
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            cards:
+              - binary_sensor.*contact[door]
+          windows:
+            name: Windows
+            icon: mdi:window-closed-variant
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            cards:
+              - binary_sensor.*contact[window]
+      diagnostic:
+        name: Diagnostic
+        sections:
+          leak:
+            name: Watersensors
+            icon: mdi:water
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            cards:
+              - binary_sensor.*leak
+          batteries:
+            name: Batteries
+            icon: mdi:battery
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            include_diagnostic: true
+            include_config: true
+            cards:
+              - sensor.*battery
+```
+
+Custom views will be added as tabs at the top. In combination with wildcards you can create views to keep an eye on batteries, doors, shutters, etc. in just a few lines. Or create entirely custom views with your own cards.
+
+You can use CSS like attribute selectors (including \*=, ^= and $=, which is most useful for `name`) to get exactly what you're looking for. Here are some examples:
+
+- `binary_sensor.*contact[window]` grabs all binary contact sensors with a device_class of `window`, it's basically the shorthand
+- `binary_sensor.*contact[name$=door] grabs all binary contact sensors whose display names end with `door`
+- `sensor.*[unit_of_measurement=ppm]` grabs all sensors whose unit of measurement is `ppm`
+- `"*[area_id=office]"` grabs everything from the office (in quotes because of the leading asterisk)
+
+Don't forget to add `include_diagnostic: true` and `include_config: true` if needed, otherwise things like battery sensors and other options might not show up, as only the user facing sensors are included by default (`include_sensors: true`).
 
 When using your own cards you can use card_mod to style them to look like the rest of Bonbon Strategy. Some variables will be available to you, like `--bonbon-box-shadow` and `--bubble-button-border-radius`, which should get you most of the way there.

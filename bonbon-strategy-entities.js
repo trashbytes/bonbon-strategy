@@ -134,6 +134,53 @@ export function resolveEntities(
         if (c) {
           const elements = [];
           if (typeof c === 'string') {
+            const attrFilterMatch = c.match(/(.*)\[([^\]]+)\]$/);
+            let attrFilter;
+            if (attrFilterMatch) {
+              c = attrFilterMatch[1].trim();
+              const inside = attrFilterMatch[2].trim();
+              const m = inside.match(
+                /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(.+))$/,
+              );
+              if (m) {
+                const key = m[1];
+                const operator = m[2];
+                const value = (m[3] || m[4] || m[5] || '').trim();
+                attrFilter = { key, operator, value };
+              } else {
+                attrFilter = {
+                  key: 'device_class',
+                  operator: '*=',
+                  value: inside,
+                };
+              }
+            }
+
+            const getAttributeValue = (entity, key) => {
+              if (!entity) return undefined;
+              if (key === 'name') return getEntityDisplayName({ entity });
+              const attrFromEntity = entity[key];
+              if (attrFromEntity !== undefined) return attrFromEntity;
+              const stateAttr =
+                window._bonbon.states?.[entity.entity_id]?.attributes?.[key];
+              if (stateAttr !== undefined) return stateAttr;
+              return entity[key];
+            };
+
+            const matchesAttribute = (entity) => {
+              if (!attrFilter) return true;
+              const { key, operator, value } = attrFilter;
+              const attr = getAttributeValue(entity, key);
+              if (attr === undefined || attr === null) return false;
+              const a = String(attr).toLowerCase();
+              const v = String(value).toLowerCase();
+              if (operator === '=') return a === v;
+              if (operator === '*=') return a.includes(v);
+              if (operator === '^=') return a.startsWith(v);
+              if (operator === '$=') return a.endsWith(v);
+              return false;
+            };
+
             if (c.includes('*')) {
               const esc = (s) => s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
               const pattern = '^' + c.split('*').map(esc).join('.*') + '$';
@@ -148,7 +195,8 @@ export function resolveEntities(
                       includeConfig,
                       includeDiagnostic,
                     ) &&
-                    !isHidden(e)
+                    !isHidden(e) &&
+                    matchesAttribute(e)
                   ) {
                     elements.push({ entity: e });
                   }
@@ -162,7 +210,8 @@ export function resolveEntities(
                   includeConfig,
                   includeDiagnostic,
                 ) &&
-                !isHidden(window._bonbon.entities?.[c])
+                !isHidden(window._bonbon.entities?.[c]) &&
+                matchesAttribute(window._bonbon.entities?.[c])
               ) {
                 elements.push({ entity: window._bonbon.entities?.[c] });
               }
@@ -176,7 +225,8 @@ export function resolveEntities(
                       includeConfig,
                       includeDiagnostic,
                     ) &&
-                    !isHidden(e)
+                    !isHidden(e) &&
+                    matchesAttribute(e)
                   ) {
                     elements.push({ entity: e });
                   }
@@ -191,7 +241,8 @@ export function resolveEntities(
                       includeConfig,
                       includeDiagnostic,
                     ) &&
-                    !isHidden(e)
+                    !isHidden(e) &&
+                    matchesAttribute(e)
                   ) {
                     elements.push({ entity: e });
                   }
@@ -206,7 +257,8 @@ export function resolveEntities(
                       includeConfig,
                       includeDiagnostic,
                     ) &&
-                    !isHidden(e)
+                    !isHidden(e) &&
+                    matchesAttribute(e)
                   ) {
                     elements.push({ entity: e });
                   }
@@ -242,26 +294,34 @@ export function resolveEntity(c) {
 }
 
 export function inArea(c, area) {
-  if (c && area) {
-    const inArea =
-      c.entity?.area_id === (area.area_id || area) ||
-      c.object?.area_id === (area.area_id || area);
-    const device = window._bonbon.devices[c.entity?.device_id];
-    const deviceInArea = device && device.area_id === (area.area_id || area);
-    return inArea || deviceInArea;
-  }
+  // if (c && area) {
+  //   const inArea =
+  //     c.entity?.area_id === (area.area_id || area) ||
+  //     c.object?.area_id === (area.area_id || area);
+  //   const device = window._bonbon.devices[c.entity?.device_id];
+  //   const deviceInArea = device && device.area_id === (area.area_id || area);
+  //   return inArea || deviceInArea;
+  // }
+  return (
+    c.entity?.area_id === (area.area_id || area) ||
+    c.object?.area_id === (area.area_id || area)
+  );
   return false;
 }
 
 export function onFloor(c, floor) {
-  if (c && floor) {
-    const onFloor =
-      c.entity?.floor_id === (floor.floor_id || floor) ||
-      c.object?.floor_id === (floor.floor_id || floor);
-    const areasOnFloor = Object.values(window._bonbon.areas).filter((area) => {
-      return area.floor_id == (floor.floor_id || floor);
-    });
-    return onFloor || areasOnFloor.some((area) => inArea(c, area));
-  }
+  // if (c && floor) {
+  //   const onFloor =
+  //     c.entity?.floor_id === (floor.floor_id || floor) ||
+  //     c.object?.floor_id === (floor.floor_id || floor);
+  //   const areasOnFloor = Object.values(window._bonbon.areas).filter((area) => {
+  //     return area.floor_id == (floor.floor_id || floor);
+  //   });
+  //   return onFloor || areasOnFloor.some((area) => inArea(c, area));
+  // }
+  return (
+    c.entity?.floor_id === (floor.floor_id || floor) ||
+    c.object?.floor_id === (floor.floor_id || floor)
+  );
   return false;
 }
