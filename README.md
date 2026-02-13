@@ -70,12 +70,16 @@ Done!
 
 Add this to your dashboard configuration. Change the translations and options as needed.
 
+### Minimum Config
+
 Minimum required configuration, everything default:
 
 ```
 strategy:
   type: custom:bonbon-strategy
 ```
+
+### Translation only
 
 Configuration with translations only, rest default:
 
@@ -111,6 +115,8 @@ strategy:
           bonbon_miscellaneous:
             name: Miscellaneous
 ```
+
+### Complete config
 
 Complete configuration for maximum control:
 
@@ -264,8 +270,9 @@ strategy:
             include_sensors: true
             include_config: false
             include_diagnostic: false
-
 ```
+
+### Custom sections
 
 You can add custom sections like this:
 
@@ -275,16 +282,19 @@ You can add custom sections like this:
             icon: mdi:death-star
             order: 3
             show_separator: true
-            custom_separator_buttons: false # can be an array of Bubble `sub_button`s, entity_ids (including *wildcards*), device_ids or labels
+            custom_separator_buttons: false # can be an array of Bubble `sub_button`s, entity_ids, device_ids or labels
             min_columns: 1
             max_columns: 2
             hidden: false
-            cards: # can be cards, entity_ids (including *wildcards*), device_ids or labels
+            cards: # can be cards, entity_ids, device_ids or labels
               - light.death_star
               - switch.arm
 ```
 
-When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section. Same goes for custom separator cards in areas, though they can also be added to floors in the home view and restricted to a specific one the same way with `floor_id: <floor_id>` and `bonbon_floor_id: <floor_id>` respectively.
+When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section.
+Same goes for custom separator cards on floors and in areas which can be restricted to a specific one with `floor_id: <floor_id>` and `bonbon_floor_id: <floor_id>` or `area_id: <area_id>` and `bonbon_area_id: <area_id>` respectively.
+
+### Custom views
 
 You can even add entire custom views like this:
 
@@ -333,7 +343,9 @@ You can even add entire custom views like this:
 
 Custom views will be added as tabs at the top. In combination with wildcards you can create views to keep an eye on batteries, doors, shutters, etc. in just a few lines. Or create entirely custom views with your own cards.
 
-You can use CSS like attribute selectors (including \*=, ^= and $=, which is most useful for `name`) to get exactly what you're looking for. Here are some examples:
+### Wildcards and attribute selectors
+
+You can use wildcards and CSS like attribute selectors (including \*=, ^= and $=, which is most useful for `name`) to get exactly what you're looking for. Here are some examples:
 
 - `binary_sensor.*contact[window]` grabs all binary contact sensors with a device_class of `window`, it's basically the shorthand
 - `binary_sensor.*contact[name$=door] grabs all binary contact sensors whose display names end with `door`
@@ -341,5 +353,7 @@ You can use CSS like attribute selectors (including \*=, ^= and $=, which is mos
 - `"*[area_id=office]"` grabs everything from the office (in quotes because of the leading asterisk)
 
 Don't forget to add `include_diagnostic: true` and `include_config: true` if needed, otherwise things like battery sensors and other options might not show up, as only the user facing sensors are included by default (`include_sensors: true`).
+
+### Custom cards
 
 When using your own cards you can use card_mod to style them to look like the rest of Bonbon Strategy. Some variables will be available to you, like `--bonbon-box-shadow` and `--bubble-button-border-radius`, which should get you most of the way there.
