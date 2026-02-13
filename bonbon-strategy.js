@@ -58,7 +58,6 @@ export class BonbonStrategy {
     }
 
     androidGesturesFix();
-    const ha = document.querySelector('home-assistant');
 
     try {
       const views = [];
@@ -115,7 +114,7 @@ export class BonbonStrategy {
                   ).map(function (c) {
                     return createSubButton(c);
                   });
-                  const separatorSubButton = [
+                  const separatorSubButtons = [
                     !sectionConfig.show_card
                       ? [
                           {
@@ -138,7 +137,7 @@ export class BonbonStrategy {
                     createSeparatorCard(
                       separatorName,
                       separatorIcon,
-                      separatorSubButton,
+                      separatorSubButtons,
                       styles.bubbleSeparatorSubButtonBase,
                     ),
                   );
@@ -231,7 +230,7 @@ export class BonbonStrategy {
                   name: sectionConfig.name,
                   floor_id: '_areas',
                   icon: sectionConfig.icon || 'mdi:sofa',
-                  level: 99,
+                  level: Infinity,
                 },
               }).map((floor, index, floors) => {
                 floor._lights = resolveEntities('light.*').filter((c) => {
@@ -385,7 +384,7 @@ export class BonbonStrategy {
                             })
                             .flat()
                         : [];
-                    const separatorSubButton = [
+                    const separatorSubButtons = [
                       floorLightsSubButtons,
                       userSubButtons,
                     ];
@@ -398,7 +397,7 @@ export class BonbonStrategy {
                       createSeparatorCard(
                         separatorName,
                         separatorIcon,
-                        separatorSubButton,
+                        separatorSubButtons,
                         styles.bubbleSeparatorSubButtonBase + separatorStyles,
                       ),
                     );
@@ -678,7 +677,7 @@ export class BonbonStrategy {
                               .map(function (c) {
                                 return createSubButton(c);
                               });
-                            const separatorSubButton = [
+                            const separatorSubButtons = [
                               areaLightsSubButtons,
                               userSubButtons,
                             ];
@@ -691,7 +690,7 @@ export class BonbonStrategy {
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                separatorSubButton,
+                                separatorSubButtons,
                                 styles.bubbleSeparatorSubButtonBase +
                                   separatorStyles,
                               ),

@@ -203,10 +203,13 @@ export function inArea(c, area) {
 
 export function onFloor(c, floor) {
   if (c && floor) {
+    const onFloor =
+      c.entity?.floor_id === (floor.floor_id || floor) ||
+      c.object?.floor_id === (floor.floor_id || floor);
     const areasOnFloor = Object.values(window._bonbon.areas).filter((area) => {
       return area.floor_id == (floor.floor_id || floor);
     });
-    return areasOnFloor.some((area) => inArea(c, area));
+    return onFloor || areasOnFloor.some((area) => inArea(c, area));
   }
   return false;
 }
