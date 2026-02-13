@@ -182,6 +182,9 @@ strategy:
             show_humidity: true
             show_co2: true
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_climate:
             name: Climate
             icon: mdi:radiator
@@ -190,6 +193,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_lights:
             name: Lights
             icon: mdi:lightbulb-group
@@ -200,6 +206,9 @@ strategy:
             show_area_lights_toggle: true
             always_show_area_lights_toggle: true
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_switches:
             name: Switches
             icon: mdi:toggle-switch
@@ -208,6 +217,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_media:
             name: Media Players
             icon: mdi:disc-player
@@ -216,6 +228,9 @@ strategy:
             min_columns: 1
             max_columns: 1
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_openings:
             name: Doors & Windows
             icon: mdi:window-closed-variant
@@ -224,6 +239,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_covers:
             name: Shutters & Shades
             icon: mdi:roller-shade
@@ -232,6 +250,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_miscellaneous:
             name: Miscellaneous
             icon: mdi:dots-horizontal-circle-outline
@@ -240,6 +261,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
 
 ```
 

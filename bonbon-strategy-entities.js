@@ -15,8 +15,17 @@ function isHidden(entity) {
   return entity.hidden || hasLabel(entity, 'hidden');
 }
 
-function isUserFacing(entity) {
-  return !entity.entity_category;
+function isEntityCategory(
+  entity,
+  sensors = true,
+  config = false,
+  diagnostic = false,
+) {
+  return (
+    (sensors && !entity.entity_category) ||
+    (config && entity.entity_category == 'config') ||
+    (diagnostic && entity.entity_category == 'diagnostic')
+  );
 }
 
 function getOrderNumber(c) {
@@ -113,7 +122,12 @@ export function sortEntities(list) {
   return [...withOrder, ...groupedObjects];
 }
 
-export function resolveEntities(c) {
+export function resolveEntities(
+  c,
+  includeSensors = true,
+  includeConfig = false,
+  includeDiagnostic = false,
+) {
   return sortEntities(
     (Array.isArray(c) ? c : [c])
       .map(function (c) {
@@ -127,35 +141,73 @@ export function resolveEntities(c) {
               Object.values(window._bonbon.entities || {})
                 .filter((e) => re.test(e.entity_id))
                 .forEach((e) => {
-                  if (isUserFacing(e) && !isHidden(e)) {
+                  if (
+                    isEntityCategory(
+                      e,
+                      includeSensors,
+                      includeConfig,
+                      includeDiagnostic,
+                    ) &&
+                    !isHidden(e)
+                  ) {
                     elements.push({ entity: e });
                   }
                 });
             } else {
               if (
                 window._bonbon.entities?.[c] &&
-                isUserFacing(window._bonbon.entities?.[c]) &&
+                isEntityCategory(
+                  window._bonbon.entities?.[c],
+                  includeSensors,
+                  includeConfig,
+                  includeDiagnostic,
+                ) &&
                 !isHidden(window._bonbon.entities?.[c])
               ) {
                 elements.push({ entity: window._bonbon.entities?.[c] });
               }
               if (window._bonbon.devices?.[c]) {
                 Object.values(window._bonbon.entities || {}).forEach((e) => {
-                  if (e.device_id === c && isUserFacing(e) && !isHidden(e)) {
+                  if (
+                    e.device_id === c &&
+                    isEntityCategory(
+                      e,
+                      includeSensors,
+                      includeConfig,
+                      includeDiagnostic,
+                    ) &&
+                    !isHidden(e)
+                  ) {
                     elements.push({ entity: e });
                   }
                 });
               }
               if (window._bonbon.labels?.[c]) {
                 window._bonbon.labels[c].forEach((e) => {
-                  if (isUserFacing(e) && !isHidden(e)) {
+                  if (
+                    isEntityCategory(
+                      e,
+                      includeSensors,
+                      includeConfig,
+                      includeDiagnostic,
+                    ) &&
+                    !isHidden(e)
+                  ) {
                     elements.push({ entity: e });
                   }
                 });
               }
               if (window._bonbon.labels?.['bonbon_' + c]) {
                 window._bonbon.labels['bonbon_' + c].forEach((e) => {
-                  if (isUserFacing(e) && !isHidden(e)) {
+                  if (
+                    isEntityCategory(
+                      e,
+                      includeSensors,
+                      includeConfig,
+                      includeDiagnostic,
+                    ) &&
+                    !isHidden(e)
+                  ) {
                     elements.push({ entity: e });
                   }
                 });
