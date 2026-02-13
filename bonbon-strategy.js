@@ -80,8 +80,10 @@ export class BonbonStrategy {
           return !config.views.bonbon_home.sections[key].hidden;
         })
         .sort((aKey, bKey) => {
-          const orderA = config.views.bonbon_home.sections[aKey].order ?? 999;
-          const orderB = config.views.bonbon_home.sections[bKey].order ?? 999;
+          const orderA =
+            config.views.bonbon_home.sections[aKey].order ?? Infinity;
+          const orderB =
+            config.views.bonbon_home.sections[bKey].order ?? Infinity;
           return orderA - orderB;
         })
         .map((key) => {
@@ -506,9 +508,9 @@ export class BonbonStrategy {
                   })
                   .sort((aKey, bKey) => {
                     const orderA =
-                      config.views.bonbon_area.sections[aKey].order ?? 999;
+                      config.views.bonbon_area.sections[aKey].order ?? Infinity;
                     const orderB =
-                      config.views.bonbon_area.sections[bKey].order ?? 999;
+                      config.views.bonbon_area.sections[bKey].order ?? Infinity;
                     return orderA - orderB;
                   })
                   .map((key) => {
@@ -1044,8 +1046,8 @@ export class BonbonStrategy {
           const sections = Object.keys(viewConfig.sections || {})
             .filter((s) => !viewConfig.sections[s].hidden)
             .sort((aKey, bKey) => {
-              const orderA = viewConfig.sections[aKey].order ?? 999;
-              const orderB = viewConfig.sections[bKey].order ?? 999;
+              const orderA = viewConfig.sections[aKey].order ?? Infinity;
+              const orderB = viewConfig.sections[bKey].order ?? Infinity;
               return orderA - orderB;
             })
             .map((key) => {
