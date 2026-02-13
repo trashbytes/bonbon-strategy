@@ -303,8 +303,8 @@ export function inArea(c, area) {
   //   return inArea || deviceInArea;
   // }
   return (
-    c.entity?.area_id === (area.area_id || area) ||
-    c.object?.area_id === (area.area_id || area)
+    c.entity?.area_id === (area?.area_id || area) ||
+    c.object?.area_id === (area?.area_id || area)
   );
   return false;
 }
@@ -320,8 +320,8 @@ export function onFloor(c, floor) {
   //   return onFloor || areasOnFloor.some((area) => inArea(c, area));
   // }
   return (
-    c.entity?.floor_id === (floor.floor_id || floor) ||
-    c.object?.floor_id === (floor.floor_id || floor)
+    c.entity?.floor_id === (floor?.floor_id || floor) ||
+    c.object?.floor_id === (floor?.floor_id || floor)
   );
   return false;
 }
