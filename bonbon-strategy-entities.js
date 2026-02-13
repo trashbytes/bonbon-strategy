@@ -138,6 +138,7 @@ export function resolveEntities(
             let attrFilter;
             if (attrFilterMatch) {
               c = attrFilterMatch[1].trim();
+              if (!c) c = '*';
               const inside = attrFilterMatch[2].trim();
               const m = inside.match(
                 /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(.+))$/,

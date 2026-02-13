@@ -350,7 +350,7 @@ You can use wildcards and CSS like attribute selectors (including \*=, ^= and $=
 - `binary_sensor.*contact[window]` grabs all binary contact sensors with a device_class of `window`, it's basically the shorthand
 - `binary_sensor.*contact[name$=door] grabs all binary contact sensors whose display names end with `door`
 - `sensor.*[unit_of_measurement=ppm]` grabs all sensors whose unit of measurement is `ppm`
-- `"*[area_id=office]"` grabs everything from the office (in quotes because of the leading asterisk)
+- `"[area_id=office]"` grabs everything from the office (in quotes because of the leading bracket)
 
 Don't forget to add `include_diagnostic: true` and `include_config: true` if needed, otherwise things like battery sensors and other options might not show up, as only the user facing sensors are included by default (`include_sensors: true`).
 
