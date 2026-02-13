@@ -20,7 +20,7 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 - Areas (add the label `hidden` to hide an area)
 - Temperature, Humidity and CO2
 - Climate (HVAC)
-- Lights (add the labels `mainlight` and `nightlight` if needed)
+- Lights
 - Switches
 - Media Players
 - Openings (Doors & Windows)
@@ -29,9 +29,10 @@ If an entity isn't assigned to an area or if it's disabled or hidden, it won't s
 - Custom views, sections and cards (see configuration)
 
 You can hide anything with the label `hidden` or by disabling the `Visible` setting.
-All entities are ordered alphabetically by default but are grouped by device, if they are in the same section. Though there is an additional rule for lights: If lights have the label `mainlight` they are listed first, if they have the label `nightlight` they are listed last. The latter are also excluded from the area or floor toggles.
+All entities are ordered alphabetically by default but are grouped by device, if they are in the same section.
 You can override the order by adding labels like `order_1`, `order_2`, etc.
 You can add the prefix `bonbon_` to any of these labels in case it interferes with your setup.
+You can add the label `nightlight` to lights to exclude them from area and floor toggles.
 
 ## Dependencies
 
@@ -69,12 +70,16 @@ Done!
 
 Add this to your dashboard configuration. Change the translations and options as needed.
 
+### Minimum Config
+
 Minimum required configuration, everything default:
 
 ```
 strategy:
   type: custom:bonbon-strategy
 ```
+
+### Translation only
 
 Configuration with translations only, rest default:
 
@@ -110,6 +115,8 @@ strategy:
           bonbon_miscellaneous:
             name: Miscellaneous
 ```
+
+### Complete config
 
 Complete configuration for maximum control:
 
@@ -181,6 +188,9 @@ strategy:
             show_humidity: true
             show_co2: true
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_climate:
             name: Climate
             icon: mdi:radiator
@@ -189,6 +199,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_lights:
             name: Lights
             icon: mdi:lightbulb-group
@@ -199,6 +212,9 @@ strategy:
             show_area_lights_toggle: true
             always_show_area_lights_toggle: true
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_switches:
             name: Switches
             icon: mdi:toggle-switch
@@ -207,6 +223,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_media:
             name: Media Players
             icon: mdi:disc-player
@@ -215,6 +234,9 @@ strategy:
             min_columns: 1
             max_columns: 1
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_openings:
             name: Doors & Windows
             icon: mdi:window-closed-variant
@@ -223,6 +245,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_covers:
             name: Shutters & Shades
             icon: mdi:roller-shade
@@ -231,6 +256,9 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
           bonbon_miscellaneous:
             name: Miscellaneous
             icon: mdi:dots-horizontal-circle-outline
@@ -239,26 +267,12 @@ strategy:
             min_columns: 1
             max_columns: 2
             hidden: false
-
+            include_sensors: true
+            include_config: false
+            include_diagnostic: false
 ```
 
-You can add custom views like this:
-
-```
-      batteries:
-        name: Batteries
-        sections:
-          batteries:
-            name: Batteries
-            icon: mdi:battery
-            show_separator: true
-            min_columns: 2
-            max_columns: 2
-            cards:
-              - sensor.*battery
-```
-
-Custom views will be added as tabs at the top. In combination with wildcards you can create views to keep an eye on batteries, doors, shutters, etc. in just a few lines. Or create entirely custom views with your own cards.
+### Custom sections
 
 You can add custom sections like this:
 
@@ -268,18 +282,78 @@ You can add custom sections like this:
             icon: mdi:death-star
             order: 3
             show_separator: true
+            custom_separator_buttons: false # can be an array of Bubble `sub_button`s, entity_ids, device_ids or labels
             min_columns: 1
             max_columns: 2
             hidden: false
-            cards: # can be cards, entity_ids (including *wildcards*), device_ids or labels
+            cards: # can be cards, entity_ids, device_ids or labels
               - light.death_star
               - switch.arm
 ```
 
 When added under `bonbon_area` then the section will only show up if there are entities that are assigned to that area. If you add a custom card which does not have an `entity` or `entity_id` key with an entity_id that is assigned to that area, you can add `area_id: <area_id>` or `bonbon_area_id: <area_id>` to the card. If you want to force this section to show up in a specific area all the time then add `area_id: <area_id>` to the section.
+Same goes for custom separator cards on floors and in areas which can be restricted to a specific one with `floor_id: <floor_id>` and `bonbon_floor_id: <floor_id>` or `area_id: <area_id>` and `bonbon_area_id: <area_id>` respectively.
+
+### Custom views
+
+You can even add entire custom views like this:
+
+```
+      openings:
+        name: Doors & Windows
+        sections:
+          doors:
+            name: Doors
+            icon: mdi:door
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            cards:
+              - binary_sensor.*contact[door]
+          windows:
+            name: Windows
+            icon: mdi:window-closed-variant
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            cards:
+              - binary_sensor.*contact[window]
+      diagnostic:
+        name: Diagnostic
+        sections:
+          leak:
+            name: Watersensors
+            icon: mdi:water
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            cards:
+              - binary_sensor.*leak
+          batteries:
+            name: Batteries
+            icon: mdi:battery
+            show_separator: true
+            min_columns: 2
+            max_columns: 2
+            include_diagnostic: true
+            include_config: true
+            cards:
+              - sensor.*battery
+```
+
+Custom views will be added as tabs at the top. In combination with wildcards you can create views to keep an eye on batteries, doors, shutters, etc. in just a few lines. Or create entirely custom views with your own cards.
+
+### Wildcards and attribute selectors
+
+You can use wildcards and CSS like attribute selectors (including \*=, ^= and $=, which is most useful for `name`) to get exactly what you're looking for. Here are some examples:
+
+- `binary_sensor.*contact[window]` grabs all binary contact sensors with a device_class of `window`, it's basically the shorthand
+- `binary_sensor.*contact[name$=door] grabs all binary contact sensors whose display names end with `door`
+- `sensor.*[unit_of_measurement=ppm]` grabs all sensors whose unit of measurement is `ppm`
+- `"*[area_id=office]"` grabs everything from the office (in quotes because of the leading asterisk)
+
+Don't forget to add `include_diagnostic: true` and `include_config: true` if needed, otherwise things like battery sensors and other options might not show up, as only the user facing sensors are included by default (`include_sensors: true`).
+
+### Custom cards
 
 When using your own cards you can use card_mod to style them to look like the rest of Bonbon Strategy. Some variables will be available to you, like `--bonbon-box-shadow` and `--bubble-button-border-radius`, which should get you most of the way there.
-
-### Auto Light/Dark Mode
-
-If your theme supports it and `auto_light_dark_mode` is set to `true`, then Bonbon Strategy will try to automatically switch between light and dark mode depending on the state of the sun. It should work independently from your browser and operating system.

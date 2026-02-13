@@ -1,15 +1,16 @@
-export function createButton(e, entities, states, styles) {
-  if (typeof e === 'string' && entities[e]) {
-    e = entities[e];
+export function createButton(e, styles) {
+  if (typeof e === 'string' && window._bonbon.entities[e]) {
+    e = window._bonbon.entities[e];
   }
   const isMeasurement =
-    states[e.entity_id]?.attributes?.unit_of_measurement != null;
+    window._bonbon.states[e?.entity_id]?.attributes?.unit_of_measurement !=
+    null;
   const isToggle =
-    e.entity_id?.startsWith('light.') || e.entity_id?.startsWith('switch.');
-  const isBinary = e.entity_id?.startsWith('binary_sensor.');
+    e?.entity_id?.startsWith('light.') || e?.entity_id?.startsWith('switch.');
+  const isBinary = e?.entity_id?.startsWith('binary_sensor.');
   const opts = {
     card_type: 'button',
-    entity: e.entity_id,
+    entity: e?.entity_id,
     show_state: true,
     show_last_changed: isToggle,
     use_accent_color: true,
@@ -25,7 +26,7 @@ export function createButton(e, entities, states, styles) {
 export function createSeparatorCard(
   name,
   icon,
-  sub_button = false,
+  groups = false,
   styles = undefined,
 ) {
   const card = {
@@ -33,27 +34,40 @@ export function createSeparatorCard(
     card_type: 'separator',
     name: name,
     icon: icon,
-    sub_button: sub_button,
+    sub_button: { main: groups.map((g) => ({ group: g })) },
   };
   if (styles) card.styles = styles;
   return card;
+}
+
+export function createSubButton(c) {
+  if (c.object) {
+    return c.object;
+  }
+  const isToggle =
+    c?.entity?.entity_id.startsWith('light.') ||
+    c?.entity?.entity_id.startsWith('switch.');
+  return {
+    entity: c?.entity.entity_id,
+    tap_action: { action: isToggle ? 'toggle' : 'more-info' },
+  };
 }
 
 export function resolveColumns(sectionConfig, count) {
   return (
     sectionConfig.columns ||
     Math.min(
-      Math.max(sectionConfig.min_columns || 1, count),
+      Math.max(sectionConfig.min_columns || 1, count || 0),
       sectionConfig.max_columns || 1,
     )
   );
 }
 
-export function createGrid(cardsArray, sectionConfig, count, square = false) {
+export function createGrid(cardsArray, sectionConfig) {
   return {
     type: 'grid',
-    columns: resolveColumns(sectionConfig, count),
-    square: square,
+    columns: resolveColumns(sectionConfig, cardsArray?.length),
+    square: false,
     cards: cardsArray,
   };
 }

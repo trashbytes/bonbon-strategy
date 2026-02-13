@@ -117,7 +117,7 @@ export const getStyles = (isDark) => {
         opacity: 1 !important;
       }
     `,
-    bubbleSubButtonAlternate: css`
+    bubbleSeparatorSubButtonBase: css`
       .bubble-sub-button,
       .bubble-sub-button-container:not(:has(.background-on))
         .bubble-sub-button {
@@ -131,41 +131,66 @@ export const getStyles = (isDark) => {
         color: #fff;
         background-color: var(--bubble-default-color);
       }
-      .bubble-sub-button-container:has(.background-on)
-        .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-      .bubble-sub-button-container:has(.background-on)
-        .bubble-sub-button[data-tap-action*='light.turn_off']
-        ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-        display: none !important;
-      }
-      .bubble-sub-button-container:not(:has(.background-on))
-        .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-      .bubble-sub-button-container:not(:has(.background-on))
-        .bubble-sub-button[data-tap-action*='light.turn_on']
-        ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-        display: none !important;
-      }
     `,
-    bubbleSubButtonRegular: css`
-      .bubble-sub-button {
+    bubbleSeparatorLightsSubButtonAlways: css`
+      [data-group-id=\"g_main_0\"] .bubble-sub-button,
+      .bubble-sub-button-container:not(:has(.background-on))
+        [data-group-id=\"g_main_0\"]
+        .bubble-sub-button {
         background-color: var(
           --ha-card-background,
           var(--card-background-color, #fff)
         );
         box-shadow: 0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'});
       }
-      .background-on {
+      .bubble-sub-button-container:has(.background-on)
+        [data-group-id=\"g_main_0\"]
+        .bubble-sub-button {
         color: #fff;
         background-color: var(--bubble-default-color);
       }
-      .bubble-sub-button-container .bubble-sub-button:not(.background-on),
+      .bubble-sub-button-container:has(.background-on)
+        [data-group-id=\"g_main_0\"]
+        .bubble-sub-button:not([data-tap-action*='light.turn_off']),
+      .bubble-sub-button-container:has(.background-on)
+        [data-group-id=\"g_main_0\"]
+        .bubble-sub-button[data-tap-action*='light.turn_off']
+        ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
+        display: none !important;
+      }
+      .bubble-sub-button-container:not(:has(.background-on))
+        [data-group-id=\"g_main_0\"]
+        .bubble-sub-button:not([data-tap-action*='light.turn_on']),
+      .bubble-sub-button-container:not(:has(.background-on))
+        [data-group-id=\"g_main_0\"]
+        .bubble-sub-button[data-tap-action*='light.turn_on']
+        ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
+        display: none !important;
+      }
+    `,
+    bubbleSeparatorLightsSubButtonDefault: css`
+      [data-group-id=\"g_main_0\"] .bubble-sub-button {
+        background-color: var(
+          --ha-card-background,
+          var(--card-background-color, #fff)
+        );
+        box-shadow: 0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'});
+      }
+      [data-group-id=\"g_main_0\"] .background-on {
+        color: #fff;
+        background-color: var(--bubble-default-color);
+      }
       .bubble-sub-button-container
+        [data-group-id=\"g_main_0\"]
+        .bubble-sub-button:not(.background-on),
+      .bubble-sub-button-container
+        [data-group-id=\"g_main_0\"]
         .bubble-sub-button.background-on
         ~ .bubble-sub-button.background-on {
         display: none !important;
       }
     `,
-    bubbleAreaSubButtonAlternate: css`
+    bubbleAreaSubButtonAlways: css`
       .fixed-top .bubble-sub-button-container {
         margin-top: 8px;
       }
@@ -256,7 +281,7 @@ export const getStyles = (isDark) => {
         display: none !important;
       }
     `,
-    bubbleAreaSubButtonRegular: css`
+    bubbleAreaSubButtonDefault: css`
       .fixed-top .bubble-sub-button-container {
         margin-top: 8px;
       }
