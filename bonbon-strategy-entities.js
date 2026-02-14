@@ -43,8 +43,8 @@ function getOrderNumber(c) {
 
 function getEntityDisplayName(c) {
   const name =
-    c?.entity?.name ||
     window.__bonbon.states?.[c?.entity?.entity_id]?.attributes?.friendly_name ||
+    c?.entity?.name ||
     c?.entity?.entity_id ||
     '';
   return name;
@@ -124,28 +124,31 @@ export function resolveEntities(c) {
               }
             }
 
-            const attrFilterMatch = c.match(/(.*)\[([^\]]+)\]$/);
-            let attrFilter;
-            if (attrFilterMatch) {
-              c = attrFilterMatch[1].trim();
+            const attrFilters = [];
+            const attrFilterMatches = c.match(/\[([^\]]+)\]/g);
+            if (attrFilterMatches) {
+              c = c.replace(/\[([^\]]+)\]/g, '').trim();
               if (!c) c = '*';
-              const inside = attrFilterMatch[2].trim();
-              const m = inside.match(
-                /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(.+))$/,
-              );
-              if (m) {
-                const key = m[1];
-                const operator = m[2];
-                const value = (m[3] || m[4] || m[5] || '').trim();
-                attrFilter = { key, operator, value };
-              } else if (/^[a-zA-Z0-9_-]+$/.test(inside)) {
-                attrFilter = { key: inside, operator: 'exists' };
-              }
+              attrFilterMatches.forEach((match) => {
+                const inside = match.slice(1, -1).trim();
+                const m = inside.match(
+                  /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(.+))$/,
+                );
+                if (m) {
+                  const key = m[1];
+                  const operator = m[2];
+                  const value = (m[3] || m[4] || m[5] || '').trim();
+                  attrFilters.push({ key, operator, value });
+                } else if (/^[a-zA-Z0-9_-]+$/.test(inside)) {
+                  attrFilters.push({ key: inside, operator: 'exists' });
+                }
+              });
             }
 
             const getAttributeValue = (entity, key) => {
               if (!entity) return undefined;
-              if (key === 'name') return getEntityDisplayName({ entity });
+              if (key === 'name' || key === 'friendly_name')
+                return getEntityDisplayName({ entity });
               const attrFromEntity = entity[key];
               if (attrFromEntity !== undefined) return attrFromEntity;
               const stateAttr =
@@ -156,7 +159,7 @@ export function resolveEntities(c) {
 
             const hasAttribute = (entity, key) => {
               if (!entity) return false;
-              if (key === 'name') return true;
+              if (key === 'name' || key === 'friendly_name') return true;
               if (Object.prototype.hasOwnProperty.call(entity, key))
                 return true;
               const stateAttrs =
@@ -169,19 +172,62 @@ export function resolveEntities(c) {
               return false;
             };
 
-            const matchesAttribute = (entity) => {
-              if (!attrFilter) return true;
-              const { key, operator, value } = attrFilter;
-              if (operator === 'exists') return hasAttribute(entity, key);
-              const attr = getAttributeValue(entity, key);
-              if (attr === undefined || attr === null) return false;
-              const a = String(attr).toLowerCase();
-              const v = String(value).toLowerCase();
-              if (operator === '=') return a === v;
-              if (operator === '*=') return a.includes(v);
-              if (operator === '^=') return a.startsWith(v);
-              if (operator === '$=') return a.endsWith(v);
-              return false;
+            const matchesAttributes = (entity) => {
+              return attrFilters.every((attrFilter) => {
+                const { key, operator, value } = attrFilter;
+                if (operator === 'exists') return hasAttribute(entity, key);
+                const attr = getAttributeValue(entity, key);
+                if (attr === undefined || attr === null) return false;
+                const a = String(attr).toLowerCase();
+                const v = String(value).toLowerCase();
+                if (operator === '=') return a === v;
+                if (operator === '*=') return a.includes(v);
+                if (operator === '^=') return a.startsWith(v);
+                if (operator === '$=') return a.endsWith(v);
+                return false;
+              });
+            };
+
+            const checkEntityCategory = (entity) => {
+              const hasEntityCategoryFilter = attrFilters.some(
+                (f) => f.key === 'entity_category',
+              );
+              if (!hasEntityCategoryFilter) return !entity.entity_category;
+
+              return attrFilters
+                .filter((f) => f.key === 'entity_category')
+                .every((f) => {
+                  const a = String(entity.entity_category || '').toLowerCase();
+                  const v = String(f.value).toLowerCase();
+                  if (f.operator === '=') return a === v;
+                  if (f.operator === '*=') return a.includes(v);
+                  if (f.operator === '^=') return a.startsWith(v);
+                  if (f.operator === '$=') return a.endsWith(v);
+                  return false;
+                });
+            };
+
+            const getOtherFilters = () =>
+              attrFilters.filter((f) => f.key !== 'entity_category');
+
+            const checkOtherAttributes = (entity) => {
+              const otherFilters = getOtherFilters();
+              return (
+                otherFilters.length === 0 ||
+                otherFilters.every((f) => {
+                  const { key, operator, value } = f;
+                  if (operator === 'exists') return hasAttribute(entity, key);
+                  const attr = getAttributeValue(entity, key);
+                  if (attr === undefined || attr === null) return false;
+                  const a = String(attr).toLowerCase();
+                  const v = String(value).toLowerCase();
+                  if (operator === '=') return a === v;
+                  if (operator === '*=') return a.includes(v);
+                  if (operator === '^=') return a.startsWith(v);
+                  if (operator === '$=') return a.endsWith(v);
+                  return false;
+                })
+              );
             };
 
             if (c.includes('*')) {
@@ -191,19 +237,11 @@ export function resolveEntities(c) {
               Object.values(window.__bonbon.entities || {})
                 .filter((e) => re.test(e.entity_id))
                 .forEach((e) => {
-                  const passesEntityCategoryCheck =
-                    attrFilter?.key === 'entity_category'
-                      ? matchesAttribute(e)
-                      : !e.entity_category;
-                  const passesAttributeCheck =
-                    !attrFilter ||
-                    attrFilter.key === 'entity_category' ||
-                    matchesAttribute(e);
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
-                    passesEntityCategoryCheck &&
+                    checkEntityCategory(e) &&
                     !isHidden(e) &&
-                    passesAttributeCheck
+                    checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });
                   }
@@ -211,39 +249,23 @@ export function resolveEntities(c) {
             } else {
               if (window.__bonbon.entities?.[c]) {
                 const e = window.__bonbon.entities?.[c];
-                const passesEntityCategoryCheck =
-                  attrFilter?.key === 'entity_category'
-                    ? matchesAttribute(e)
-                    : !e.entity_category;
-                const passesAttributeCheck =
-                  !attrFilter ||
-                  attrFilter.key === 'entity_category' ||
-                  matchesAttribute(e);
                 if (
                   !excludedEntity_ids.has(c) &&
-                  passesEntityCategoryCheck &&
+                  checkEntityCategory(e) &&
                   !isHidden(e) &&
-                  passesAttributeCheck
+                  checkOtherAttributes(e)
                 ) {
                   elements.push({ entity: e });
                 }
               }
               if (window.__bonbon.devices?.[c]) {
                 Object.values(window.__bonbon.entities || {}).forEach((e) => {
-                  const passesEntityCategoryCheck =
-                    attrFilter?.key === 'entity_category'
-                      ? matchesAttribute(e)
-                      : !e.entity_category;
-                  const passesAttributeCheck =
-                    !attrFilter ||
-                    attrFilter.key === 'entity_category' ||
-                    matchesAttribute(e);
                   if (
                     e.device_id === c &&
                     !excludedEntity_ids.has(e.entity_id) &&
-                    passesEntityCategoryCheck &&
+                    checkEntityCategory(e) &&
                     !isHidden(e) &&
-                    passesAttributeCheck
+                    checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });
                   }
@@ -251,19 +273,11 @@ export function resolveEntities(c) {
               }
               if (window.__bonbon.labels?.[c]) {
                 window.__bonbon.labels[c].forEach((e) => {
-                  const passesEntityCategoryCheck =
-                    attrFilter?.key === 'entity_category'
-                      ? matchesAttribute(e)
-                      : !e.entity_category;
-                  const passesAttributeCheck =
-                    !attrFilter ||
-                    attrFilter.key === 'entity_category' ||
-                    matchesAttribute(e);
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
-                    passesEntityCategoryCheck &&
+                    checkEntityCategory(e) &&
                     !isHidden(e) &&
-                    passesAttributeCheck
+                    checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });
                   }
@@ -271,19 +285,11 @@ export function resolveEntities(c) {
               }
               if (window.__bonbon.labels?.['bonbon_' + c]) {
                 window.__bonbon.labels['bonbon_' + c].forEach((e) => {
-                  const passesEntityCategoryCheck =
-                    attrFilter?.key === 'entity_category'
-                      ? matchesAttribute(e)
-                      : !e.entity_category;
-                  const passesAttributeCheck =
-                    !attrFilter ||
-                    attrFilter.key === 'entity_category' ||
-                    matchesAttribute(e);
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
-                    passesEntityCategoryCheck &&
+                    checkEntityCategory(e) &&
                     !isHidden(e) &&
-                    passesAttributeCheck
+                    checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });
                   }

@@ -315,7 +315,7 @@ You can even add entire custom views like this:
             max_columns: 2
             include_diagnostic: true
             cards:
-              - sensor.*battery
+              - sensor.*battery[entity_category=diagnostic]
 ```
 
 Custom views will be added as tabs at the top. In combination with wildcards you can create views to keep an eye on batteries, doors, shutters, etc. in just a few lines. Or create entirely custom views with your own cards.
@@ -329,7 +329,7 @@ You can use wildcards and CSS like attribute selectors (including \*=, ^= and $=
 - `sensor.*[unit_of_measurement=ppm]` grabs all sensors whose unit of measurement is `ppm`
 - `"[area_id=office]"` grabs everything from the office (in quotes because of the leading bracket)
 
-Don't forget to add `include_diagnostic: true` and `include_config: true` if needed, otherwise things like battery sensors and other options might not show up, as only the user facing sensors are included by default (`include_sensors: true`).
+Don't forget to add `[entity_category=diagnostic]` or `[entity_category=config]` if needed, otherwise things like battery sensors and other options might not show up, as only the user facing sensors are included by default. You can also use multiple attribute selectors for even more control.
 
 ### Custom cards
 
