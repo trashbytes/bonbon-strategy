@@ -300,7 +300,8 @@ You can even add entire custom views like this:
 
 ```
       openings:
-        name: Doors & Windows
+        title: Doors & Windows
+        icon: mdi:window-closed-variant
         sections:
           doors:
             name: Doors
@@ -319,7 +320,8 @@ You can even add entire custom views like this:
             cards:
               - binary_sensor.*contact[window]
       diagnostic:
-        name: Diagnostic
+        title: Diagnostic
+        icon: mdi:magnify-scan
         sections:
           leak:
             name: Watersensors

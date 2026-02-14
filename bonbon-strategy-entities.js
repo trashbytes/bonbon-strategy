@@ -134,6 +134,27 @@ export function resolveEntities(
         if (c) {
           const elements = [];
           if (typeof c === 'string') {
+            let excludedEntity_ids = new Set();
+
+            if (c.includes(':not(')) {
+              const notMatch = c.match(/^(.*):not\(([^)]+)\)$/);
+              if (notMatch) {
+                c = notMatch[1].trim();
+                const notSelector = notMatch[2];
+                const excludedElements = resolveEntities(
+                  notSelector,
+                  includeSensors,
+                  includeConfig,
+                  includeDiagnostic,
+                );
+                excludedEntity_ids = new Set(
+                  excludedElements
+                    .map((e) => e.entity?.entity_id)
+                    .filter(Boolean),
+                );
+              }
+            }
+
             const attrFilterMatch = c.match(/(.*)\[([^\]]+)\]$/);
             let attrFilter;
             if (attrFilterMatch) {
@@ -148,12 +169,8 @@ export function resolveEntities(
                 const operator = m[2];
                 const value = (m[3] || m[4] || m[5] || '').trim();
                 attrFilter = { key, operator, value };
-              } else {
-                attrFilter = {
-                  key: 'device_class',
-                  operator: '*=',
-                  value: inside,
-                };
+              } else if (/^[a-zA-Z0-9_-]+$/.test(inside)) {
+                attrFilter = { key: inside, operator: 'exists' };
               }
             }
 
@@ -168,9 +185,25 @@ export function resolveEntities(
               return entity[key];
             };
 
+            const hasAttribute = (entity, key) => {
+              if (!entity) return false;
+              if (key === 'name') return true;
+              if (Object.prototype.hasOwnProperty.call(entity, key))
+                return true;
+              const stateAttrs =
+                window._bonbon.states?.[entity.entity_id]?.attributes;
+              if (
+                stateAttrs &&
+                Object.prototype.hasOwnProperty.call(stateAttrs, key)
+              )
+                return true;
+              return false;
+            };
+
             const matchesAttribute = (entity) => {
               if (!attrFilter) return true;
               const { key, operator, value } = attrFilter;
+              if (operator === 'exists') return hasAttribute(entity, key);
               const attr = getAttributeValue(entity, key);
               if (attr === undefined || attr === null) return false;
               const a = String(attr).toLowerCase();
@@ -190,6 +223,7 @@ export function resolveEntities(
                 .filter((e) => re.test(e.entity_id))
                 .forEach((e) => {
                   if (
+                    !excludedEntity_ids.has(e.entity_id) &&
                     isEntityCategory(
                       e,
                       includeSensors,
@@ -205,6 +239,7 @@ export function resolveEntities(
             } else {
               if (
                 window._bonbon.entities?.[c] &&
+                !excludedEntity_ids.has(c) &&
                 isEntityCategory(
                   window._bonbon.entities?.[c],
                   includeSensors,
@@ -220,6 +255,7 @@ export function resolveEntities(
                 Object.values(window._bonbon.entities || {}).forEach((e) => {
                   if (
                     e.device_id === c &&
+                    !excludedEntity_ids.has(e.entity_id) &&
                     isEntityCategory(
                       e,
                       includeSensors,
@@ -236,6 +272,7 @@ export function resolveEntities(
               if (window._bonbon.labels?.[c]) {
                 window._bonbon.labels[c].forEach((e) => {
                   if (
+                    !excludedEntity_ids.has(e.entity_id) &&
                     isEntityCategory(
                       e,
                       includeSensors,
@@ -252,6 +289,7 @@ export function resolveEntities(
               if (window._bonbon.labels?.['bonbon_' + c]) {
                 window._bonbon.labels['bonbon_' + c].forEach((e) => {
                   if (
+                    !excludedEntity_ids.has(e.entity_id) &&
                     isEntityCategory(
                       e,
                       includeSensors,

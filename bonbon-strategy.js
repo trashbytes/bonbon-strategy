@@ -997,6 +997,7 @@ export class BonbonStrategy {
                   .filter((section) => section);
                 views.push({
                   title: area.name,
+                  icon: area.icon,
                   background: isDark
                     ? config.background_image_dark
                       ? 'top / cover no-repeat fixed url("' +
@@ -1061,6 +1062,7 @@ export class BonbonStrategy {
 
       const homeView = {
         title: dashboardName,
+        icon: config?.views?.bonbon_home?.icon || '',
         background: isDark
           ? config.background_image_dark
             ? 'top / cover no-repeat fixed url("' +
@@ -1133,7 +1135,8 @@ export class BonbonStrategy {
 
           if (sections.length) {
             views.push({
-              title: viewConfig.name || viewKey,
+              title: viewConfig.title || viewKey,
+              icon: viewConfig.icon || '',
               background: isDark
                 ? config.background_image_dark
                   ? 'top / cover no-repeat fixed url("' +
