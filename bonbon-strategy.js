@@ -530,9 +530,6 @@ export class BonbonStrategy {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -601,9 +598,6 @@ export class BonbonStrategy {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -679,9 +673,6 @@ export class BonbonStrategy {
 
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -728,9 +719,6 @@ export class BonbonStrategy {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -767,9 +755,6 @@ export class BonbonStrategy {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -809,9 +794,6 @@ export class BonbonStrategy {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -851,9 +833,6 @@ export class BonbonStrategy {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -903,9 +882,6 @@ export class BonbonStrategy {
                           if (sectionConfig.show_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
-                              sectionConfig.include_sensors,
-                              sectionConfig.include_config,
-                              sectionConfig.include_diagnostic,
                             )
                               .filter((c) => {
                                 return inArea(c, area);
@@ -956,9 +932,6 @@ export class BonbonStrategy {
                             if (sectionConfig.show_separator) {
                               const userSubButtons = resolveEntities(
                                 sectionConfig.custom_separator_buttons,
-                                sectionConfig.include_sensors,
-                                sectionConfig.include_config,
-                                sectionConfig.include_diagnostic,
                               )
                                 .map(function (c) {
                                   if (c.entity) {
@@ -1031,9 +1004,6 @@ export class BonbonStrategy {
                   if (sectionConfig.show_separator) {
                     const userSubButtons = resolveEntities(
                       sectionConfig.custom_separator_buttons,
-                      sectionConfig.include_sensors,
-                      sectionConfig.include_config,
-                      sectionConfig.include_diagnostic,
                     )
                       .map(function (c) {
                         if (c.entity) {
@@ -1111,9 +1081,6 @@ export class BonbonStrategy {
                   if (sectionConfig.show_separator) {
                     const userSubButtons = resolveEntities(
                       sectionConfig.custom_separator_buttons,
-                      sectionConfig.include_sensors,
-                      sectionConfig.include_config,
-                      sectionConfig.include_diagnostic,
                     ).map(function (c) {
                       return createSubButton(c);
                     });
