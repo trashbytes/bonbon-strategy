@@ -313,7 +313,6 @@ You can even add entire custom views like this:
             show_separator: true
             min_columns: 2
             max_columns: 2
-            include_diagnostic: true
             cards:
               - sensor.*battery[entity_category=diagnostic]
 ```
