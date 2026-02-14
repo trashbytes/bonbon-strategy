@@ -1,9 +1,9 @@
 export function createButton(e, styles) {
-  if (typeof e === 'string' && window._bonbon.entities[e]) {
-    e = window._bonbon.entities[e];
+  if (typeof e === 'string' && window.__bonbon.entities[e]) {
+    e = window.__bonbon.entities[e];
   }
   const isMeasurement =
-    window._bonbon.states[e?.entity_id]?.attributes?.unit_of_measurement !=
+    window.__bonbon.states[e?.entity_id]?.attributes?.unit_of_measurement !=
     null;
   const isToggle =
     e?.entity_id?.startsWith('light.') || e?.entity_id?.startsWith('switch.');

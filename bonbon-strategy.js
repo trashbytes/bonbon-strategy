@@ -43,7 +43,7 @@ export class BonbonStrategy {
     }, {});
 
     if (typeof window !== 'undefined') {
-      window._bonbon = window._bonbon || {
+      window.__bonbon = window.__bonbon || {
         entities,
         devices,
         states,

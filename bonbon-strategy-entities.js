@@ -3,7 +3,7 @@ export function hasLabel(entity, label) {
   if (entity.labels?.some((l) => labels.includes(l))) return true;
   if (
     entity.device_id &&
-    window._bonbon.devices?.[entity.device_id]?.labels?.some((l) =>
+    window.__bonbon.devices?.[entity.device_id]?.labels?.some((l) =>
       labels.includes(l),
     )
   )
@@ -40,9 +40,9 @@ function getOrderNumber(c) {
   }
   if (
     c?.entity?.device_id &&
-    window._bonbon.devices?.[c?.entity.device_id]?.labels
+    window.__bonbon.devices?.[c?.entity.device_id]?.labels
   ) {
-    allLabels.push(...window._bonbon.devices[c?.entity.device_id].labels);
+    allLabels.push(...window.__bonbon.devices[c?.entity.device_id].labels);
   }
   const orderLabel = allLabels.find((label) =>
     /^bonbon_order_\d+$|^order_\d+$/.test(label),
@@ -57,7 +57,7 @@ function getOrderNumber(c) {
 function getEntityDisplayName(c) {
   const name =
     c?.entity?.name ||
-    window._bonbon.states?.[c?.entity?.entity_id]?.attributes?.friendly_name ||
+    window.__bonbon.states?.[c?.entity?.entity_id]?.attributes?.friendly_name ||
     c?.entity?.entity_id ||
     '';
   return name;
@@ -108,7 +108,7 @@ export function sortEntities(list) {
   });
   const groupEntries = Object.keys(groups).map((devId) => ({
     devId,
-    device: window._bonbon.devices?.[devId] || null,
+    device: window.__bonbon.devices?.[devId] || null,
     objects: groups[devId],
   }));
   groupEntries.sort((a, b) => {
@@ -180,7 +180,7 @@ export function resolveEntities(
               const attrFromEntity = entity[key];
               if (attrFromEntity !== undefined) return attrFromEntity;
               const stateAttr =
-                window._bonbon.states?.[entity.entity_id]?.attributes?.[key];
+                window.__bonbon.states?.[entity.entity_id]?.attributes?.[key];
               if (stateAttr !== undefined) return stateAttr;
               return entity[key];
             };
@@ -191,7 +191,7 @@ export function resolveEntities(
               if (Object.prototype.hasOwnProperty.call(entity, key))
                 return true;
               const stateAttrs =
-                window._bonbon.states?.[entity.entity_id]?.attributes;
+                window.__bonbon.states?.[entity.entity_id]?.attributes;
               if (
                 stateAttrs &&
                 Object.prototype.hasOwnProperty.call(stateAttrs, key)
@@ -219,7 +219,7 @@ export function resolveEntities(
               const esc = (s) => s.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
               const pattern = '^' + c.split('*').map(esc).join('.*') + '$';
               const re = new RegExp(pattern);
-              Object.values(window._bonbon.entities || {})
+              Object.values(window.__bonbon.entities || {})
                 .filter((e) => re.test(e.entity_id))
                 .forEach((e) => {
                   if (
@@ -238,21 +238,21 @@ export function resolveEntities(
                 });
             } else {
               if (
-                window._bonbon.entities?.[c] &&
+                window.__bonbon.entities?.[c] &&
                 !excludedEntity_ids.has(c) &&
                 isEntityCategory(
-                  window._bonbon.entities?.[c],
+                  window.__bonbon.entities?.[c],
                   includeSensors,
                   includeConfig,
                   includeDiagnostic,
                 ) &&
-                !isHidden(window._bonbon.entities?.[c]) &&
-                matchesAttribute(window._bonbon.entities?.[c])
+                !isHidden(window.__bonbon.entities?.[c]) &&
+                matchesAttribute(window.__bonbon.entities?.[c])
               ) {
-                elements.push({ entity: window._bonbon.entities?.[c] });
+                elements.push({ entity: window.__bonbon.entities?.[c] });
               }
-              if (window._bonbon.devices?.[c]) {
-                Object.values(window._bonbon.entities || {}).forEach((e) => {
+              if (window.__bonbon.devices?.[c]) {
+                Object.values(window.__bonbon.entities || {}).forEach((e) => {
                   if (
                     e.device_id === c &&
                     !excludedEntity_ids.has(e.entity_id) &&
@@ -269,8 +269,8 @@ export function resolveEntities(
                   }
                 });
               }
-              if (window._bonbon.labels?.[c]) {
-                window._bonbon.labels[c].forEach((e) => {
+              if (window.__bonbon.labels?.[c]) {
+                window.__bonbon.labels[c].forEach((e) => {
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
                     isEntityCategory(
@@ -286,8 +286,8 @@ export function resolveEntities(
                   }
                 });
               }
-              if (window._bonbon.labels?.['bonbon_' + c]) {
-                window._bonbon.labels['bonbon_' + c].forEach((e) => {
+              if (window.__bonbon.labels?.['bonbon_' + c]) {
+                window.__bonbon.labels['bonbon_' + c].forEach((e) => {
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
                     isEntityCategory(
@@ -306,13 +306,13 @@ export function resolveEntities(
             }
           } else if (
             (c.entity_id || c.entity) &&
-            (window._bonbon.entities[c.entity_id] ||
-              window._bonbon.entities[c.entity])
+            (window.__bonbon.entities[c.entity_id] ||
+              window.__bonbon.entities[c.entity])
           ) {
             elements.push({
               entity:
-                window._bonbon.entities[c.entity_id] ||
-                window._bonbon.entities[c.entity],
+                window.__bonbon.entities[c.entity_id] ||
+                window.__bonbon.entities[c.entity],
               object: c,
             });
           } else {
@@ -337,7 +337,7 @@ export function inArea(c, area) {
   //   const inArea =
   //     c.entity?.area_id === (area.area_id || area) ||
   //     c.object?.area_id === (area.area_id || area);
-  //   const device = window._bonbon.devices[c.entity?.device_id];
+  //   const device = window.__bonbon.devices[c.entity?.device_id];
   //   const deviceInArea = device && device.area_id === (area.area_id || area);
   //   return inArea || deviceInArea;
   // }
@@ -353,7 +353,7 @@ export function onFloor(c, floor) {
   //   const onFloor =
   //     c.entity?.floor_id === (floor.floor_id || floor) ||
   //     c.object?.floor_id === (floor.floor_id || floor);
-  //   const areasOnFloor = Object.values(window._bonbon.areas).filter((area) => {
+  //   const areasOnFloor = Object.values(window.__bonbon.areas).filter((area) => {
   //     return area.floor_id == (floor.floor_id || floor);
   //   });
   //   return onFloor || areasOnFloor.some((area) => inArea(c, area));
