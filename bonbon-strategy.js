@@ -910,12 +910,7 @@ export class BonbonStrategy {
                           (!sectionConfig.area_id ||
                             sectionConfig.area_id == area.area_id)
                         ) {
-                          const userCards = resolveEntities(
-                            sectionConfig.cards,
-                            sectionConfig.include_sensors,
-                            sectionConfig.include_config,
-                            sectionConfig.include_diagnostic,
-                          )
+                          const userCards = resolveEntities(sectionConfig.cards)
                             .filter((c) => {
                               console.log(c);
                               return (
@@ -992,14 +987,11 @@ export class BonbonStrategy {
               break;
             default:
               if (sectionConfig.cards && sectionConfig.cards.length) {
-                const userCards = resolveEntities(
-                  sectionConfig.cards,
-                  sectionConfig.include_sensors,
-                  sectionConfig.include_config,
-                  sectionConfig.include_diagnostic,
-                ).map(function (c) {
-                  return c.object || createButton(c.entity, styles);
-                });
+                const userCards = resolveEntities(sectionConfig.cards).map(
+                  function (c) {
+                    return c.object || createButton(c.entity, styles);
+                  },
+                );
                 if (userCards.length) {
                   if (sectionConfig.show_separator) {
                     const userSubButtons = resolveEntities(
@@ -1068,14 +1060,11 @@ export class BonbonStrategy {
               const sectionConfig = viewConfig.sections[key];
               const section = { cards: [] };
               if (sectionConfig.cards && sectionConfig.cards.length) {
-                const userCards = resolveEntities(
-                  sectionConfig.cards,
-                  sectionConfig.include_sensors,
-                  sectionConfig.include_config,
-                  sectionConfig.include_diagnostic,
-                ).map(function (c) {
-                  return c.object || createButton(c.entity, styles);
-                });
+                const userCards = resolveEntities(sectionConfig.cards).map(
+                  function (c) {
+                    return c.object || createButton(c.entity, styles);
+                  },
+                );
 
                 if (userCards.length) {
                   if (sectionConfig.show_separator) {
