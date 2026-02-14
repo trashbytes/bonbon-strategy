@@ -15,19 +15,6 @@ function isHidden(entity) {
   return entity.hidden || hasLabel(entity, 'hidden');
 }
 
-function isEntityCategory(
-  entity,
-  sensors = true,
-  config = false,
-  diagnostic = false,
-) {
-  return (
-    (sensors && !entity.entity_category) ||
-    (config && entity.entity_category == 'config') ||
-    (diagnostic && entity.entity_category == 'diagnostic')
-  );
-}
-
 function getOrderNumber(c) {
   const allLabels = [];
   if (c?.object?.bonbon_order || c?.object?.order) {
@@ -61,14 +48,6 @@ function getEntityDisplayName(c) {
     c?.entity?.entity_id ||
     '';
   return name;
-}
-
-export function isEntityType(c, domain, suffix) {
-  if (!c?.entity?.entity_id) return false;
-  const prefix = (domain || '').endsWith('.') ? domain : (domain || '') + '.';
-  if (!c.entity.entity_id.startsWith(prefix)) return false;
-  if (suffix) return c.entity.entity_id.endsWith(suffix);
-  return true;
 }
 
 export function sortByName(list) {
@@ -122,12 +101,7 @@ export function sortEntities(list) {
   return [...withOrder, ...groupedObjects];
 }
 
-export function resolveEntities(
-  c,
-  includeSensors = true,
-  includeConfig = false,
-  includeDiagnostic = false,
-) {
+export function resolveEntities(c) {
   return sortEntities(
     (Array.isArray(c) ? c : [c])
       .map(function (c) {
@@ -141,12 +115,7 @@ export function resolveEntities(
               if (notMatch) {
                 c = notMatch[1].trim();
                 const notSelector = notMatch[2];
-                const excludedElements = resolveEntities(
-                  notSelector,
-                  includeSensors,
-                  includeConfig,
-                  includeDiagnostic,
-                );
+                const excludedElements = resolveEntities(notSelector);
                 excludedEntity_ids = new Set(
                   excludedElements
                     .map((e) => e.entity?.entity_id)
@@ -222,48 +191,59 @@ export function resolveEntities(
               Object.values(window.__bonbon.entities || {})
                 .filter((e) => re.test(e.entity_id))
                 .forEach((e) => {
+                  const passesEntityCategoryCheck =
+                    attrFilter?.key === 'entity_category'
+                      ? matchesAttribute(e)
+                      : !e.entity_category;
+                  const passesAttributeCheck =
+                    !attrFilter ||
+                    attrFilter.key === 'entity_category' ||
+                    matchesAttribute(e);
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
-                    isEntityCategory(
-                      e,
-                      includeSensors,
-                      includeConfig,
-                      includeDiagnostic,
-                    ) &&
+                    passesEntityCategoryCheck &&
                     !isHidden(e) &&
-                    matchesAttribute(e)
+                    passesAttributeCheck
                   ) {
                     elements.push({ entity: e });
                   }
                 });
             } else {
-              if (
-                window.__bonbon.entities?.[c] &&
-                !excludedEntity_ids.has(c) &&
-                isEntityCategory(
-                  window.__bonbon.entities?.[c],
-                  includeSensors,
-                  includeConfig,
-                  includeDiagnostic,
-                ) &&
-                !isHidden(window.__bonbon.entities?.[c]) &&
-                matchesAttribute(window.__bonbon.entities?.[c])
-              ) {
-                elements.push({ entity: window.__bonbon.entities?.[c] });
+              if (window.__bonbon.entities?.[c]) {
+                const e = window.__bonbon.entities?.[c];
+                const passesEntityCategoryCheck =
+                  attrFilter?.key === 'entity_category'
+                    ? matchesAttribute(e)
+                    : !e.entity_category;
+                const passesAttributeCheck =
+                  !attrFilter ||
+                  attrFilter.key === 'entity_category' ||
+                  matchesAttribute(e);
+                if (
+                  !excludedEntity_ids.has(c) &&
+                  passesEntityCategoryCheck &&
+                  !isHidden(e) &&
+                  passesAttributeCheck
+                ) {
+                  elements.push({ entity: e });
+                }
               }
               if (window.__bonbon.devices?.[c]) {
                 Object.values(window.__bonbon.entities || {}).forEach((e) => {
+                  const passesEntityCategoryCheck =
+                    attrFilter?.key === 'entity_category'
+                      ? matchesAttribute(e)
+                      : !e.entity_category;
+                  const passesAttributeCheck =
+                    !attrFilter ||
+                    attrFilter.key === 'entity_category' ||
+                    matchesAttribute(e);
                   if (
                     e.device_id === c &&
                     !excludedEntity_ids.has(e.entity_id) &&
-                    isEntityCategory(
-                      e,
-                      includeSensors,
-                      includeConfig,
-                      includeDiagnostic,
-                    ) &&
+                    passesEntityCategoryCheck &&
                     !isHidden(e) &&
-                    matchesAttribute(e)
+                    passesAttributeCheck
                   ) {
                     elements.push({ entity: e });
                   }
@@ -271,16 +251,19 @@ export function resolveEntities(
               }
               if (window.__bonbon.labels?.[c]) {
                 window.__bonbon.labels[c].forEach((e) => {
+                  const passesEntityCategoryCheck =
+                    attrFilter?.key === 'entity_category'
+                      ? matchesAttribute(e)
+                      : !e.entity_category;
+                  const passesAttributeCheck =
+                    !attrFilter ||
+                    attrFilter.key === 'entity_category' ||
+                    matchesAttribute(e);
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
-                    isEntityCategory(
-                      e,
-                      includeSensors,
-                      includeConfig,
-                      includeDiagnostic,
-                    ) &&
+                    passesEntityCategoryCheck &&
                     !isHidden(e) &&
-                    matchesAttribute(e)
+                    passesAttributeCheck
                   ) {
                     elements.push({ entity: e });
                   }
@@ -288,16 +271,19 @@ export function resolveEntities(
               }
               if (window.__bonbon.labels?.['bonbon_' + c]) {
                 window.__bonbon.labels['bonbon_' + c].forEach((e) => {
+                  const passesEntityCategoryCheck =
+                    attrFilter?.key === 'entity_category'
+                      ? matchesAttribute(e)
+                      : !e.entity_category;
+                  const passesAttributeCheck =
+                    !attrFilter ||
+                    attrFilter.key === 'entity_category' ||
+                    matchesAttribute(e);
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
-                    isEntityCategory(
-                      e,
-                      includeSensors,
-                      includeConfig,
-                      includeDiagnostic,
-                    ) &&
+                    passesEntityCategoryCheck &&
                     !isHidden(e) &&
-                    matchesAttribute(e)
+                    passesAttributeCheck
                   ) {
                     elements.push({ entity: e });
                   }
