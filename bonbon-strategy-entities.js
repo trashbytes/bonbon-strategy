@@ -132,15 +132,28 @@ export function resolveEntities(c) {
               attrFilterMatches.forEach((match) => {
                 const inside = match.slice(1, -1).trim();
                 const m = inside.match(
-                  /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(.+))$/,
+                  /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|\*|(.+))$/,
                 );
                 if (m) {
                   const key = m[1];
                   const operator = m[2];
-                  const value = (m[3] || m[4] || m[5] || '').trim();
-                  attrFilters.push({ key, operator, value });
+                  const valueStr = (m[3] || m[4] || m[5] || '').trim();
+                  if (operator === '=' && !valueStr) {
+                    attrFilters.push({
+                      key,
+                      operator: 'exists-any',
+                      values: [],
+                    });
+                  } else {
+                    const values = valueStr.split('|').map((v) => v.trim());
+                    attrFilters.push({ key, operator, values });
+                  }
                 } else if (/^[a-zA-Z0-9_-]+$/.test(inside)) {
-                  attrFilters.push({ key: inside, operator: 'exists' });
+                  attrFilters.push({
+                    key: inside,
+                    operator: 'exists-truthy',
+                    values: [],
+                  });
                 }
               });
             }
@@ -172,19 +185,31 @@ export function resolveEntities(c) {
               return false;
             };
 
+            const matchValue = (actualValue, operator, allowedValues) => {
+              const a = String(actualValue).toLowerCase();
+              return allowedValues.some((v) => {
+                const val = String(v).toLowerCase();
+                if (operator === '=') return a === val;
+                if (operator === '*=') return a.includes(val);
+                if (operator === '^=') return a.startsWith(val);
+                if (operator === '$=') return a.endsWith(val);
+                return false;
+              });
+            };
+
             const matchesAttributes = (entity) => {
               return attrFilters.every((attrFilter) => {
-                const { key, operator, value } = attrFilter;
-                if (operator === 'exists') return hasAttribute(entity, key);
+                const { key, operator, values } = attrFilter;
+                if (operator === 'exists-truthy') {
+                  const attr = getAttributeValue(entity, key);
+                  return !!attr;
+                }
+                if (operator === 'exists-any') {
+                  return hasAttribute(entity, key);
+                }
                 const attr = getAttributeValue(entity, key);
                 if (attr === undefined || attr === null) return false;
-                const a = String(attr).toLowerCase();
-                const v = String(value).toLowerCase();
-                if (operator === '=') return a === v;
-                if (operator === '*=') return a.includes(v);
-                if (operator === '^=') return a.startsWith(v);
-                if (operator === '$=') return a.endsWith(v);
-                return false;
+                return matchValue(attr, operator, values);
               });
             };
 
@@ -194,38 +219,51 @@ export function resolveEntities(c) {
               );
               if (!hasEntityCategoryFilter) return !entity.entity_category;
 
+              const entityCategory = entity.entity_category || 'sensor';
               return attrFilters
                 .filter((f) => f.key === 'entity_category')
+                .every((f) => matchValue(entityCategory, f.operator, f.values));
+            };
+
+            const checkHidden = (entity) => {
+              const hasHiddenFilter = attrFilters.some(
+                (f) => f.key === 'hidden',
+              );
+              if (!hasHiddenFilter) return !isHidden(entity);
+
+              return attrFilters
+                .filter((f) => f.key === 'hidden')
                 .every((f) => {
-                  const a = String(entity.entity_category || '').toLowerCase();
-                  const v = String(f.value).toLowerCase();
-                  if (f.operator === '=') return a === v;
-                  if (f.operator === '*=') return a.includes(v);
-                  if (f.operator === '^=') return a.startsWith(v);
-                  if (f.operator === '$=') return a.endsWith(v);
-                  return false;
+                  if (f.operator === 'exists-truthy') return isHidden(entity);
+                  if (f.operator === 'exists-any') return true;
+                  return matchValue(
+                    String(isHidden(entity)),
+                    f.operator,
+                    f.values,
+                  );
                 });
             };
 
             const getOtherFilters = () =>
-              attrFilters.filter((f) => f.key !== 'entity_category');
+              attrFilters.filter(
+                (f) => f.key !== 'entity_category' && f.key !== 'hidden',
+              );
 
             const checkOtherAttributes = (entity) => {
               const otherFilters = getOtherFilters();
               return (
                 otherFilters.length === 0 ||
                 otherFilters.every((f) => {
-                  const { key, operator, value } = f;
-                  if (operator === 'exists') return hasAttribute(entity, key);
+                  const { key, operator, values } = f;
+                  if (operator === 'exists-truthy') {
+                    const attr = getAttributeValue(entity, key);
+                    return !!attr;
+                  }
+                  if (operator === 'exists-any')
+                    return hasAttribute(entity, key);
                   const attr = getAttributeValue(entity, key);
                   if (attr === undefined || attr === null) return false;
-                  const a = String(attr).toLowerCase();
-                  const v = String(value).toLowerCase();
-                  if (operator === '=') return a === v;
-                  if (operator === '*=') return a.includes(v);
-                  if (operator === '^=') return a.startsWith(v);
-                  if (operator === '$=') return a.endsWith(v);
-                  return false;
+                  return matchValue(attr, operator, values);
                 })
               );
             };
@@ -240,7 +278,7 @@ export function resolveEntities(c) {
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
                     checkEntityCategory(e) &&
-                    !isHidden(e) &&
+                    checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });
@@ -252,7 +290,7 @@ export function resolveEntities(c) {
                 if (
                   !excludedEntity_ids.has(c) &&
                   checkEntityCategory(e) &&
-                  !isHidden(e) &&
+                  checkHidden(e) &&
                   checkOtherAttributes(e)
                 ) {
                   elements.push({ entity: e });
@@ -264,7 +302,7 @@ export function resolveEntities(c) {
                     e.device_id === c &&
                     !excludedEntity_ids.has(e.entity_id) &&
                     checkEntityCategory(e) &&
-                    !isHidden(e) &&
+                    checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });
@@ -276,7 +314,7 @@ export function resolveEntities(c) {
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
                     checkEntityCategory(e) &&
-                    !isHidden(e) &&
+                    checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });
@@ -288,7 +326,7 @@ export function resolveEntities(c) {
                   if (
                     !excludedEntity_ids.has(e.entity_id) &&
                     checkEntityCategory(e) &&
-                    !isHidden(e) &&
+                    checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
                     elements.push({ entity: e });

@@ -286,7 +286,7 @@ You can even add entire custom views like this:
             min_columns: 2
             max_columns: 2
             cards:
-              - binary_sensor.*contact[door]
+              - binary_sensor.*contact[device_class=door]
           windows:
             name: Windows
             icon: mdi:window-closed-variant
@@ -294,7 +294,7 @@ You can even add entire custom views like this:
             min_columns: 2
             max_columns: 2
             cards:
-              - binary_sensor.*contact[window]
+              - binary_sensor.*contact[device_class=window]
       diagnostic:
         title: Diagnostic
         icon: mdi:magnify-scan
@@ -321,14 +321,16 @@ Custom views will be added as tabs at the top. In combination with wildcards you
 
 ### Wildcards and attribute selectors
 
-You can use wildcards and CSS like attribute selectors (including \*=, ^= and $=, which is most useful for `name`) to get exactly what you're looking for. Here are some examples:
+You can use wildcards and CSS like attribute selectors (including \*=, ^= and $=, which is most useful for `name`) to get exactly what you're looking for.
+By default only visible (not hidden) entities that are user facing (not diagnostic, not config) are included. Use `[entity_category=*]` or `[hidden=*]` to include them.
 
-- `binary_sensor.*contact[window]` grabs all binary contact sensors with a device_class of `window`, it's basically the shorthand
-- `binary_sensor.*contact[name$=door] grabs all binary contact sensors whose display names end with `door`
-- `sensor.*[unit_of_measurement=ppm]` grabs all sensors whose unit of measurement is `ppm`
-- `"[area_id=office]"` grabs everything from the office (in quotes because of the leading bracket)
+- `binary_sensor.*contact[device_class=window]` grabs all visible and user facing binary contact sensors with a device_class of `window`
+- `binary_sensor.*contact[name*=door|gate] grabs all visible and user facing binary contact sensors whose display name contains `door`or`gate`
+- `sensor.*[unit_of_measurement=ppm]` grabs all visible and user facing sensors whose unit of measurement is `ppm`
+- `"[area_id=office]"` grabs all visible and user facing entities from the office area (in quotes because of the leading bracket)
+- `"[area_id=utilities][entity_category=sensor|diagnostic][hidden=*]"` grabs all regular and diagnostic sensors, visible or hidden, from the utilities area (in quotes because of the leading bracket)
 
-Don't forget to add `[entity_category=diagnostic]` or `[entity_category=config]` if needed, otherwise things like battery sensors and other options might not show up, as only the user facing sensors are included by default. You can also use multiple attribute selectors for even more control.
+You can also use multiple attribute selectors for even more control.
 
 ### Custom cards
 
