@@ -117,11 +117,6 @@ export class BonbonStrategy {
                         states[weather_entity?.entity?.entity_id]?.state,
                       )
                     : sectionConfig.icon;
-                  const userSubButtons = resolveEntities(
-                    sectionConfig.custom_separator_buttons,
-                  ).map(function (c) {
-                    return createSubButton(c);
-                  });
                   const separatorSubButtons = [
                     !sectionConfig.show_weather_card
                       ? [
@@ -132,7 +127,6 @@ export class BonbonStrategy {
                           ),
                         ]
                       : [],
-                    userSubButtons,
                   ];
                   section.cards.push(
                     createSeparatorCard(
@@ -175,18 +169,8 @@ export class BonbonStrategy {
               const persons = resolveEntities('person.*');
               if (persons.length) {
                 if (!sectionConfig.hide_separator) {
-                  const userSubButtons = resolveEntities(
-                    sectionConfig.custom_separator_buttons,
-                  ).map(function (c) {
-                    return createSubButton(c);
-                  });
                   section.cards.push(
-                    createSeparatorCard(
-                      sectionConfig.name,
-                      sectionConfig.icon,
-                      [userSubButtons],
-                      styles.bubbleSeparatorSubButtonBase,
-                    ),
+                    createSeparatorCard(sectionConfig.name, sectionConfig.icon),
                   );
                 }
                 section.cards.push(
@@ -209,18 +193,8 @@ export class BonbonStrategy {
 
               if (favorites.length) {
                 if (!sectionConfig.hide_separator) {
-                  const userSubButtons = resolveEntities(
-                    sectionConfig.custom_separator_buttons,
-                  ).map(function (c) {
-                    return createSubButton(c);
-                  });
                   section.cards.push(
-                    createSeparatorCard(
-                      sectionConfig.name,
-                      sectionConfig.icon,
-                      [userSubButtons],
-                      styles.bubbleSeparatorSubButtonBase,
-                    ),
+                    createSeparatorCard(sectionConfig.name, sectionConfig.icon),
                   );
                 }
                 section.cards.push(
@@ -241,9 +215,9 @@ export class BonbonStrategy {
                   level: Number.MAX_SAFE_INTEGER,
                 },
               }).map((floor, index, floors) => {
-                floor._lights = resolveEntities('light.*').filter((c) => {
-                  return onFloor(c, floor);
-                });
+                floor._lights = resolveEntities(
+                  'light.*[floor_id=' + floor.floor_id + ']',
+                );
                 return floor;
               });
 
@@ -270,74 +244,42 @@ export class BonbonStrategy {
                   area.reglrColor = colors.reglrColor;
                   area.shadeColor = colors.shadeColor;
 
-                  area.categorizedEntityIds = [
-                    area.temperature_entity_id,
-                    area.humidity_entity_id,
-                  ];
+                  area.categorizedEntityIds = [];
 
-                  area.co2_entity_id = resolveEntities('sensor.*').filter(
-                    (c) => {
-                      return (
-                        inArea(c, area) &&
-                        (states[c.entity.entity_id]?.attributes
-                          ?.device_class === 'carbon_dioxide' ||
-                          (c.entity.entity_id.includes('co2') &&
-                            states[c.entity.entity_id]?.attributes
-                              ?.unit_of_measurement === 'ppm'))
-                      );
-                    },
-                  )[0];
+                  area.co2_entity_id = resolveEntities(
+                    'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm][area_id=' +
+                      area.area_id +
+                      ']',
+                  )?.entity_id;
 
-                  area._lights = resolveEntities('light.*').filter((c) => {
-                    return (
-                      inArea(c, area) &&
-                      area.categorizedEntityIds.push(c.entity.entity_id)
-                    );
-                  });
-                  area._switches = resolveEntities('switch.*').filter((c) => {
-                    return (
-                      inArea(c, area) &&
-                      area.categorizedEntityIds.push(c.entity.entity_id)
-                    );
-                  });
-                  area._openings = resolveEntities(
-                    'binary_sensor.*_contact',
-                  ).filter((c) => {
-                    return (
-                      inArea(c, area) &&
-                      area.categorizedEntityIds.push(c.entity.entity_id)
-                    );
-                  });
-
-                  area._media = resolveEntities('media_player.*').filter(
-                    (c) => {
-                      return (
-                        inArea(c, area) &&
-                        area.categorizedEntityIds.push(c.entity.entity_id)
-                      );
-                    },
+                  area._lights = resolveEntities(
+                    'light.*[area_id=' + area.area_id + ']',
                   );
 
-                  area._covers = resolveEntities('cover.*').filter((c) => {
-                    return (
-                      inArea(c, area) &&
-                      area.categorizedEntityIds.push(c.entity.entity_id)
-                    );
-                  });
+                  area._switches = resolveEntities(
+                    'switch.*[area_id=' + area.area_id + ']',
+                  );
+                  area._openings = resolveEntities(
+                    'binary_sensor.*[door|garage_door|window|opening][area_id=' +
+                      area.area_id +
+                      ']',
+                  );
 
-                  area._climates = resolveEntities('climate.*').filter((c) => {
-                    return (
-                      inArea(c, area) &&
-                      area.categorizedEntityIds.push(c.entity.entity_id)
-                    );
-                  });
+                  area._media = resolveEntities(
+                    'media_player.*[area_id=' + area.area_id + ']',
+                  );
 
-                  area._misc = resolveEntities('*').filter((c) => {
-                    return (
-                      inArea(c, area) &&
-                      !area.categorizedEntityIds.includes(c.entity.entity_id)
-                    );
-                  });
+                  area._covers = resolveEntities(
+                    'cover.*[area_id=' + area.area_id + ']',
+                  );
+
+                  area._climates = resolveEntities(
+                    'climate.*[area_id=' + area.area_id + ']',
+                  );
+
+                  area._misc = resolveEntities(
+                    '*[area_id=' + area.area_id + ']',
+                  );
                   return area;
                 });
 
@@ -347,16 +289,6 @@ export class BonbonStrategy {
                 );
                 if (floorAreas.length) {
                   if (!sectionConfig.hide_separator) {
-                    const userSubButtons = resolveEntities(
-                      sectionConfig.custom_separator_buttons,
-                    )
-                      .filter((c) => {
-                        return onFloor(c, floor);
-                      })
-                      .map(function (c) {
-                        return createSubButton(c);
-                      });
-
                     const notNightlightsOnFloor = notNightlights.filter((c) => {
                       return onFloor(c, floor);
                     });
@@ -394,10 +326,7 @@ export class BonbonStrategy {
                             })
                             .flat()
                         : [];
-                    const separatorSubButtons = [
-                      floorLightsSubButtons,
-                      userSubButtons,
-                    ];
+                    const separatorSubButtons = [floorLightsSubButtons];
                     const separatorStyles = floorLightsSubButtons.length
                       ? sectionConfig.show_floor_lights_toggle === 'always'
                         ? styles.bubbleSeparatorLightsSubButtonAlways
@@ -562,7 +491,13 @@ export class BonbonStrategy {
                           area.humidity_entity_id,
                           area.co2_entity_id,
                         ]
-                          .filter((e_id) => e_id)
+                          .filter((e_id) => {
+                            return (
+                              e_id &&
+                              !area.categorizedEntityIds.includes(e_id) &&
+                              area.categorizedEntityIds.push(e_id)
+                            );
+                          })
                           .map((e_id) => {
                             return sectionConfig.show_graphs &&
                               window.customCards
@@ -607,40 +542,40 @@ export class BonbonStrategy {
                       case 'bonbon_climate':
                         if (area._climates.length) {
                           if (!sectionConfig.hide_separator) {
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                [userSubButtons],
-                                styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
                           }
-                          const climateCards = area._climates.map((c) =>
-                            createBubbleCard({
-                              card_type: 'climate',
-                              entity: c.entity.entity_id,
-                              show_state: true,
-                              state_color: true,
-                              show_last_changed: true,
-                              sub_button: [
-                                {
-                                  select_attribute: 'hvac_modes',
-                                  show_arrow: false,
-                                  state_background: false,
-                                },
-                              ],
-                            }),
-                          );
+                          const climateCards = area._climates
+                            .filter((c) => {
+                              return (
+                                !area.categorizedEntityIds.includes(
+                                  c.entity.entity_id,
+                                ) &&
+                                area.categorizedEntityIds.push(
+                                  c.entity.entity_id,
+                                )
+                              );
+                            })
+                            .map((c) =>
+                              createBubbleCard({
+                                card_type: 'climate',
+                                entity: c.entity.entity_id,
+                                show_state: true,
+                                state_color: true,
+                                show_last_changed: true,
+                                sub_button: [
+                                  {
+                                    select_attribute: 'hvac_modes',
+                                    show_arrow: false,
+                                    state_background: false,
+                                  },
+                                ],
+                              }),
+                            );
                           section.cards.push(
                             createGrid(climateCards, sectionConfig),
                           );
@@ -684,19 +619,7 @@ export class BonbonStrategy {
                                     .flat()
                                 : [];
 
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
-                            const separatorSubButtons = [
-                              areaLightsSubButtons,
-                              userSubButtons,
-                            ];
+                            const separatorSubButtons = [areaLightsSubButtons];
                             const separatorStyles = areaLightsSubButtons.length
                               ? sectionConfig.show_area_lights_toggle ===
                                 'always'
@@ -713,16 +636,27 @@ export class BonbonStrategy {
                               ),
                             );
                           }
-                          const lightCards = area._lights.map((c) =>
-                            createBubbleCard({
-                              card_type: 'button',
-                              entity: c.entity.entity_id,
-                              show_state: true,
-                              show_last_changed: true,
-                              use_accent_color: true,
-                              tap_action: { action: 'none' },
-                            }),
-                          );
+                          const lightCards = area._lights
+                            .filter((c) => {
+                              return (
+                                !area.categorizedEntityIds.includes(
+                                  c.entity.entity_id,
+                                ) &&
+                                area.categorizedEntityIds.push(
+                                  c.entity.entity_id,
+                                )
+                              );
+                            })
+                            .map((c) =>
+                              createBubbleCard({
+                                card_type: 'button',
+                                entity: c.entity.entity_id,
+                                show_state: true,
+                                show_last_changed: true,
+                                use_accent_color: true,
+                                tap_action: { action: 'none' },
+                              }),
+                            );
                           section.cards.push(
                             createGrid(lightCards, sectionConfig),
                           );
@@ -731,34 +665,34 @@ export class BonbonStrategy {
                       case 'bonbon_switches':
                         if (area._switches.length) {
                           if (!sectionConfig.hide_separator) {
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                [userSubButtons],
-                                styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
                           }
-                          const switchCards = area._switches.map((c) =>
-                            createBubbleCard({
-                              card_type: 'button',
-                              entity: c.entity.entity_id,
-                              show_state: true,
-                              show_last_changed: true,
-                              use_accent_color: true,
-                              tap_action: { action: 'none' },
-                            }),
-                          );
+                          const switchCards = area._switches
+                            .filter((c) => {
+                              return (
+                                !area.categorizedEntityIds.includes(
+                                  c.entity.entity_id,
+                                ) &&
+                                area.categorizedEntityIds.push(
+                                  c.entity.entity_id,
+                                )
+                              );
+                            })
+                            .map((c) =>
+                              createBubbleCard({
+                                card_type: 'button',
+                                entity: c.entity.entity_id,
+                                show_state: true,
+                                show_last_changed: true,
+                                use_accent_color: true,
+                                tap_action: { action: 'none' },
+                              }),
+                            );
                           section.cards.push(
                             createGrid(switchCards, sectionConfig),
                           );
@@ -767,37 +701,37 @@ export class BonbonStrategy {
                       case 'bonbon_media':
                         if (area._media.length) {
                           if (!sectionConfig.hide_separator) {
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                [userSubButtons],
-                                styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
                           }
-                          const mediaCards = area._media.map((c) =>
-                            createBubbleCard({
-                              card_type: 'media-player',
-                              entity: c.entity.entity_id,
-                              show_state: true,
-                              show_last_changed: true,
-                              use_accent_color: true,
-                              tap_action: { action: 'none' },
-                              button_action: {
-                                tap_action: { action: 'more-info' },
-                              },
-                            }),
-                          );
+                          const mediaCards = area._media
+                            .filter((c) => {
+                              return (
+                                !area.categorizedEntityIds.includes(
+                                  c.entity.entity_id,
+                                ) &&
+                                area.categorizedEntityIds.push(
+                                  c.entity.entity_id,
+                                )
+                              );
+                            })
+                            .map((c) =>
+                              createBubbleCard({
+                                card_type: 'media-player',
+                                entity: c.entity.entity_id,
+                                show_state: true,
+                                show_last_changed: true,
+                                use_accent_color: true,
+                                tap_action: { action: 'none' },
+                                button_action: {
+                                  tap_action: { action: 'more-info' },
+                                },
+                              }),
+                            );
                           section.cards.push(
                             createGrid(mediaCards, sectionConfig),
                           );
@@ -806,37 +740,37 @@ export class BonbonStrategy {
                       case 'bonbon_openings':
                         if (area._openings.length) {
                           if (!sectionConfig.hide_separator) {
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                [userSubButtons],
-                                styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
                           }
-                          const openingCards = area._openings.map((c) =>
-                            createBubbleCard({
-                              card_type: 'button',
-                              entity: c.entity.entity_id,
-                              show_state: true,
-                              show_last_changed: true,
-                              use_accent_color: true,
-                              tap_action: { action: 'none' },
-                              button_action: {
-                                tap_action: { action: 'more-info' },
-                              },
-                            }),
-                          );
+                          const openingCards = area._openings
+                            .filter((c) => {
+                              return (
+                                !area.categorizedEntityIds.includes(
+                                  c.entity.entity_id,
+                                ) &&
+                                area.categorizedEntityIds.push(
+                                  c.entity.entity_id,
+                                )
+                              );
+                            })
+                            .map((c) =>
+                              createBubbleCard({
+                                card_type: 'button',
+                                entity: c.entity.entity_id,
+                                show_state: true,
+                                show_last_changed: true,
+                                use_accent_color: true,
+                                tap_action: { action: 'none' },
+                                button_action: {
+                                  tap_action: { action: 'more-info' },
+                                },
+                              }),
+                            );
                           section.cards.push(
                             createGrid(openingCards, sectionConfig),
                           );
@@ -845,39 +779,39 @@ export class BonbonStrategy {
                       case 'bonbon_covers':
                         if (area._covers.length) {
                           if (!sectionConfig.hide_separator) {
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                [userSubButtons],
-                                styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
                           }
-                          const coverCards = area._covers.map((c) =>
-                            createBubbleCard({
-                              card_type: 'cover',
-                              entity: c.entity.entity_id,
-                              show_state: true,
-                              show_last_changed: true,
-                              use_accent_color: true,
-                              tap_action: { action: 'none' },
-                              button_action: {
-                                tap_action: { action: 'more-info' },
-                              },
-                              icon_open: 'mdi:roller-shade',
-                              icon_close: 'mdi:roller-shade-closed',
-                            }),
-                          );
+                          const coverCards = area._covers
+                            .filter((c) => {
+                              return (
+                                !area.categorizedEntityIds.includes(
+                                  c.entity.entity_id,
+                                ) &&
+                                area.categorizedEntityIds.push(
+                                  c.entity.entity_id,
+                                )
+                              );
+                            })
+                            .map((c) =>
+                              createBubbleCard({
+                                card_type: 'cover',
+                                entity: c.entity.entity_id,
+                                show_state: true,
+                                show_last_changed: true,
+                                use_accent_color: true,
+                                tap_action: { action: 'none' },
+                                button_action: {
+                                  tap_action: { action: 'more-info' },
+                                },
+                                icon_open: 'mdi:roller-shade',
+                                icon_close: 'mdi:roller-shade-closed',
+                              }),
+                            );
                           section.cards.push(
                             createGrid(coverCards, sectionConfig),
                           );
@@ -894,21 +828,10 @@ export class BonbonStrategy {
                           .map((c) => createButton(c.entity, styles));
                         if (miscCards.length) {
                           if (!sectionConfig.hide_separator) {
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                [userSubButtons],
-                                styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
                           }

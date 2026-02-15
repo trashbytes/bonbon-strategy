@@ -26,7 +26,7 @@ export function createButton(e, styles) {
 export function createSeparatorCard(
   name,
   icon,
-  groups = false,
+  groups = [],
   styles = undefined,
 ) {
   const card = {
