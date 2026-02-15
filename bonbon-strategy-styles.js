@@ -1,9 +1,9 @@
 export const css = (strings, ...values) =>
   strings.reduce((acc, str, i) => acc + str + (values[i] || ''), '');
 
-export const getStyles = (isDark) => {
+export const getStyles = (isDark, primaryAccentColor) => {
   const shadowOverlay = css`
-    border-radius: var(--bubble-button-border-radius);
+    border-radius: var(--bonbon-border-radius);
     pointer-events: none;
     display: block;
     content: '';
@@ -13,25 +13,32 @@ export const getStyles = (isDark) => {
   `;
   const globalStyles = css`
     :host {
-      --primary-text-color: ${isDark ? '#eee' : '#111'};
+      --bonbon-primary-text-color: ${isDark ? '#eee' : '#111'};
+      --primary-text-color: var(--bonbon-primary-text-color);
       --bubble-line-background-color: rgba(0, 0, 0, 0.05);
       --bubble-main-background-color: var(
         --ha-card-background,
         var(--card-background-color, #fff)
       );
-      --bubble-border-radius: var(--ha-card-border-radius, 12px);
+      --bonbon-card-background: var(--bubble-main-background-color);
+      --bubble-main-background-color: var(--bonbon-main-background);
+      --bonbon-border-radius: 12px;
+      --bubble-border-radius: var(--bonbon-border-radius);
       --bubble-icon-border-radius: 8px;
       --bubble-sub-button-border-radius: 8px;
-      --bubble-button-border-radius: var(--bubble-border-radius);
+      --bubble-button-border-radius: var(--bonbon-border-radius);
       --bonbon-box-shadow:
         0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'}),
         inset 0 0.5px 0 0 rgba(255, 255, 255, ${isDark ? '0.01' : '0.2'}),
         inset 0 -0.5px 0 0 rgba(0, 0, 0, ${isDark ? '0.8' : '0.10'});
+      --bonbon-primary-accent-color: ${primaryAccentColor
+        ? primaryAccentColor
+        : '#9373c9'};
     }
     *,
     *:before,
     *:after {
-      --bubble-default-color: #9373c9;
+      --bubble-default-color: var(--bonbon-primary-accent-color);
     }
   `;
   const styles = {
@@ -419,7 +426,7 @@ export const getStyles = (isDark) => {
         color: var(--primary-text-color) !important;
         border-radius: var(
           --bubble-button-icon-border-radius,
-          var(--bubble-icon-border-radius, var(--bubble-border-radius, 50%))
+          var(--bubble-icon-border-radius, var(--bonbon-border-radius, 50%))
         ) !important;
         background-color: var(
           --bubble-button-icon-background-color,

@@ -69,7 +69,7 @@ export class BonbonStrategy {
           .querySelector('meta[name="color-scheme"]')
           ?.getAttribute('content') === 'dark';
 
-      const styles = getStyles(isDark);
+      const styles = getStyles(isDark, config?.primary_accent_color);
 
       const homeSections = Object.keys(config?.views?.bonbon_home?.sections)
         .filter((key) => {
@@ -103,7 +103,7 @@ export class BonbonStrategy {
               }
               if (weather_entity && states[weather_entity?.entity?.entity_id]) {
                 if (!sectionConfig.hide_separator) {
-                  const separatorName = !sectionConfig.show_card
+                  const separatorName = !sectionConfig.show_weather_card
                     ? entities[weather_entity?.entity?.entity_id]?.name ||
                       states[weather_entity?.entity?.entity_id]?.attributes
                         ?.friendly_name ||
@@ -112,7 +112,7 @@ export class BonbonStrategy {
                       ]?.name ||
                       sectionConfig.name
                     : sectionConfig.name;
-                  const separatorIcon = !sectionConfig.show_card
+                  const separatorIcon = !sectionConfig.show_weather_card
                     ? getWeatherIcon(
                         states[weather_entity?.entity?.entity_id]?.state,
                       )
@@ -123,7 +123,7 @@ export class BonbonStrategy {
                     return createSubButton(c);
                   });
                   const separatorSubButtons = [
-                    !sectionConfig.show_card
+                    !sectionConfig.show_weather_card
                       ? [
                           createSubButton(
                             weather_entity,
@@ -142,16 +142,23 @@ export class BonbonStrategy {
                       styles.bubbleSeparatorSubButtonBase,
                     ),
                   );
-                  if (sectionConfig.show_card) {
+                  if (sectionConfig.show_weather_card) {
                     section.cards.push(
                       createGrid(
                         [
                           {
                             type: 'weather-forecast',
                             entity: weather_entity_id,
-                            show_current: !!sectionConfig.card_show_current,
-                            show_forecast: !!sectionConfig.card_show_forecast,
-                            forecast_type: sectionConfig.card_forecast_type,
+                            show_current: true,
+                            show_forecast:
+                              sectionConfig.show_weather_card === 'daily' ||
+                              sectionConfig.show_weather_card === 'hourly',
+                            forecast_type:
+                              sectionConfig.show_weather_card === 'daily'
+                                ? 'daily'
+                                : sectionConfig.show_weather_card === 'hourly'
+                                  ? 'hourly'
+                                  : undefined,
                             card_mod: {
                               style: styles.weatherCard,
                             },
@@ -368,9 +375,11 @@ export class BonbonStrategy {
                                   show_state: false,
                                   content_layout: 'icon-left',
                                   use_accent_color: true,
-                                  icon: sectionConfig.always_show_floor_lights_toggle
-                                    ? 'mdi:lightbulb-group'
-                                    : '',
+                                  icon:
+                                    sectionConfig.show_floor_lights_toggle ===
+                                    'always'
+                                      ? 'mdi:lightbulb-group'
+                                      : '',
                                   tap_action: {
                                     action: 'call-service',
                                     service: 'light.turn_' + state,
@@ -390,7 +399,7 @@ export class BonbonStrategy {
                       userSubButtons,
                     ];
                     const separatorStyles = floorLightsSubButtons.length
-                      ? sectionConfig.always_show_floor_lights_toggle
+                      ? sectionConfig.show_floor_lights_toggle === 'always'
                         ? styles.bubbleSeparatorLightsSubButtonAlways
                         : styles.bubbleSeparatorLightsSubButtonDefault
                       : '';
@@ -432,9 +441,11 @@ export class BonbonStrategy {
                                   show_state: false,
                                   content_layout: 'icon-left',
                                   use_accent_color: true,
-                                  icon: sectionConfig.always_show_area_lights_toggle
-                                    ? 'mdi:lightbulb-group'
-                                    : '',
+                                  icon:
+                                    sectionConfig.show_area_lights_toggle ===
+                                    'always'
+                                      ? 'mdi:lightbulb-group'
+                                      : '',
                                   tap_action: {
                                     action: 'call-service',
                                     service: 'light.turn_' + state,
@@ -489,7 +500,7 @@ export class BonbonStrategy {
                             --area-shade-color: ${area.shadeColor};
                           }
                         ` +
-                        (sectionConfig.always_show_area_lights_toggle
+                        (sectionConfig.show_area_lights_toggle === 'always'
                           ? styles.bubbleAreaSubButtonDefault
                           : styles.bubbleAreaSubButtonAlways),
                     });
@@ -653,9 +664,11 @@ export class BonbonStrategy {
                                           show_state: false,
                                           content_layout: 'icon-left',
                                           use_accent_color: true,
-                                          icon: sectionConfig.always_show_area_lights_toggle
-                                            ? 'mdi:lightbulb-group'
-                                            : '',
+                                          icon:
+                                            sectionConfig.show_area_lights_toggle ===
+                                            'always'
+                                              ? 'mdi:lightbulb-group'
+                                              : '',
                                           tap_action: {
                                             action: 'call-service',
                                             service: 'light.turn_' + state,
@@ -685,7 +698,8 @@ export class BonbonStrategy {
                               userSubButtons,
                             ];
                             const separatorStyles = areaLightsSubButtons.length
-                              ? sectionConfig.always_show_area_lights_toggle
+                              ? sectionConfig.show_area_lights_toggle ===
+                                'always'
                                 ? styles.bubbleSeparatorLightsSubButtonAlways
                                 : styles.bubbleSeparatorLightsSubButtonDefault
                               : '';

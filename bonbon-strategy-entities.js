@@ -197,12 +197,19 @@ export function resolveEntities(c) {
               });
             };
 
+            const isTruthy = (value) => {
+              if (Array.isArray(value)) {
+                return value.length > 0;
+              }
+              return !!value;
+            };
+
             const matchesAttributes = (entity) => {
               return attrFilters.every((attrFilter) => {
                 const { key, operator, values } = attrFilter;
                 if (operator === 'exists-truthy') {
                   const attr = getAttributeValue(entity, key);
-                  return !!attr;
+                  return isTruthy(attr);
                 }
                 if (operator === 'exists-any') {
                   return hasAttribute(entity, key);
@@ -257,7 +264,7 @@ export function resolveEntities(c) {
                   const { key, operator, values } = f;
                   if (operator === 'exists-truthy') {
                     const attr = getAttributeValue(entity, key);
-                    return !!attr;
+                    return isTruthy(attr);
                   }
                   if (operator === 'exists-any')
                     return hasAttribute(entity, key);
