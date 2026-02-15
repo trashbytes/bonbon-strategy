@@ -73,7 +73,7 @@ export class BonbonStrategy {
 
       const homeSections = Object.keys(config?.views?.bonbon_home?.sections)
         .filter((key) => {
-          return !config.views.bonbon_home.sections[key].hidden;
+          return !config.views.bonbon_home.sections[key].disabled;
         })
         .sort((aKey, bKey) => {
           const orderA =
@@ -102,7 +102,7 @@ export class BonbonStrategy {
                 weather_entity = resolveEntity(weather_entity_id);
               }
               if (weather_entity && states[weather_entity?.entity?.entity_id]) {
-                if (sectionConfig.show_separator) {
+                if (!sectionConfig.hide_separator) {
                   const separatorName = !sectionConfig.show_card
                     ? entities[weather_entity?.entity?.entity_id]?.name ||
                       states[weather_entity?.entity?.entity_id]?.attributes
@@ -167,7 +167,7 @@ export class BonbonStrategy {
             case 'bonbon_persons':
               const persons = resolveEntities('person.*');
               if (persons.length) {
-                if (sectionConfig.show_separator) {
+                if (!sectionConfig.hide_separator) {
                   const userSubButtons = resolveEntities(
                     sectionConfig.custom_separator_buttons,
                   ).map(function (c) {
@@ -201,7 +201,7 @@ export class BonbonStrategy {
               const favorites = resolveEntities('favorite');
 
               if (favorites.length) {
-                if (sectionConfig.show_separator) {
+                if (!sectionConfig.hide_separator) {
                   const userSubButtons = resolveEntities(
                     sectionConfig.custom_separator_buttons,
                   ).map(function (c) {
@@ -339,7 +339,7 @@ export class BonbonStrategy {
                   (area) => area.floor_id == floor.floor_id,
                 );
                 if (floorAreas.length) {
-                  if (sectionConfig.show_separator) {
+                  if (!sectionConfig.hide_separator) {
                     const userSubButtons = resolveEntities(
                       sectionConfig.custom_separator_buttons,
                     )
@@ -503,7 +503,7 @@ export class BonbonStrategy {
                   config?.views?.bonbon_area?.sections,
                 )
                   .filter((key) => {
-                    return !config.views.bonbon_area.sections[key].hidden;
+                    return !config.views.bonbon_area.sections[key].disabled;
                   })
                   .sort((aKey, bKey) => {
                     const orderA =
@@ -527,7 +527,7 @@ export class BonbonStrategy {
                           area.humidity_entity_id ||
                           area.co2_entity_id
                         )
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
                             )
@@ -595,7 +595,7 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_climate':
                         if (area._climates.length) {
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
                             )
@@ -642,7 +642,7 @@ export class BonbonStrategy {
                               return inArea(c, area);
                             },
                           );
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const areaLightsSubButtons =
                               sectionConfig.show_area_lights_toggle
                                 ? (notNightlightsInArea || [])
@@ -716,7 +716,7 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_switches':
                         if (area._switches.length) {
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
                             )
@@ -752,7 +752,7 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_media':
                         if (area._media.length) {
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
                             )
@@ -791,7 +791,7 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_openings':
                         if (area._openings.length) {
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
                             )
@@ -830,7 +830,7 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_covers':
                         if (area._covers.length) {
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
                             )
@@ -879,7 +879,7 @@ export class BonbonStrategy {
                           )
                           .map((c) => createButton(c.entity, styles));
                         if (miscCards.length) {
-                          if (sectionConfig.show_separator) {
+                          if (!sectionConfig.hide_separator) {
                             const userSubButtons = resolveEntities(
                               sectionConfig.custom_separator_buttons,
                             )
@@ -924,7 +924,7 @@ export class BonbonStrategy {
                               return c.object || createButton(c.entity, styles);
                             });
                           if (userCards.length) {
-                            if (sectionConfig.show_separator) {
+                            if (!sectionConfig.hide_separator) {
                               const userSubButtons = resolveEntities(
                                 sectionConfig.custom_separator_buttons,
                               )
@@ -993,7 +993,7 @@ export class BonbonStrategy {
                   },
                 );
                 if (userCards.length) {
-                  if (sectionConfig.show_separator) {
+                  if (!sectionConfig.hide_separator) {
                     const userSubButtons = resolveEntities(
                       sectionConfig.custom_separator_buttons,
                     )
@@ -1048,7 +1048,7 @@ export class BonbonStrategy {
         .forEach((viewKey) => {
           const viewConfig = config.views[viewKey] || {};
           const sections = Object.keys(viewConfig.sections || {})
-            .filter((s) => !viewConfig.sections[s].hidden)
+            .filter((s) => !viewConfig.sections[s].disabled)
             .sort((aKey, bKey) => {
               const orderA =
                 viewConfig.sections[aKey].order ?? Number.MAX_SAFE_INTEGER;
@@ -1067,7 +1067,7 @@ export class BonbonStrategy {
                 );
 
                 if (userCards.length) {
-                  if (sectionConfig.show_separator) {
+                  if (!sectionConfig.hide_separator) {
                     const userSubButtons = resolveEntities(
                       sectionConfig.custom_separator_buttons,
                     ).map(function (c) {
