@@ -113,7 +113,7 @@ strategy:
             custom_separator_buttons: null # additional buttons to add to separator
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
-            cards: # custom cards, see
+            cards: # custom cards and entities
               - entity_id
               - light.*
               - binary_sensor.*[device_class=door]
@@ -323,9 +323,12 @@ Add your own sections to any view to organize entities your way:
 views:
   bonbon_home:
     sections:
-      my_fancy_weather_card:
+      bonbon_weather:
+        disabled: true
+      my_way_better_weather_section:
         name: Weather
         icon: mdi:cloud
+        order: 1
         cards:
           - type: custom:the-best-weather-card
 ```
