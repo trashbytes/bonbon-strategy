@@ -94,7 +94,7 @@ strategy:
   type: custom:bonbon-strategy
   options:
     # Global dashboard options
-    primary_accent_color: "#9373c9"
+    primary_accent_color: '#9373c9'
     background_image_light: null
     background_image_dark: null
 
@@ -113,29 +113,30 @@ strategy:
             custom_separator_buttons: null # additional buttons to add to separator
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
-
-            # Feature-specific properties (depending on section type)
-
-            # bonbon_home
-            # bonbon_areas: show lights toggle on floor separators and area cards ('when-on' | 'always' | false)
-            show_floor_lights_toggle: 'when-on'
-            show_area_lights_toggle: 'when-on'
-
-            # bonbon_area
-            # bonbon_environment: Show/hide temperature, humidity and CO2
-            show_temperature: true # assign an entity in the HA area properties, otherwise it'll try and pick one automatically
-            show_humidity: true # assign an entity in the HA area properties, otherwise it'll try and pick one automatically
-            show_co2: true # it'll try and pick one automatically
-            show_graphs: true # will only work when mini-graph-card is installed
-            # Lights: show lights toggle on lights separator ('when-on' | 'always' | false)
-            show_area_lights_toggle: 'always'
-
-            # Custom cards
-            cards:
+            cards: # custom cards, see
               - entity_id
               - light.*
               - binary_sensor.*[device_class=door]
               - etc.
+
+      # Feature-specific properties (depending on section type)
+
+      bonbon_home:
+        sections:
+          bonbon_areas:
+            show_floor_lights_toggle: 'when-on' # show lights toggle on floor separators ('when-on' | 'always' | false)
+            show_area_lights_toggle: 'when-on' # show lights toggle on area cards ('when-on' | 'always' | false)
+
+      bonbon_area:
+        sections:
+          bonbon_environment:
+            show_temperature: true # assign an entity in the HA area properties, otherwise it'll try and pick one automatically
+            show_humidity: true # assign an entity in the HA area properties, otherwise it'll try and pick one automatically
+            show_co2: true # it'll try and pick one automatically
+            show_graphs: true # will only work when mini-graph-card is installed
+
+          bonbon_lights:
+            show_area_lights_toggle: 'always' # show lights toggle on lights separator ('when-on' | 'always' | false)
 ```
 
 ### Global Options
@@ -174,9 +175,9 @@ strategy:
             name: 'Rollläden'
 ```
 
-### Wildcards and Attribute Selectors
+### Cards and Entities
 
-In the `cards` and `custom_separator_buttons` arrays, you can specify entities in two ways:
+In the `cards` arrays, you can specify cards and entities in two ways:
 
 **1. Classic YAML structure** - Use Home Assistant's built-in cards or custom cards you installed:
 
