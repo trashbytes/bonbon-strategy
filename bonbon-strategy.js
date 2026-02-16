@@ -25,16 +25,20 @@ export class BonbonStrategy {
     const devices = hass.devices;
     const floors = hass.floors;
     const areas = hass.areas;
-    const entities = hass.entities;
-    Object.keys(hass.entities).forEach((entity_id) => {
-      const entity = entities[entity_id];
-      const device = devices?.[entity?.device_id];
-      entity.area_id = entity?.area_id || device?.area_id;
-      if (entity?.area_id) {
-        entity.floor_id = areas?.[entity.area_id]?.floor_id;
+    const entities = Object.keys(hass.entities).reduce((acc, entity_id) => {
+      const originalEntity = hass.entities[entity_id];
+      const device = devices?.[originalEntity?.device_id];
+      const updatedEntity = {
+        ...originalEntity,
+        area_id: originalEntity?.area_id || device?.area_id,
+        labels: [...(originalEntity?.labels || []), ...(device?.labels || [])],
+      };
+      if (updatedEntity.area_id) {
+        updatedEntity.floor_id = areas?.[updatedEntity.area_id]?.floor_id;
       }
-      entity.labels = [...(entity?.labels || []), ...(device?.labels || [])];
-    });
+      acc[entity_id] = updatedEntity;
+      return acc;
+    }, {});
     const labels = Object.values(entities).reduce((acc, e) => {
       (e.labels ?? []).forEach((label) => {
         (acc[label] ??= []).push(e);
