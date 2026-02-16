@@ -108,6 +108,7 @@ export function resolveEntities(c) {
         if (c) {
           const elements = [];
           if (typeof c === 'string') {
+            const selector = c;
             let excludedEntity_ids = new Set();
 
             if (c.includes(':not(')) {
@@ -288,7 +289,7 @@ export function resolveEntities(c) {
                     checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
-                    elements.push({ entity: e });
+                    elements.push({ selector: selector, entity: e });
                   }
                 });
             } else {
@@ -300,7 +301,7 @@ export function resolveEntities(c) {
                   checkHidden(e) &&
                   checkOtherAttributes(e)
                 ) {
-                  elements.push({ entity: e });
+                  elements.push({ selector: selector, entity: e });
                 }
               }
               if (window.__bonbon.devices?.[c]) {
@@ -312,7 +313,7 @@ export function resolveEntities(c) {
                     checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
-                    elements.push({ entity: e });
+                    elements.push({ selector: selector, entity: e });
                   }
                 });
               }
@@ -324,7 +325,7 @@ export function resolveEntities(c) {
                     checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
-                    elements.push({ entity: e });
+                    elements.push({ selector: selector, entity: e });
                   }
                 });
               }
@@ -336,7 +337,7 @@ export function resolveEntities(c) {
                     checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
-                    elements.push({ entity: e });
+                    elements.push({ selector: selector, entity: e });
                   }
                 });
               }
@@ -353,9 +354,7 @@ export function resolveEntities(c) {
               object: c,
             });
           } else {
-            elements.push({
-              object: c,
-            });
+            elements.push({ object: c });
           }
           return elements;
         }
@@ -370,34 +369,55 @@ export function resolveEntity(c) {
 }
 
 export function inArea(c, area) {
-  // if (c && area) {
-  //   const inArea =
-  //     c.entity?.area_id === (area.area_id || area) ||
-  //     c.object?.area_id === (area.area_id || area);
-  //   const device = window.__bonbon.devices[c.entity?.device_id];
-  //   const deviceInArea = device && device.area_id === (area.area_id || area);
-  //   return inArea || deviceInArea;
-  // }
-  return (
-    c.entity?.area_id === (area?.area_id || area) ||
-    c.object?.area_id === (area?.area_id || area)
-  );
+  const areaId = area?.area_id || area;
+
+  const entityAreaIds = Array.isArray(c.entity?.area_id)
+    ? c.entity.area_id
+    : c.entity?.area_id
+      ? [c.entity.area_id]
+      : [];
+  if (entityAreaIds.includes(areaId)) return true;
+
+  const objectBonbonAreaIds = Array.isArray(c.object?.bonbon_area_id)
+    ? c.object.bonbon_area_id
+    : c.object?.bonbon_area_id
+      ? [c.object.bonbon_area_id]
+      : [];
+  if (objectBonbonAreaIds.includes(areaId)) return true;
+
+  const objectAreaIds = Array.isArray(c.object?.area_id)
+    ? c.object.area_id
+    : c.object?.area_id
+      ? [c.object.area_id]
+      : [];
+  if (objectAreaIds.includes(areaId)) return true;
+
   return false;
 }
 
 export function onFloor(c, floor) {
-  // if (c && floor) {
-  //   const onFloor =
-  //     c.entity?.floor_id === (floor.floor_id || floor) ||
-  //     c.object?.floor_id === (floor.floor_id || floor);
-  //   const areasOnFloor = Object.values(window.__bonbon.areas).filter((area) => {
-  //     return area.floor_id == (floor.floor_id || floor);
-  //   });
-  //   return onFloor || areasOnFloor.some((area) => inArea(c, area));
-  // }
-  return (
-    c.entity?.floor_id === (floor?.floor_id || floor) ||
-    c.object?.floor_id === (floor?.floor_id || floor)
-  );
+  const floorId = floor?.floor_id || floor;
+
+  const entityFloorIds = Array.isArray(c.entity?.floor_id)
+    ? c.entity.floor_id
+    : c.entity?.floor_id
+      ? [c.entity.floor_id]
+      : [];
+  if (entityFloorIds.includes(floorId)) return true;
+
+  const objectBonbonFloorIds = Array.isArray(c.object?.bonbon_floor_id)
+    ? c.object.bonbon_floor_id
+    : c.object?.bonbon_floor_id
+      ? [c.object.bonbon_floor_id]
+      : [];
+  if (objectBonbonFloorIds.includes(floorId)) return true;
+
+  const objectFloorIds = Array.isArray(c.object?.floor_id)
+    ? c.object.floor_id
+    : c.object?.floor_id
+      ? [c.object.floor_id]
+      : [];
+  if (objectFloorIds.includes(floorId)) return true;
+
   return false;
 }

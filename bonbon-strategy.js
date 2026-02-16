@@ -260,7 +260,7 @@ export class BonbonStrategy {
                     'switch.*[area_id=' + area.area_id + ']',
                   );
                   area._openings = resolveEntities(
-                    'binary_sensor.*[door|garage_door|window|opening][area_id=' +
+                    'binary_sensor.*[device_class=door|garage_door|window|opening][area_id=' +
                       area.area_id +
                       ']',
                   );
@@ -278,7 +278,7 @@ export class BonbonStrategy {
                   );
 
                   area._misc = resolveEntities(
-                    '*[area_id=' + area.area_id + ']',
+                    '[area_id=' + area.area_id + ']',
                   );
                   return area;
                 });
@@ -468,21 +468,10 @@ export class BonbonStrategy {
                           area.co2_entity_id
                         )
                           if (!sectionConfig.hide_separator) {
-                            const userSubButtons = resolveEntities(
-                              sectionConfig.custom_separator_buttons,
-                            )
-                              .filter((c) => {
-                                return inArea(c, area);
-                              })
-                              .map(function (c) {
-                                return createSubButton(c);
-                              });
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
-                                [userSubButtons],
-                                styles.bubbleSeparatorSubButtonBase,
                               ),
                             );
                           }
@@ -845,40 +834,46 @@ export class BonbonStrategy {
                           sectionConfig.cards &&
                           sectionConfig.cards.length &&
                           (!sectionConfig.area_id ||
-                            sectionConfig.area_id == area.area_id)
+                            (Array.isArray(sectionConfig.area_id)
+                              ? sectionConfig.area_id.includes(area.area_id)
+                              : sectionConfig.area_id == area.area_id))
                         ) {
                           const userCards = resolveEntities(sectionConfig.cards)
-                            .filter((c) => {
-                              console.log(c);
-                              return (
-                                inArea(c, area) &&
+                            .filter(
+                              (c) =>
+                                ((c.selector &&
+                                  typeof c.selector == 'string' &&
+                                  c.selector.includes('[area_id=')) ||
+                                  c.object?.bonbon_area_id == area.area_id ||
+                                  c.object?.area_id == area.area_id ||
+                                  (!c.object?.bonbon_area_id &&
+                                    !c.object?.area_id &&
+                                    inArea(c, area))) &&
                                 area.categorizedEntityIds.push(
                                   c?.entity?.entity_id,
-                                )
-                              );
-                            })
+                                ),
+                            )
                             .map(function (c) {
                               return c.object || createButton(c.entity, styles);
                             });
                           if (userCards.length) {
                             if (!sectionConfig.hide_separator) {
                               const userSubButtons = resolveEntities(
-                                sectionConfig.custom_separator_buttons,
+                                sectionConfig.separator_buttons,
                               )
+                                .filter(
+                                  (c) =>
+                                    (c.selector &&
+                                      typeof c.selector == 'string' &&
+                                      c.selector.includes('[area_id=')) ||
+                                    c.object?.bonbon_area_id == area.area_id ||
+                                    c.object?.area_id == area.area_id ||
+                                    (!c.object?.bonbon_area_id &&
+                                      !c.object?.area_id &&
+                                      inArea(c, area)),
+                                )
                                 .map(function (c) {
-                                  if (c.entity) {
-                                    return c;
-                                  }
                                   return createSubButton(c);
-                                })
-                                .filter((c) => {
-                                  if (
-                                    c.bonbon_area_id == area.area_id ||
-                                    c.area_id == area.area_id
-                                  ) {
-                                    return true;
-                                  }
-                                  return inArea(c, area);
                                 });
                               section.cards.push(
                                 createSeparatorCard(
@@ -932,15 +927,10 @@ export class BonbonStrategy {
                 if (userCards.length) {
                   if (!sectionConfig.hide_separator) {
                     const userSubButtons = resolveEntities(
-                      sectionConfig.custom_separator_buttons,
-                    )
-                      .map(function (c) {
-                        if (c.entity) {
-                          return c;
-                        }
-                        return createSubButton(c);
-                      })
-                      .filter((c) => c);
+                      sectionConfig.separator_buttons,
+                    ).map(function (c) {
+                      return createSubButton(c);
+                    });
                     section.cards.push(
                       createSeparatorCard(
                         sectionConfig.name || 'Custom Section',
@@ -1006,7 +996,7 @@ export class BonbonStrategy {
                 if (userCards.length) {
                   if (!sectionConfig.hide_separator) {
                     const userSubButtons = resolveEntities(
-                      sectionConfig.custom_separator_buttons,
+                      sectionConfig.separator_buttons,
                     ).map(function (c) {
                       return createSubButton(c);
                     });

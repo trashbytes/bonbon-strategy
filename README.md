@@ -110,10 +110,10 @@ strategy:
             order: 1 # sort order, ascending
             disabled: false # disable entire section
             hide_separator: false # hide separator bar above section
-            custom_separator_buttons: null # additional buttons to add to separator
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
-            cards: # custom cards and entities
+            separator_buttons: null # buttons to add to a separator, only in custom sections
+            cards: # custom cards and entities, only in custom sections
               - entity_id
               - light.*
               - binary_sensor.*[device_class=door]
@@ -191,7 +191,7 @@ cards:
 
 **2. Entity selectors** - Use strings or an array of strings with wildcards and filters to automatically match entities:
 
-Entity selectors use wildcards and CSS-like attribute filters to match entities precisely. You'll use this syntax throughout your configuration in `cards`, `custom_separator_buttons`, labels, and other places.
+Entity selectors use wildcards and CSS-like attribute filters to match entities precisely. You'll use this syntax throughout your configuration in `cards`, `separator_buttons`, labels, and other places.
 
 **Wildcard syntax:**
 
@@ -335,7 +335,9 @@ views:
 
 **Area-specific sections:**
 
-When adding custom sections under `bonbon_area`, they automatically show in areas with matching entities and won't show in areas without matching entities. To force a section in a specific area use this:
+When adding custom sections under `bonbon_area`, they automatically show in areas with matching entities and won't show in areas without matching entities. To force entities to match, add `[area_id=area_id]` or `[area_id=*]` to the selector to override the restriction to the current area.
+
+When using custom cards, which have an entity which belongs to a different area, you can add `area_id: area_id` or `bonbon_area_id: area_id` to the card options to assign that card to one or more different areas so that it will show up in those areas instead. This will override the detected area from the entity.
 
 ```yaml
 views:
@@ -343,24 +345,34 @@ views:
     sections:
       my_pantry_section:
         name: Pantry Controls
-        area_id: kitchen # show in kitchen, even though the entities belong to pantry
+        # manually restrict to kitchen, otherwise some selectors may cause it to show up in other areas as well, if they match there
+        # would be the case for lights and switches in this example
+        area_id: kitchen
+        # force match even though we are in the kitchen and these belong the pantry
         cards:
-          - light.pantry_main
-          - switch.pantry_outlet
+          - light.*[area=*]
+          - switch.*[area=pantry]
+          - type: custom:my-custom-fridge-card
+            entity_id: sensor.pantry_fridge
+            area_id: kitchen
 ```
 
 ### Custom Separator Buttons
 
-Customize the buttons in the separator bar above sections using `custom_separator_buttons`:
+Add buttons to the separator bar above a section using `separator_buttons`:
 
 ```yaml
 views:
   bonbon_area:
     sections:
-      bonbon_lights:
-        show_area_lights_toggle: false # hides the default separator buttons (optional, makes sense in this example)
-        custom_separator_buttons:
-          - light.*[labels=mainlight] # instead show lights with the label mainlight in the current area (because bonbon_area)
+      my_server_section:
+        name: Server Status
+        cards:
+          - sensor.server_storage
+          - sensor.server_cpu
+          - switch.server_restart
+        separator_buttons:
+          - binary_sensor.server*status
 ```
 
 ### Custom Views
