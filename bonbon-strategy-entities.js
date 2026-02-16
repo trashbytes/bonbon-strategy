@@ -133,12 +133,12 @@ export function resolveEntities(c) {
               attrFilterMatches.forEach((match) => {
                 const inside = match.slice(1, -1).trim();
                 const m = inside.match(
-                  /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|\*|(.+))$/,
+                  /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(\*)|(.+))$/,
                 );
                 if (m) {
                   const key = m[1];
                   const operator = m[2];
-                  const valueStr = (m[3] || m[4] || m[5] || '').trim();
+                  const valueStr = (m[3] || m[4] || m[5] || m[6] || '').trim();
                   if (operator === '=' && !valueStr) {
                     attrFilters.push({
                       key,
@@ -199,6 +199,7 @@ export function resolveEntities(c) {
               const a = String(actualValue).toLowerCase();
               return allowedValues.some((v) => {
                 const val = String(v).toLowerCase();
+                if (val === '*') return true;
                 if (operator === '=') return a === val;
                 if (operator === '*=') return a.includes(val);
                 if (operator === '^=') return a.startsWith(val);
@@ -214,32 +215,26 @@ export function resolveEntities(c) {
               return !!value;
             };
 
-            const matchesAttributes = (entity) => {
-              return attrFilters.every((attrFilter) => {
-                const { key, operator, values } = attrFilter;
-                if (operator === 'exists-truthy') {
-                  const attr = getAttributeValue(entity, key);
-                  return isTruthy(attr);
-                }
-                if (operator === 'exists-any') {
-                  return hasAttribute(entity, key);
-                }
-                const attr = getAttributeValue(entity, key);
-                if (attr === undefined || attr === null) return false;
-                return matchValue(attr, operator, values);
-              });
-            };
-
             const checkEntityCategory = (entity) => {
               const hasEntityCategoryFilter = attrFilters.some(
                 (f) => f.key === 'entity_category',
               );
-              if (!hasEntityCategoryFilter) return !entity.entity_category;
+              if (!hasEntityCategoryFilter) {
+                return !entity.entity_category;
+              }
 
-              const entityCategory = entity.entity_category || 'sensor';
+              const entityCategory = entity.entity_category;
+
               return attrFilters
                 .filter((f) => f.key === 'entity_category')
-                .every((f) => matchValue(entityCategory, f.operator, f.values));
+                .every((f) => {
+                  const { values } = f;
+                  if (values.some((v) => v === '*')) return true;
+                  if (values.some((v) => v === 'sensor') && !entityCategory) {
+                    return true;
+                  }
+                  return values.some((v) => v === entityCategory);
+                });
             };
 
             const checkHidden = (entity) => {
