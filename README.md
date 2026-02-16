@@ -158,6 +158,8 @@ strategy:
             name: 'Wetter'
           bonbon_persons:
             name: 'Personen'
+          bonbon_favorites:
+            name: 'Favoriten'
           bonbon_areas:
             name: 'Bereiche'
       bonbon_area:
