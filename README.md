@@ -245,7 +245,7 @@ cards:
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
-**Important note:** A dashboard strategy generates YAML, which is inherently static! `[state=on]` will not react to state changes without refreshing the dashboard!
+**Important note:** A dashboard strategy generates YAML, which is inherently static! `[state=on]` will not react to state changes without refreshing the dashboard! I don't think it's a big issue, as most cards shouldn't come and go willy-nilly anyway, but it's something you should keep in mind when building your dashboards. I use a more complex workaround for the `show_floor_lights_toggle` and `show_area_lights_toggle`.
 
 ## Views and Sections
 
