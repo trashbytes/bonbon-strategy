@@ -1,12 +1,12 @@
 # 🍬 Bonbon Strategy
 
-Bonbon Strategy is a Home Assistant strategy which automatically generates a colorful dashboard using [Bubble Card](https://github.com/Clooos/Bubble-Card)s.
+Bonbon Strategy is a Home Assistant strategy which automatically generates a colorful dashboard using Bubble Cards.
 
 <img width="4270" alt="preview" src="preview.png?v=2" />
 
-- Left: Home View (with [Atmospheric Weather Card](https://github.com/shpongledsummer/atmospheric-weather-card) and four [Bubble Card](https://github.com/Clooos/Bubble-Card)s arranged on a Picture Elements card.)
-- Middle: Area View (with [Mini Graph Card](https://github.com/kalkih/mini-graph-card) styled to look like [Bubble Card](https://github.com/Clooos/Bubble-Card)s)
-- Right: Custom View (with two custom sections for `binary_sensor.*contact[device_class=door]` and `binary_sensor.*contact[device_class=window]`)
+- Left: Home View (with [Atmospheric Weather Card](https://github.com/shpongledsummer/atmospheric-weather-card))
+- Middle: Area View (with [Mini Graph Card](https://github.com/kalkih/mini-graph-card))
+- Right: Custom View (with sections for `binary_sensor.*contact[device_class=door]` and `...[device_class=window]`)
 
 ## Preparations
 
