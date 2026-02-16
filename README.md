@@ -245,6 +245,8 @@ cards:
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
+**Important note:** A dashboard strategy generates YAML, which is inherently static! `[state=on]` will not react to state changes without refreshing the dashboard!
+
 ## Views and Sections
 
 Bonbon Strategy uses a hierarchy: **Views** contain **Sections**, which contain **Cards**. Views are displayed as tabs at the top of your dashboard, sections organize related entities within a view.
@@ -399,15 +401,6 @@ views:
         name: Low Batteries
         cards:
           - sensor.*battery[entity_category=diagnostic]
-
-  automation_hub:
-    title: Automations
-    icon: mdi:robot
-    sections:
-      active_automations:
-        name: Running
-        cards:
-          - automation.*[state=on]
 ```
 
 ## Advanced Features

@@ -165,6 +165,9 @@ export function resolveEntities(c) {
                 return getEntityDisplayName({ entity });
               const attrFromEntity = entity[key];
               if (attrFromEntity !== undefined) return attrFromEntity;
+              const stateVal =
+                window.__bonbon.states?.[entity.entity_id]?.[key];
+              if (stateVal !== undefined) return stateVal;
               const stateAttr =
                 window.__bonbon.states?.[entity.entity_id]?.attributes?.[key];
               if (stateAttr !== undefined) return stateAttr;
@@ -175,6 +178,12 @@ export function resolveEntities(c) {
               if (!entity) return false;
               if (key === 'name' || key === 'friendly_name') return true;
               if (Object.prototype.hasOwnProperty.call(entity, key))
+                return true;
+              const stateVals = window.__bonbon.states?.[entity.entity_id];
+              if (
+                stateVals &&
+                Object.prototype.hasOwnProperty.call(stateVals, key)
+              )
                 return true;
               const stateAttrs =
                 window.__bonbon.states?.[entity.entity_id]?.attributes;
