@@ -4,6 +4,9 @@ Bonbon Strategy is a Home Assistant strategy which automatically generates a col
 
 <img width="4270" alt="preview" src="https://github.com/user-attachments/assets/f0546d37-2db8-4cff-a988-7a52eb4e2020" />
 
+Left: Home View (with [Atmospheric Weather Card](https://github.com/shpongledsummer/atmospheric-weather-card))
+Middle: Area View
+Right: Custom View
 
 ## Preparations
 
