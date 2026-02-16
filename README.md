@@ -346,12 +346,14 @@ views:
       my_pantry_section:
         name: Pantry Controls
         # manually restrict to kitchen, otherwise some selectors may cause it to show up in other areas as well, if they match there
-        # would be the case for lights and switches in this example
+        # this would be the case for lights and switches in this example
         area_id: kitchen
         # force match even though we are in the kitchen and these belong the pantry
         cards:
+          # without manually specifying either wildcard or kitchen, these would never match, as [area_id=kitchen] is implied by default
           - light.*[area=*]
           - switch.*[area=pantry]
+          # sensor.pantry_fridge belongs to pantry, so without specifying area_id: kitchen to override it this one would also not match
           - type: custom:my-custom-fridge-card
             entity_id: sensor.pantry_fridge
             area_id: kitchen

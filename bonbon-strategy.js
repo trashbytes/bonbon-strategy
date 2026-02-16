@@ -841,17 +841,26 @@ export class BonbonStrategy {
                           const userCards = resolveEntities(sectionConfig.cards)
                             .filter(
                               (c) =>
-                                ((c.selector &&
+                                (c.selector &&
                                   typeof c.selector == 'string' &&
                                   c.selector.includes('[area_id=')) ||
-                                  c.object?.bonbon_area_id == area.area_id ||
+                                ((c.object?.bonbon_area_id == area.area_id ||
                                   c.object?.area_id == area.area_id ||
                                   (!c.object?.bonbon_area_id &&
                                     !c.object?.area_id &&
-                                    inArea(c, area))) &&
-                                area.categorizedEntityIds.push(
-                                  c?.entity?.entity_id,
-                                ),
+                                    (inArea(c, area) ||
+                                      (sectionConfig.area_id &&
+                                        (Array.isArray(sectionConfig.area_id)
+                                          ? sectionConfig.area_id.some(
+                                              (areaId) => inArea(c, areaId),
+                                            )
+                                          : inArea(
+                                              c,
+                                              sectionConfig.area_id,
+                                            )))))) &&
+                                  area.categorizedEntityIds.push(
+                                    c?.entity?.entity_id,
+                                  )),
                             )
                             .map(function (c) {
                               return c.object || createButton(c.entity, styles);
@@ -870,7 +879,16 @@ export class BonbonStrategy {
                                     c.object?.area_id == area.area_id ||
                                     (!c.object?.bonbon_area_id &&
                                       !c.object?.area_id &&
-                                      inArea(c, area)),
+                                      (inArea(c, area) ||
+                                        (sectionConfig.area_id &&
+                                          (Array.isArray(sectionConfig.area_id)
+                                            ? sectionConfig.area_id.some(
+                                                (areaId) => inArea(c, areaId),
+                                              )
+                                            : inArea(
+                                                c,
+                                                sectionConfig.area_id,
+                                              ))))),
                                 )
                                 .map(function (c) {
                                   return createSubButton(c);
