@@ -2,7 +2,7 @@
 
 Bonbon Strategy is a Home Assistant strategy which automatically generates a colorful dashboard.
 
-<img width="4270" alt="preview" src="https://github.com/user-attachments/assets/9070fd4f-cb20-493b-9944-f2f685a0ab15" />
+<img width="4270" alt="preview" src="https://github.com/user-attachments/assets/f0546d37-2db8-4cff-a988-7a52eb4e2020" />
 
 
 ## Preparations
