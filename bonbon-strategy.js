@@ -47,7 +47,7 @@ export class BonbonStrategy {
     }, {});
 
     if (typeof window !== 'undefined') {
-      window.__bonbon = window.__bonbon || {
+      window.__bonbon = {
         entities,
         devices,
         states,
@@ -361,7 +361,7 @@ export class BonbonStrategy {
                       button_action: {
                         tap_action: {
                           action: 'navigate',
-                          navigation_path: `area_${area.area_id}`,
+                          navigation_path: `bonbon_area_${area.area_id}`,
                         },
                         hold_action: { action: 'none' },
                       },
@@ -936,7 +936,7 @@ export class BonbonStrategy {
                         '")'
                       : '',
                   subview: true,
-                  path: `area_${area.area_id}`,
+                  path: `bonbon_area_${area.area_id}`,
                   type: 'sections',
                   max_columns: config?.views?.bonbon_area?.max_columns || 1,
                   sections: areaSections,
@@ -989,7 +989,7 @@ export class BonbonStrategy {
               config.background_image_light +
               '")'
             : '',
-        path: 'home',
+        path: 'bonbon_home',
         type: 'sections',
         max_columns: config?.views?.bonbon_home?.max_columns || 1,
         sections: homeSections,
@@ -1057,7 +1057,7 @@ export class BonbonStrategy {
                     config.background_image_light +
                     '")'
                   : '',
-              path: viewConfig.path || viewKey,
+              path: 'custom_' + viewKey,
               type: 'sections',
               max_columns: viewConfig.max_columns || 1,
               sections,
