@@ -98,9 +98,9 @@ strategy:
   type: custom:bonbon-strategy
   options:
     # Global dashboard options
-    primary_accent_color: '#9373c9'
-    background_image_light: null
-    background_image_dark: null
+    primary_accent_color: '#9373c9' # primary accent color used for "on" states
+    background_image_light: null # background image for light mode (null | path/to/image)
+    background_image_dark: null # background image for dark mode (null | path/to/image)
 
     # View definitions
     views:
@@ -142,11 +142,6 @@ strategy:
           bonbon_lights:
             show_area_lights_toggle: 'always' # show lights toggle on lights separator ('when-on' | 'always' | false)
 ```
-
-### Global Options
-
-- **background_image_light** (string or null, default: `null`) - URL to background image for light mode (e.g., `/local/background.png`)
-- **background_image_dark** (string or null, default: `null`) - URL to background image for dark mode (e.g., `/local/background.png`)
 
 ### Translations
 
