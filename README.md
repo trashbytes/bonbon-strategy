@@ -2,7 +2,7 @@
 
 Bonbon Strategy is a Home Assistant strategy which automatically generates a colorful dashboard.
 
-<img width="4270" alt="preview" src="preview.png" />
+<img width="4270" alt="preview" src="preview.png?v=2" />
 
 Left: Home View (with [Atmospheric Weather Card](https://github.com/shpongledsummer/atmospheric-weather-card))
 Middle: Area View
