@@ -12,10 +12,9 @@ Bonbon Strategy is a Home Assistant strategy which automatically generates a col
 
 Bonbon Strategy works best with a well-organized Home Assistant setup:
 
-- **Floors and Areas**: Properly define your floors and areas with descriptive names and appropriate icons
-- **Device Assignment**: Assign entities to devices, and devices to areas for proper grouping
-- **Area Metadata**: For temperature, humidity, and CO2 sensors, assign them to the area and add the device class information
-- **Labeling**: Use the standard Home Assistant labels system to organize and control visibility
+- **Floors and Areas**: Properly define your floors and areas with descriptive names and appropriate icons, order them appropriately
+- **Devices and Entities**: Assign devices and/or entities to their respective areas
+- **Organizing**: Use the standard Home Assistant features like the Visibility toggle or the labels system to organize and control visibility
 
 By default, disabled and hidden entities won't be displayed in Bonbon Strategy. However, you can override this behavior using attribute selectors in your custom sections and cards. For example, `[hidden=*]` includes all entities regardless of hidden status, and `[entity_category=*]` includes diagnostic entities that are typically hidden.
 

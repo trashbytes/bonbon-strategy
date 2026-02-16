@@ -250,11 +250,29 @@ export class BonbonStrategy {
 
                   area.categorizedEntityIds = [];
 
-                  area.co2_entity_id = resolveEntities(
-                    'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm][area_id=' +
-                      area.area_id +
-                      ']',
-                  )?.entity_id;
+                  area.temperature_entity_id =
+                    area.temperature_entity_id ||
+                    resolveEntity(
+                      'sensor.*[device_class=temperature][unit_of_measurement=°C|°F][area_id=' +
+                        area.area_id +
+                        ']',
+                    )?.entity?.entity_id;
+
+                  area.humidity_entity_id =
+                    area.humidity_entity_id ||
+                    resolveEntity(
+                      'sensor.*[device_class=humidity][unit_of_measurement=%][area_id=' +
+                        area.area_id +
+                        ']',
+                    )?.entity?.entity_id;
+
+                  area.co2_entity_id =
+                    area.co2_entity_id ||
+                    resolveEntity(
+                      'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm][area_id=' +
+                        area.area_id +
+                        ']',
+                    )?.entity?.entity_id;
 
                   area._lights = resolveEntities(
                     'light.*[area_id=' + area.area_id + ']',
