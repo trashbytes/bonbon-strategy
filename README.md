@@ -14,7 +14,7 @@ Bonbon Strategy works best with a well-organized Home Assistant setup:
 
 - **Floors and Areas**: Properly define your floors and areas with descriptive names and appropriate icons, order them appropriately
 - **Devices and Entities**: Assign devices and/or entities to their respective areas
-- **Organizing**: Use the standard Home Assistant features like the Visibility toggle or the labels system to organize and control visibility
+- **Organization**: Use the standard Home Assistant features like the Visibility toggle or the labels system to organize and control visibility
 
 By default, disabled and hidden entities won't be displayed in Bonbon Strategy. However, you can override this behavior using attribute selectors in your custom sections and cards. For example, `[hidden=*]` includes all entities regardless of hidden status, and `[entity_category=*]` includes diagnostic entities that are typically hidden.
 
