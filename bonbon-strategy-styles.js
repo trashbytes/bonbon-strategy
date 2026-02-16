@@ -57,15 +57,21 @@ export const getStyles = (isDark, primaryAccentColor) => {
         .is-off .bubble-main-icon {
           opacity: 1;
         }
+        ha-ripple {
+          display: none !important;
+        }
+        .bubble-climate-container,
+        .bubble-cover-container,
+        .bubble-media-player-container,
         .bubble-button-background {
           background-color: var(
             --ha-card-background,
             var(--card-background-color, #fff)
           );
+          opacity: 1 !important;
         }
         .is-on .bubble-button-background {
           background-color: var(--bubble-default-color) !important;
-          opacity: 1 !important;
         }
         ha-card {
           position: relative;
@@ -90,6 +96,14 @@ export const getStyles = (isDark, primaryAccentColor) => {
         .bubble-cover-container:after,
         .bubble-media-player-container:after {
           ${shadowOverlay}
+          transition: none !important;
+        }
+        .bubble-sub-buttons-container .bubble-sub-button:hover:after,
+        .bubble-button-container:not(.bubble-buttons-container):hover:after,
+        .bubble-climate-container:hover:after,
+        .bubble-cover-container:hover:after,
+        .bubble-media-player-container:hover:after {
+          background: ${isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'};
         }
         mwc-list-item[selected],
         mwc-list-item[selected] ha-icon,
@@ -121,7 +135,6 @@ export const getStyles = (isDark, primaryAccentColor) => {
           --ha-card-background,
           var(--card-background-color, #fff)
         ) !important;
-        opacity: 1 !important;
       }
     `,
     bubbleSeparatorSubButtonBase: css`
@@ -399,17 +412,18 @@ export const getStyles = (isDark, primaryAccentColor) => {
       ha-card:after {
         ${shadowOverlay}
       }
-      ha-card:hover:before {
+      ha-card:before {
+        pointer-events: none;
         content: '';
         display: block;
         inset: 0;
         position: absolute;
-        background-color: var(
-          --md-ripple-hover-color,
-          var(--md-sys-color-on-surface, #5e5e5e)
-        );
-        opacity: var(--md-ripple-hover-opacity, 0.04);
         border-radius: var(--bubble-button-border-radius);
+        background: ${isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'};
+        opacity: 0;
+      }
+      ha-card:hover:before {
+        opacity: 1;
       }
       .header {
         position: absolute !important;
@@ -498,17 +512,18 @@ export const getStyles = (isDark, primaryAccentColor) => {
       ha-card:after {
         ${shadowOverlay}
       }
-      ha-card:hover:before {
+      ha-card:before {
+        pointer-events: none;
         content: '';
         display: block;
         inset: 0;
         position: absolute;
-        background-color: var(
-          --md-ripple-hover-color,
-          var(--md-sys-color-on-surface, #5e5e5e)
-        );
-        opacity: var(--md-ripple-hover-opacity, 0.04);
         border-radius: var(--bubble-button-border-radius);
+        background: ${isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'};
+        opacity: 0;
+      }
+      ha-card:hover:before {
+        opacity: 1;
       }
     `,
   };

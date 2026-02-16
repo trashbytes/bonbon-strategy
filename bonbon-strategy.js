@@ -428,9 +428,13 @@ export class BonbonStrategy {
                       styles:
                         css`
                           :host {
-                            --area-light-color: ${area.lightColor};
+                            --area-light-color: ${isDark
+                              ? area.shadeColor
+                              : area.lightColor};
                             --area-reglr-color: ${area.reglrColor};
-                            --area-shade-color: ${area.shadeColor};
+                            --area-shade-color: ${isDark
+                              ? area.lightColor
+                              : area.shadeColor};
                           }
                         ` +
                         (sectionConfig.show_area_lights_toggle === 'always'
