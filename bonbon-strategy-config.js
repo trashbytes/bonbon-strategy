@@ -1,7 +1,14 @@
 export const defaultConfig = {
-  primary_accent_color: '#9373c9',
-  background_image_light: null,
-  background_image_dark: null,
+  styles: {
+    use_bonbon_colors: true,
+    primary_accent_color: '#9373c9',
+    card_background_color_light: '#fff',
+    card_background_color_dark: '#222',
+    card_text_color_light: '#111',
+    card_text_color_dark: '#eee',
+    background_image_light: null,
+    background_image_dark: null,
+  },
   views: {
     bonbon_home: {
       max_columns: 1,
@@ -72,7 +79,7 @@ export const defaultConfig = {
           order: 2,
           hide_separator: false,
           min_columns: 1,
-          max_columns: 2,
+          max_columns: 1,
           disabled: false,
         },
         bonbon_lights: {
@@ -118,7 +125,7 @@ export const defaultConfig = {
           order: 7,
           hide_separator: false,
           min_columns: 1,
-          max_columns: 2,
+          max_columns: 1,
           disabled: false,
         },
         bonbon_miscellaneous: {

@@ -6,8 +6,13 @@ const { defaultConfig } = await import(
 const { css, getStyles } = await import(
   `./bonbon-strategy-styles.js?hacstag=${hacstag}`
 );
-const { getWeatherIcon, androidGesturesFix, mergeDeep, getAreaColors } =
-  await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
+const {
+  getWeatherIcon,
+  androidGesturesFix,
+  mergeDeep,
+  getAreaColors,
+  getColorsFromColor,
+} = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const {
   createButton,
   createSeparatorCard,
@@ -24,7 +29,17 @@ export class BonbonStrategy {
     const states = hass.states;
     const devices = hass.devices;
     const floors = hass.floors;
-    const areas = hass.areas;
+    const areas = Object.keys(hass.areas).reduce((acc, area_id) => {
+      const area = hass.areas[area_id];
+      const colorLabel = area.labels?.find((label) =>
+        /^(bonbon_)?color_([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(label),
+      );
+      acc[area_id] = {
+        ...area,
+        label: colorLabel,
+      };
+      return acc;
+    }, {});
     const entities = Object.keys(hass.entities).reduce((acc, entity_id) => {
       const originalEntity = hass.entities[entity_id];
       const device = devices?.[originalEntity?.device_id];
@@ -73,7 +88,12 @@ export class BonbonStrategy {
           .querySelector('meta[name="color-scheme"]')
           ?.getAttribute('content') === 'dark';
 
-      const styles = getStyles(isDark, config?.primary_accent_color);
+      config.styles.primary_accent_color = getColorsFromColor(
+        config.styles.primary_accent_color,
+        isDark,
+      ).activeColor;
+
+      const styles = getStyles(config.styles, isDark);
 
       const homeSections = Object.keys(config?.views?.bonbon_home?.sections)
         .filter((key) => {
@@ -157,9 +177,6 @@ export class BonbonStrategy {
                                 : sectionConfig.show_weather_card === 'hourly'
                                   ? 'hourly'
                                   : undefined,
-                            card_mod: {
-                              style: styles.weatherCard,
-                            },
                           },
                         ],
                         sectionConfig,
@@ -248,11 +265,10 @@ export class BonbonStrategy {
                     index,
                     areas,
                     isDark,
-                    config.primary_accent_color,
-                    sectionConfig.bonbon_colors,
+                    config.styles,
                   );
                   area.lightColor = colors.lightColor;
-                  area.reglrColor = colors.reglrColor;
+                  area.mediumColor = colors.mediumColor;
                   area.shadeColor = colors.shadeColor;
 
                   area.categorizedEntityIds = [];
@@ -456,7 +472,7 @@ export class BonbonStrategy {
                             --area-light-color: ${isDark
                               ? area.shadeColor
                               : area.lightColor};
-                            --area-reglr-color: ${area.reglrColor};
+                            --area-medium-color: ${area.mediumColor};
                             --area-shade-color: ${isDark
                               ? area.lightColor
                               : area.shadeColor};
@@ -534,7 +550,8 @@ export class BonbonStrategy {
                                       show_line: false,
                                     },
                                   ],
-                                  line_color: 'var(--bubble-default-color)',
+                                  line_color:
+                                    'var(--bonbon-primary-accent-color)',
                                   show: {
                                     points: false,
                                     labels: false,
@@ -950,14 +967,14 @@ export class BonbonStrategy {
                   title: area.name,
                   icon: area.icon,
                   background: isDark
-                    ? config.background_image_dark
+                    ? config?.styles?.background_image_dark
                       ? 'top / cover no-repeat fixed url("' +
-                        config.background_image_dark +
+                        config?.styles?.background_image_dark +
                         '")'
                       : ''
-                    : config.background_image_light
+                    : config?.styles?.background_image_light
                       ? 'top / cover no-repeat fixed url("' +
-                        config.background_image_light +
+                        config?.styles?.background_image_light +
                         '")'
                       : '',
                   subview: true,
@@ -1004,14 +1021,14 @@ export class BonbonStrategy {
         title: dashboardName,
         icon: config?.views?.bonbon_home?.icon || '',
         background: isDark
-          ? config.background_image_dark
+          ? config?.styles?.background_image_dark
             ? 'top / cover no-repeat fixed url("' +
-              config.background_image_dark +
+              config?.styles?.background_image_dark +
               '")'
             : ''
-          : config.background_image_light
+          : config?.styles?.background_image_light
             ? 'top / cover no-repeat fixed url("' +
-              config.background_image_light +
+              config?.styles?.background_image_light +
               '")'
             : '',
         path: 'bonbon_home',
@@ -1072,14 +1089,14 @@ export class BonbonStrategy {
               title: viewConfig.title || viewKey,
               icon: viewConfig.icon || '',
               background: isDark
-                ? config.background_image_dark
+                ? config?.styles?.background_image_dark
                   ? 'top / cover no-repeat fixed url("' +
-                    config.background_image_dark +
+                    config?.styles?.background_image_dark +
                     '")'
                   : ''
-                : config.background_image_light
+                : config?.styles?.background_image_light
                   ? 'top / cover no-repeat fixed url("' +
-                    config.background_image_light +
+                    config?.styles?.background_image_light +
                     '")'
                   : '',
               path: 'custom_' + viewKey,
@@ -1102,7 +1119,12 @@ export class BonbonStrategy {
           }
           if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {
-              style: (newStruct.card_mod?.style || '') + styles.cardmodGlobal,
+              style:
+                styles.cardmodGlobal +
+                (!newStruct.type.startsWith('custom:')
+                  ? styles.haCardBase
+                  : '') +
+                (newStruct.card_mod?.style || ''),
             };
           }
           if (newStruct.elements && Array.isArray(newStruct.elements)) {

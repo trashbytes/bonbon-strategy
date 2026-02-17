@@ -26,7 +26,7 @@ See the **Wildcards and attribute selectors** section for more details on how to
 - Persons
 - Favorites (add the label `favorite` to an entity)
 - Floors
-- Areas (add the label `hidden` to hide an area)
+- Areas (add the label `hidden` to hide an area, or `color_XXXXXX` to set a custom color)
 - Temperature, Humidity and CO2
 - Climate (HVAC)
 - Lights
@@ -96,10 +96,16 @@ The configuration is organized as follows:
 strategy:
   type: custom:bonbon-strategy
   options:
-    # Global dashboard options
-    primary_accent_color: '#9373c9' # primary accent color used for "on" states
-    background_image_light: null # background image for light mode (null | path/to/image)
-    background_image_dark: null # background image for dark mode (null | path/to/image)
+    # Global styling options
+    styles:
+      use_bonbon_colors: true # use auto-generated area colors (true) or use card background colors (false)
+      primary_accent_color: '#9373c9' # primary accent color used for "on" states (in HEX)
+      card_background_color_light: '#fff' # card background color for light mode (in HEX)
+      card_background_color_dark: '#222' # card background color for dark mode (in HEX)
+      card_text_color_light: '#111' # card text color for light mode (in HEX)
+      card_text_color_dark: '#eee' # card text color for dark mode (in HEX)
+      background_image_light: null # background image for light mode (null | path/to/image)
+      background_image_dark: null # background image for dark mode (null | path/to/image)
 
     # View definitions
     views:
@@ -245,6 +251,54 @@ cards:
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
 **Important note:** A dashboard strategy generates YAML, which is inherently static! `[state=on]` will not react to state changes without refreshing the dashboard! I don't think it's a big issue, as most cards shouldn't come and go willy-nilly anyway, but it's something you should keep in mind when building your dashboards. I use a more complex workaround for the `show_floor_lights_toggle` and `show_area_lights_toggle`.
+
+### Styling and Colors
+
+Bonbon Strategy offers flexible styling options to customize the appearance of your dashboard.
+
+#### Color Configuration
+
+**Primary Accent Color**
+
+This is the primary color used for `on` states.
+
+```yaml
+styles:
+  primary_accent_color: '#9373c9'
+```
+
+#### Card Background Colors
+
+Configure background colors for light and dark modes:
+
+```yaml
+styles:
+  card_background_color_light: '#ffffff' # light mode background
+  card_background_color_dark: '#222222' # dark mode background
+  card_text_color_light: '#111111' # light mode text color
+  card_text_color_dark: '#eeeeee' # dark mode text color
+```
+
+#### Background Images
+
+Add background images for visual customization:
+
+```yaml
+styles:
+  background_image_light: '/local/path/to/light-bg.jpg'
+  background_image_dark: '/local/path/to/dark-bg.jpg'
+```
+
+**Auto-generated Area Colors:**
+
+When `use_bonbon_colors` is `true`, Bonbon Strategy automatically generates distinct colors for each area.
+You can override colors for specific areas by adding a label to your area with the format `color_XXXXXX` or `bonbon_color_XXXXXX` where `XXXXXX` is a hex color code.
+You can use auto generated colors mixed with manual ones.
+
+```yaml
+styles:
+  use_bonbon_colors: true
+```
 
 ## Views and Sections
 
