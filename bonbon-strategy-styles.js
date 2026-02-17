@@ -62,6 +62,7 @@ export const getStyles = (config, isDark) => {
         inset 0 -0.5px 0 0 rgba(0, 0, 0, ${isDark ? '0.8' : '0.10'});
       --bonbon-primary-accent-color: ${config?.primary_accent_color};
       --bubble-default-color: var(--bonbon-primary-accent-color);
+      --bubble-climate-background-color: var(--bonbon-primary-accent-color);
     }
   `;
   const styles = {
