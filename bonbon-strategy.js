@@ -88,10 +88,11 @@ export class BonbonStrategy {
           .querySelector('meta[name="color-scheme"]')
           ?.getAttribute('content') === 'dark';
 
-      config.styles.primary_accent_color = getColorsFromColor(
-        config.styles.primary_accent_color,
-        isDark,
-      ).activeColor;
+      config.styles.primary_accent_color =
+        config.styles.primary_accent_color.includes('#')
+          ? getColorsFromColor(config.styles.primary_accent_color, isDark)
+              .activeColor
+          : config.styles.primary_accent_color;
 
       const styles = getStyles(config.styles, isDark);
 

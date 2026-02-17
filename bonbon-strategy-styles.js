@@ -51,6 +51,12 @@ export const getStyles = (config, isDark) => {
         : config?.card_background_color_light || '#fff'};
       --ha-card-background: var(--bonbon-card-background);
       --bubble-main-background-color: var(--bonbon-card-background);
+      --bubble-media-player-main-background-color: var(
+        --bonbon-card-background
+      );
+      --bubble-cover-main-background-color: var(--bonbon-card-background);
+      --bubble-calendar-main-background-color: var(--bonbon-card-background);
+
       --bonbon-border-radius: 12px;
       --bubble-border-radius: var(--bonbon-border-radius);
       --bubble-icon-border-radius: 8px;
