@@ -46,6 +46,7 @@ export const defaultConfig = {
           show_floor_lights_toggle: 'when-on',
           show_area_lights_toggle: 'when-on',
           disabled: false,
+          bonbon_colors: true,
         },
       },
     },

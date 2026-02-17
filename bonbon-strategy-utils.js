@@ -33,7 +33,50 @@ export function getWeatherIcon(weatherType) {
   }
 }
 
-export function getAreaColors(area, index, areas, isDark) {
+function hexToHSL(hex) {
+  let r = parseInt(hex.slice(-6, -4), 16) / 255;
+  let g = parseInt(hex.slice(-4, -2), 16) / 255;
+  let b = parseInt(hex.slice(-2), 16) / 255;
+
+  let max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  let h,
+    s,
+    l = (max + min) / 2;
+
+  if (max === min) {
+    h = s = 0;
+  } else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h /= 6;
+  }
+  return {
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100),
+  };
+}
+
+export function getAreaColors(
+  area,
+  index,
+  areas,
+  isDark,
+  accentColor,
+  bonbon_colors,
+) {
   if (area.floor_id == null) {
     area.floor_id = '_areas';
   }
@@ -44,9 +87,13 @@ export function getAreaColors(area, index, areas, isDark) {
   }
   const colorIndex = Math.abs(hash % areas.length);
 
-  const hue = (colorIndex * (360 / areas.length)) % 360;
-  const saturation = isDark ? 20 : 40;
-  const lightness = isDark ? 40 : 77;
+  const accentHsl = hexToHSL(accentColor);
+
+  const hue = bonbon_colors
+    ? (colorIndex * (360 / areas.length)) % 360
+    : accentHsl.h;
+  const saturation = bonbon_colors ? (isDark ? 20 : 40) : isDark ? 24 : 60;
+  const lightness = bonbon_colors ? (isDark ? 40 : 77) : isDark ? 35 : 88;
 
   const lightColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   const reglrColor = `hsl(${hue}, ${saturation}%, ${lightness - 5}%)`;

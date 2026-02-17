@@ -243,7 +243,14 @@ export class BonbonStrategy {
                     !a.labels?.includes('bonbon_hidden'),
                 )
                 .map(function (area, index, areas) {
-                  const colors = getAreaColors(area, index, areas, isDark);
+                  const colors = getAreaColors(
+                    area,
+                    index,
+                    areas,
+                    isDark,
+                    config.primary_accent_color,
+                    sectionConfig.bonbon_colors,
+                  );
                   area.lightColor = colors.lightColor;
                   area.reglrColor = colors.reglrColor;
                   area.shadeColor = colors.shadeColor;
