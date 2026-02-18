@@ -1,7 +1,7 @@
 export const defaultConfig = {
   styles: {
     use_bonbon_colors: true,
-    primary_accent_color: '#9373c9',
+    primary_accent_color: '#009ac7',
     card_background_color_light: '#fff',
     card_background_color_dark: '#222',
     card_text_color_light: '#111',
