@@ -13,13 +13,8 @@ const {
   getAreaColors,
   getColorsFromColor,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
-const {
-  createButtonCard,
-  createSeparatorCard,
-  createGrid,
-  createBubbleCard,
-  createSubButton,
-} = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
+const { createButtonCard, createSeparatorCard, createGrid, createSubButton } =
+  await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
 
 const { resolveEntity, resolveEntities, onFloor, inArea, hasLabel } =
   await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
@@ -151,11 +146,12 @@ export class BonbonStrategy {
                   const separatorSubButtons = [
                     !sectionConfig.show_weather_card
                       ? [
-                          createSubButton(
-                            weather_entity,
-                            'temperature',
-                            'mdi:thermometer',
-                          ),
+                          createSubButton(weather_entity, {
+                            icon: 'mdi:thermometer',
+                            show_attribute: true,
+                            attribute: 'temperature',
+                            show_state: false,
+                          }),
                         ]
                       : [],
                   ];
@@ -164,7 +160,7 @@ export class BonbonStrategy {
                       separatorName,
                       separatorIcon,
                       separatorSubButtons,
-                      styles.bubbleSeparatorSubButtonBase,
+                      ['bubbleSeparatorSubButtonBase'],
                     ),
                   );
                   if (sectionConfig.show_weather_card) {
@@ -203,14 +199,7 @@ export class BonbonStrategy {
                 }
                 section.cards.push(
                   createGrid(
-                    persons.map((c) =>
-                      createBubbleCard({
-                        card_type: 'button',
-                        button_type: 'state',
-                        entity: c.entity.entity_id,
-                        show_state: true,
-                      }),
-                    ),
+                    persons.map((c) => createButtonCard(c)),
                     sectionConfig,
                   ),
                 );
@@ -227,7 +216,7 @@ export class BonbonStrategy {
                 }
                 section.cards.push(
                   createGrid(
-                    favorites.map((c) => createButtonCard(c.entity, styles)),
+                    favorites.map((c) => createButtonCard(c)),
                     sectionConfig,
                   ),
                 );
@@ -341,12 +330,8 @@ export class BonbonStrategy {
                       sectionConfig.show_floor_lights_toggle
                         ? (notNightlightsOnFloor || [])
                             .map((c, index, filtered) => {
-                              return ['off', 'on'].map((state) => {
-                                return {
-                                  entity: c.entity.entity_id,
-                                  show_state: false,
-                                  content_layout: 'icon-left',
-                                  use_accent_color: true,
+                              return ['off', 'on'].map((state) =>
+                                createSubButton(c, {
                                   icon:
                                     sectionConfig.show_floor_lights_toggle ===
                                     'always'
@@ -361,23 +346,25 @@ export class BonbonStrategy {
                                       ),
                                     },
                                   },
-                                };
-                              });
+                                }),
+                              );
                             })
                             .flat()
                         : [];
                     const separatorSubButtons = [floorLightsSubButtons];
                     const separatorStyles = floorLightsSubButtons.length
                       ? sectionConfig.show_floor_lights_toggle === 'always'
-                        ? styles.bubbleSeparatorLightsSubButtonAlways
-                        : styles.bubbleSeparatorLightsSubButtonDefault
-                      : '';
+                        ? ['bubbleSeparatorLightsSubButtonAlways']
+                        : ['bubbleSeparatorLightsSubButtonDefault']
+                      : [];
                     section.cards.push(
                       createSeparatorCard(
                         separatorName,
                         separatorIcon,
                         separatorSubButtons,
-                        styles.bubbleSeparatorSubButtonBase + separatorStyles,
+                        ['bubbleSeparatorSubButtonBase'].concat(
+                          separatorStyles,
+                        ),
                       ),
                     );
                   }
@@ -386,14 +373,10 @@ export class BonbonStrategy {
                     const notNightlightsInArea = notNightlights.filter((c) => {
                       return inArea(c, area);
                     });
-                    return createBubbleCard({
-                      card_type: 'button',
-                      button_type: 'name',
+                    return createButtonCard(null, {
                       icon: area.icon,
                       show_state: false,
                       name: area.name.split(' (')[0],
-                      hold_action: { action: 'none' },
-                      tap_action: { action: 'none' },
                       button_action: {
                         tap_action: {
                           action: 'navigate',
@@ -405,26 +388,25 @@ export class BonbonStrategy {
                         main: sectionConfig.show_area_lights_toggle
                           ? (notNightlightsInArea || [])
                               .map((c, index, filtered) => {
-                                return ['off', 'on'].map((state) => ({
-                                  entity: c.entity.entity_id,
-                                  show_state: false,
-                                  content_layout: 'icon-left',
-                                  use_accent_color: true,
-                                  icon:
-                                    sectionConfig.show_area_lights_toggle ===
-                                    'always'
-                                      ? 'mdi:lightbulb-group'
-                                      : '',
-                                  tap_action: {
-                                    action: 'call-service',
-                                    service: 'light.turn_' + state,
-                                    target: {
-                                      entity_id: filtered.map(
-                                        (c) => c.entity.entity_id,
-                                      ),
+                                return ['off', 'on'].map((state) =>
+                                  createSubButton(c, {
+                                    icon:
+                                      sectionConfig.show_area_lights_toggle ===
+                                      'always'
+                                        ? 'mdi:lightbulb-group'
+                                        : '',
+
+                                    tap_action: {
+                                      action: 'call-service',
+                                      service: 'light.turn_' + state,
+                                      target: {
+                                        entity_id: filtered.map(
+                                          (c) => c.entity.entity_id,
+                                        ),
+                                      },
                                     },
-                                  },
-                                }));
+                                  }),
+                                );
                               })
                               .flat()
                           : [],
@@ -444,13 +426,14 @@ export class BonbonStrategy {
                                 : false,
                             ]
                               .filter((e_id) => e_id)
-                              .map((e_id) => ({
-                                entity: e_id,
-                                show_background: false,
-                                show_state: true,
-                                content_layout: 'icon-left',
-                                fill_width: false,
-                              })),
+                              .map((e_id) =>
+                                createSubButton(
+                                  { entity: entities[e_id] },
+                                  {
+                                    fill_width: false,
+                                  },
+                                ),
+                              ),
                           },
                         ],
                         bottom_layout: 'inline',
@@ -461,21 +444,22 @@ export class BonbonStrategy {
                         sectionConfig.show_co2
                           ? 1.4
                           : 1,
-                      styles:
-                        css`
-                          :host {
-                            --area-light-color: ${isDark
-                              ? area.shadeColor
-                              : area.lightColor};
-                            --area-medium-color: ${area.mediumColor};
-                            --area-shade-color: ${isDark
-                              ? area.lightColor
-                              : area.shadeColor};
-                          }
-                        ` +
-                        (sectionConfig.show_area_lights_toggle === 'always'
-                          ? styles.bubbleAreaSubButtonDefault
-                          : styles.bubbleAreaSubButtonAlways),
+                      styles: css`
+                        :host {
+                          --area-light-color: ${isDark
+                            ? area.shadeColor
+                            : area.lightColor};
+                          --area-medium-color: ${area.mediumColor};
+                          --area-shade-color: ${isDark
+                            ? area.lightColor
+                            : area.shadeColor};
+                        }
+                      `,
+                      bonbon_styles: [
+                        sectionConfig.show_area_lights_toggle === 'always'
+                          ? 'bubbleAreaSubButtonDefault'
+                          : 'bubbleAreaSubButtonAlways',
+                      ],
                     });
                   });
                   section.cards.push(createGrid(floorCards, sectionConfig));
@@ -556,20 +540,7 @@ export class BonbonStrategy {
                                     style: styles.environmentGraphCard,
                                   },
                                 }
-                              : createBubbleCard(
-                                  {
-                                    card_type: 'button',
-                                    entity: e_id,
-                                    show_state: true,
-                                    show_last_changed: false,
-                                    use_accent_color: true,
-                                    tap_action: { action: 'none' },
-                                    button_action: {
-                                      tap_action: { action: 'more-info' },
-                                    },
-                                  },
-                                  styles.bubbleButtonNonBinary,
-                                );
+                              : createButtonCard({ entity: entities[e_id] });
                           });
                         section.cards.push(createGrid(envCards, sectionConfig));
                         break;
@@ -595,12 +566,8 @@ export class BonbonStrategy {
                               );
                             })
                             .map((c) =>
-                              createBubbleCard({
+                              createButtonCard(c, {
                                 card_type: 'climate',
-                                entity: c.entity.entity_id,
-                                show_state: true,
-                                state_color: true,
-                                show_last_changed: true,
                                 sub_button: [
                                   {
                                     select_attribute: 'hvac_modes',
@@ -627,12 +594,8 @@ export class BonbonStrategy {
                               sectionConfig.show_area_lights_toggle
                                 ? (notNightlightsInArea || [])
                                     .map((c, index, filtered) => {
-                                      return ['off', 'on'].map((state) => {
-                                        return {
-                                          entity: c.entity.entity_id,
-                                          show_state: false,
-                                          content_layout: 'icon-left',
-                                          use_accent_color: true,
+                                      return ['off', 'on'].map((state) =>
+                                        createSubButton(c, {
                                           icon:
                                             sectionConfig.show_area_lights_toggle ===
                                             'always'
@@ -647,8 +610,8 @@ export class BonbonStrategy {
                                               ),
                                             },
                                           },
-                                        };
-                                      });
+                                        }),
+                                      );
                                     })
                                     .flat()
                                 : [];
@@ -657,16 +620,17 @@ export class BonbonStrategy {
                             const separatorStyles = areaLightsSubButtons.length
                               ? sectionConfig.show_area_lights_toggle ===
                                 'always'
-                                ? styles.bubbleSeparatorLightsSubButtonAlways
-                                : styles.bubbleSeparatorLightsSubButtonDefault
-                              : '';
+                                ? ['bubbleSeparatorLightsSubButtonAlways']
+                                : ['bubbleSeparatorLightsSubButtonDefault']
+                              : [];
                             section.cards.push(
                               createSeparatorCard(
                                 sectionConfig.name,
                                 sectionConfig.icon,
                                 separatorSubButtons,
-                                styles.bubbleSeparatorSubButtonBase +
+                                ['bubbleSeparatorSubButtonBase'].concat(
                                   separatorStyles,
+                                ),
                               ),
                             );
                           }
@@ -681,16 +645,7 @@ export class BonbonStrategy {
                                 )
                               );
                             })
-                            .map((c) =>
-                              createBubbleCard({
-                                card_type: 'button',
-                                entity: c.entity.entity_id,
-                                show_state: true,
-                                show_last_changed: true,
-                                use_accent_color: true,
-                                tap_action: { action: 'none' },
-                              }),
-                            );
+                            .map((c) => createButtonCard(c));
                           section.cards.push(
                             createGrid(lightCards, sectionConfig),
                           );
@@ -717,16 +672,7 @@ export class BonbonStrategy {
                                 )
                               );
                             })
-                            .map((c) =>
-                              createBubbleCard({
-                                card_type: 'button',
-                                entity: c.entity.entity_id,
-                                show_state: true,
-                                show_last_changed: true,
-                                use_accent_color: true,
-                                tap_action: { action: 'none' },
-                              }),
-                            );
+                            .map((c) => createButtonCard(c));
                           section.cards.push(
                             createGrid(switchCards, sectionConfig),
                           );
@@ -754,16 +700,8 @@ export class BonbonStrategy {
                               );
                             })
                             .map((c) =>
-                              createBubbleCard({
+                              createButtonCard(c, {
                                 card_type: 'media-player',
-                                entity: c.entity.entity_id,
-                                show_state: true,
-                                show_last_changed: true,
-                                use_accent_color: true,
-                                tap_action: { action: 'none' },
-                                button_action: {
-                                  tap_action: { action: 'more-info' },
-                                },
                               }),
                             );
                           section.cards.push(
@@ -792,19 +730,7 @@ export class BonbonStrategy {
                                 )
                               );
                             })
-                            .map((c) =>
-                              createBubbleCard({
-                                card_type: 'button',
-                                entity: c.entity.entity_id,
-                                show_state: true,
-                                show_last_changed: true,
-                                use_accent_color: true,
-                                tap_action: { action: 'none' },
-                                button_action: {
-                                  tap_action: { action: 'more-info' },
-                                },
-                              }),
-                            );
+                            .map((c) => createButtonCard(c));
                           section.cards.push(
                             createGrid(openingCards, sectionConfig),
                           );
@@ -832,16 +758,8 @@ export class BonbonStrategy {
                               );
                             })
                             .map((c) =>
-                              createBubbleCard({
+                              createButtonCard(c, {
                                 card_type: 'cover',
-                                entity: c.entity.entity_id,
-                                show_state: true,
-                                show_last_changed: true,
-                                use_accent_color: true,
-                                tap_action: { action: 'none' },
-                                button_action: {
-                                  tap_action: { action: 'more-info' },
-                                },
                               }),
                             );
                           section.cards.push(
@@ -857,7 +775,7 @@ export class BonbonStrategy {
                                 c.entity.entity_id,
                               ),
                           )
-                          .map((c) => createButtonCard(c.entity, styles));
+                          .map((c) => createButtonCard(c));
                         if (miscCards.length) {
                           if (!sectionConfig.hide_separator) {
                             section.cards.push(
@@ -906,9 +824,7 @@ export class BonbonStrategy {
                                   )),
                             )
                             .map(function (c) {
-                              return (
-                                c.object || createButtonCard(c.entity, styles)
-                              );
+                              return c.object || createButtonCard(c);
                             });
                           if (userCards.length) {
                             if (!sectionConfig.hide_separator) {
@@ -944,7 +860,7 @@ export class BonbonStrategy {
                                   sectionConfig.icon ||
                                     'mdi:view-dashboard-edit',
                                   [userSubButtons],
-                                  styles.bubbleSeparatorSubButtonBase,
+                                  ['bubbleSeparatorSubButtonBase'],
                                 ),
                               );
                             }
@@ -984,7 +900,7 @@ export class BonbonStrategy {
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = resolveEntities(sectionConfig.cards).map(
                   function (c) {
-                    return c.object || createButtonCard(c.entity, styles);
+                    return c.object || createButtonCard(c);
                   },
                 );
                 if (userCards.length) {
@@ -999,7 +915,7 @@ export class BonbonStrategy {
                         sectionConfig.name || 'Custom Section',
                         sectionConfig.icon || 'mdi:view-dashboard-edit',
                         [userSubButtons],
-                        styles.bubbleSeparatorSubButtonBase,
+                        ['bubbleSeparatorSubButtonBase'],
                       ),
                     );
                   }
@@ -1052,7 +968,7 @@ export class BonbonStrategy {
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = resolveEntities(sectionConfig.cards).map(
                   function (c) {
-                    return c.object || createButtonCard(c.entity, styles);
+                    return c.object || createButtonCard(c);
                   },
                 );
 
@@ -1068,7 +984,7 @@ export class BonbonStrategy {
                         sectionConfig.name || 'Custom Section',
                         sectionConfig.icon || 'mdi:view-dashboard-edit',
                         [userSubButtons],
-                        styles.bubbleSeparatorSubButtonBase,
+                        ['bubbleSeparatorSubButtonBase'],
                       ),
                     );
                   }
@@ -1110,7 +1026,12 @@ export class BonbonStrategy {
             newStruct.type &&
             newStruct.type.startsWith('custom:bubble-card')
           ) {
-            newStruct.styles = styles.bubbleGlobal + (newStruct.styles || '');
+            newStruct.styles =
+              styles.bubbleGlobal +
+              (newStruct.styles || '') +
+              (newStruct.bonbon_styles
+                ?.map((s) => styles[s] || '')
+                .join('\n') || '');
           }
           if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {

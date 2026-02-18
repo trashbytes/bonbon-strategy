@@ -108,7 +108,7 @@ export const getStyles = (config, isDark) => {
           opacity: 1;
         }
         .bubble-icon-container {
-          --icon-primary-color: var(--bonbon-icon-color-ff);
+          --icon-primary-color: var(--bonbon-icon-color-off);
           background-color: var(--bonbon-icon-background-off);
         }
         ha-ripple {
