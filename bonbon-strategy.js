@@ -854,8 +854,6 @@ export class BonbonStrategy {
                                 button_action: {
                                   tap_action: { action: 'more-info' },
                                 },
-                                icon_open: 'mdi:roller-shade',
-                                icon_close: 'mdi:roller-shade-closed',
                               }),
                             );
                           section.cards.push(

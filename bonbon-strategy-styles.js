@@ -140,11 +140,23 @@ export const getStyles = (config, isDark) => {
         }
         mwc-list-item[selected],
         mwc-list-item[selected] ha-icon,
-        .is-on
-          :not(.bubble-media-player)
-          > .bubble-content-container
-          .bubble-name-container {
+        .is-on .bubble-name-container {
           color: #fff !important;
+        }
+        .is-on .bubble-cover-button,
+        .is-on .bubble-media-button {
+          background: rgba(0, 0, 0, 0.1);
+          border-radius: var(
+            --bubble-sub-button-border-radius,
+            var(--bubble-border-radius, 18px)
+          );
+          --icon-primary-color: #fff;
+        }
+        .is-on .bubble-button-background,
+        .is-on .bubble-background {
+          background-color: var(--bonbon-primary-accent-color) !important;
+          filter: none !important;
+          opacity: 1 !important;
         }
         .bubble-dropdown-inner-border {
           display: none !important;
@@ -157,17 +169,11 @@ export const getStyles = (config, isDark) => {
         }
       `,
     bubbleButtonNonBinary: css`
-      .is-on
-        :not(.bubble-media-player)
-        > .bubble-content-container
-        .bubble-name-container[class] {
+      .is-on .bubble-name-container[class] {
         color: var(--primary-text-color) !important;
       }
       .is-on .bubble-button-background[class] {
-        background-color: var(
-          --ha-card-background,
-          var(--card-background-color, #fff)
-        ) !important;
+        background-color: var(--bonbon-card-background) !important;
       }
     `,
     bubbleSeparatorSubButtonBase: css`
