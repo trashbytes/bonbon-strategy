@@ -14,7 +14,7 @@ const {
   getColorsFromColor,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const {
-  createButton,
+  createButtonCard,
   createSeparatorCard,
   createGrid,
   createBubbleCard,
@@ -227,7 +227,7 @@ export class BonbonStrategy {
                 }
                 section.cards.push(
                   createGrid(
-                    favorites.map((c) => createButton(c.entity, styles)),
+                    favorites.map((c) => createButtonCard(c.entity, styles)),
                     sectionConfig,
                   ),
                 );
@@ -280,21 +280,9 @@ export class BonbonStrategy {
 
                   area.categorizedEntityIds = [];
 
-                  area.temperature_entity_id =
-                    area.temperature_entity_id ||
-                    resolveEntity(
-                      'sensor.*[device_class=temperature][unit_of_measurement=°C|°F][area_id=' +
-                        area.area_id +
-                        ']',
-                    )?.entity?.entity_id;
+                  area.temperature_entity_id = area.temperature_entity_id;
 
-                  area.humidity_entity_id =
-                    area.humidity_entity_id ||
-                    resolveEntity(
-                      'sensor.*[device_class=humidity][unit_of_measurement=%][area_id=' +
-                        area.area_id +
-                        ']',
-                    )?.entity?.entity_id;
+                  area.humidity_entity_id = area.humidity_entity_id;
 
                   area.co2_entity_id =
                     area.co2_entity_id ||
@@ -869,7 +857,7 @@ export class BonbonStrategy {
                                 c.entity.entity_id,
                               ),
                           )
-                          .map((c) => createButton(c.entity, styles));
+                          .map((c) => createButtonCard(c.entity, styles));
                         if (miscCards.length) {
                           if (!sectionConfig.hide_separator) {
                             section.cards.push(
@@ -918,7 +906,9 @@ export class BonbonStrategy {
                                   )),
                             )
                             .map(function (c) {
-                              return c.object || createButton(c.entity, styles);
+                              return (
+                                c.object || createButtonCard(c.entity, styles)
+                              );
                             });
                           if (userCards.length) {
                             if (!sectionConfig.hide_separator) {
@@ -994,7 +984,7 @@ export class BonbonStrategy {
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = resolveEntities(sectionConfig.cards).map(
                   function (c) {
-                    return c.object || createButton(c.entity, styles);
+                    return c.object || createButtonCard(c.entity, styles);
                   },
                 );
                 if (userCards.length) {
@@ -1062,7 +1052,7 @@ export class BonbonStrategy {
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = resolveEntities(sectionConfig.cards).map(
                   function (c) {
-                    return c.object || createButton(c.entity, styles);
+                    return c.object || createButtonCard(c.entity, styles);
                   },
                 );
 

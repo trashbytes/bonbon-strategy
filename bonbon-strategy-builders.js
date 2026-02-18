@@ -1,4 +1,4 @@
-export function createButton(e, styles) {
+export function createButtonCard(e, styles) {
   if (typeof e === 'string' && window.__bonbon.entities[e]) {
     e = window.__bonbon.entities[e];
   }
@@ -21,6 +21,21 @@ export function createButton(e, styles) {
   };
   const mergedStyles = isToggle || isBinary ? '' : styles.bubbleButtonNonBinary;
   return createBubbleCard(opts, mergedStyles);
+}
+
+export function createBubbleCard(options = {}, styles = {}) {
+  const base = {
+    type: 'custom:bubble-card',
+    card_type: options.card_type || 'button',
+    entity: options.entity,
+    show_state: options.show_state ?? true,
+    show_last_changed: options.show_last_changed ?? false,
+    use_accent_color: options.use_accent_color ?? true,
+    tap_action: options.tap_action ?? { action: 'none' },
+  };
+  const merged = { ...base, ...options };
+  if (merged.styles === undefined && styles) merged.styles = styles;
+  return merged;
 }
 
 export function createSeparatorCard(
@@ -74,19 +89,4 @@ export function createGrid(cardsArray, sectionConfig) {
     square: false,
     cards: cardsArray,
   };
-}
-
-export function createBubbleCard(options = {}, styles = {}) {
-  const base = {
-    type: 'custom:bubble-card',
-    card_type: options.card_type || 'button',
-    entity: options.entity,
-    show_state: options.show_state ?? true,
-    show_last_changed: options.show_last_changed ?? false,
-    use_accent_color: options.use_accent_color ?? true,
-    tap_action: options.tap_action ?? { action: 'none' },
-  };
-  const merged = { ...base, ...options };
-  if (merged.styles === undefined && styles) merged.styles = styles;
-  return merged;
 }
