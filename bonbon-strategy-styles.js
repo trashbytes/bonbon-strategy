@@ -161,10 +161,8 @@ export const getStyles = (config, isDark) => {
         mwc-list-item:not([selected]) {
           --icon-primary-color: var(--bonbon-primary-text-color);
         }
-        .is-on {
-          --icon-primary-color: var(--bonbon-icon-color-on);
-        }
         .is-on .bubble-icon-container {
+          --icon-primary-color: var(--bonbon-icon-color-on);
           background-color: var(--bonbon-icon-background-on);
         }
         .bubble-climate .bubble-sub-button.background-off,
