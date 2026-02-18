@@ -83,10 +83,16 @@ export class BonbonStrategy {
         hass?.config?.location_name ||
         'Home';
 
-      const isDark =
-        document
-          .querySelector('meta[name="color-scheme"]')
-          ?.getAttribute('content') === 'dark';
+      const metaScheme = document.querySelector('meta[name="color-scheme"]');
+      const isDark = metaScheme.getAttribute('content') === 'dark';
+
+      if (metaScheme) {
+        const observer = new MutationObserver(() => {
+          location.reload();
+        });
+
+        observer.observe(metaScheme, { attributes: true });
+      }
 
       config.styles.primary_accent_color =
         config.styles.primary_accent_color.includes('#')

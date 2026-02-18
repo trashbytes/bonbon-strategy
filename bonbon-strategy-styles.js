@@ -29,7 +29,7 @@ export const getStyles = (config, isDark) => {
       inset: 0;
       position: absolute;
       border-radius: var(--bubble-button-border-radius);
-      background: ${isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'};
+      background: ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'};
       opacity: 0;
     }
     ha-card:hover:before {
@@ -129,7 +129,7 @@ export const getStyles = (config, isDark) => {
         .bubble-climate-container:hover:after,
         .bubble-cover-container:hover:after,
         .bubble-media-player-container:hover:after {
-          background: ${isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'};
+          background: ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'};
         }
         mwc-list-item[selected],
         mwc-list-item[selected] ha-icon,

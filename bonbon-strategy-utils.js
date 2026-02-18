@@ -140,7 +140,7 @@ function hexToHSL(hex) {
 }
 
 export function getColorsFromColor(color, isDark) {
-  const step = 3;
+  const step = isDark ? 8 : 3;
 
   const rgb = hexToRGB(color);
   const lab = rgbToLAB(rgb);
@@ -198,7 +198,7 @@ export function getAreaColors(area, index, areas, isDark, styles) {
   if (area.floor_id == null) {
     area.floor_id = '_areas';
   }
-  const step = 3;
+  const step = isDark ? 8 : 3;
 
   if (area.label) {
     const hexMatch = area.label.match(
