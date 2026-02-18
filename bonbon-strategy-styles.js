@@ -57,10 +57,23 @@ export const getStyles = (config, isDark) => {
       --bubble-cover-main-background-color: var(--bonbon-card-background);
       --bubble-calendar-main-background-color: var(--bonbon-card-background);
 
+      --bonbon-icon-color-off: ${isDark
+        ? 'var(--bonbon-primary-text-color)'
+        : 'var(--bonbon-primary-text-color)'};
+      --bonbon-icon-background-off: ${isDark
+        ? 'rgba(0,0,0,0.1)'
+        : 'rgba(0,0,0,0.03)'};
+
+      --bonbon-icon-color-on: ${isDark
+        ? 'var(--bonbon-primary-accent-color)'
+        : 'var(--bonbon-primary-accent-color)'};
+      --bonbon-icon-background-on: ${isDark ? '#fff' : '#fff'};
       --bonbon-border-radius: 12px;
       --bubble-border-radius: var(--bonbon-border-radius);
       --bubble-icon-border-radius: 8px;
       --bubble-sub-button-border-radius: 8px;
+      --bubble-media-player-buttons-border-radius: 8px;
+      --bubble-cover-buttons-border-radius: 8px;
       --bubble-button-border-radius: var(--bonbon-border-radius);
       --bonbon-box-shadow:
         0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'}),
@@ -94,6 +107,10 @@ export const getStyles = (config, isDark) => {
         .is-off .bubble-main-icon {
           opacity: 1;
         }
+        .bubble-icon-container {
+          --icon-primary-color: var(--bonbon-icon-color-ff);
+          background-color: var(--bonbon-icon-background-off);
+        }
         ha-ripple {
           display: none !important;
         }
@@ -103,9 +120,6 @@ export const getStyles = (config, isDark) => {
         .bubble-button-background {
           background-color: var(--bonbon-card-background) !important;
           opacity: 1 !important;
-        }
-        .is-on .bubble-button-background {
-          background-color: var(--bubble-default-color) !important;
         }
         ha-card {
           position: relative;
@@ -139,17 +153,36 @@ export const getStyles = (config, isDark) => {
           background: ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'};
         }
         mwc-list-item[selected],
-        mwc-list-item[selected] ha-icon,
+        mwc-list-item[selected],
         .is-on .bubble-name-container {
+          --icon-primary-color: #fff;
           color: #fff !important;
         }
+        mwc-list-item:not([selected]) {
+          --icon-primary-color: var(--bonbon-primary-text-color);
+        }
+        .is-on {
+          --icon-primary-color: var(--bonbon-icon-color-on);
+        }
+        .is-on .bubble-icon-container {
+          background-color: var(--bonbon-icon-background-on);
+        }
+        .bubble-climate .bubble-sub-button.background-off,
+        .bubble-climate .bubble-temperature-container {
+          background: var(--bonbon-icon-background-off);
+        }
+        .is-on .bubble-climate .bubble-temperature-container {
+          color: #fff;
+          --icon-primary-color: #fff;
+        }
+        .bubble-cover-button,
+        .bubble-media-button {
+          background: var(--bonbon-icon-background-off);
+          --icon-primary-color: var(--bonbon-primary-text-color);
+        }
         .is-on .bubble-cover-button,
-        .is-on .bubble-media-button {
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: var(
-            --bubble-sub-button-border-radius,
-            var(--bubble-border-radius, 18px)
-          );
+        .is-on .bubble-media-button,
+        .is-on .bubble-climate {
           --icon-primary-color: #fff;
         }
         .is-on .bubble-button-background,
@@ -460,16 +493,7 @@ export const getStyles = (config, isDark) => {
           --bubble-button-icon-border-radius,
           var(--bubble-icon-border-radius, var(--bonbon-border-radius, 50%))
         ) !important;
-        background-color: var(
-          --bubble-button-icon-background-color,
-          var(
-            --bubble-icon-background-color,
-            var(
-              --bubble-secondary-background-color,
-              var(--card-background-color, var(--ha-card-background))
-            )
-          )
-        ) !important;
+        background-color: var(--bonbon-icon-background-off);
         padding: 9px !important;
       }
       .name {
