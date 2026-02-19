@@ -28,12 +28,12 @@ See the **Wildcards and attribute selectors** section for more details on how to
 - Floors
 - Areas (add the label `hidden` to hide an area, or `color_XXXXXX` to set a custom color)
 - Temperature, Humidity and CO2
-- Climate (HVAC)
 - Lights
 - Switches
 - Media Players
-- Openings (Doors & Windows)
+- Climate (HVAC)
 - Covers (Shutters & Shades)
+- Openings (Doors & Windows)
 - Miscellaneous (almost everything that isn't part of the above)
 - Custom views, sections and cards (see configuration)
 
@@ -175,10 +175,14 @@ strategy:
             name: 'Beleuchtung'
           bonbon_switches:
             name: 'Schalter'
+          bonbon_media:
+            name: 'Media Player'
+          bonbon_climate:
+            name: 'Heizung & Klima'
+          bonbon_covers:
+            name: 'Rollläden & Beschattung'
           bonbon_openings:
             name: 'Fenster & Türen'
-          bonbon_covers:
-            name: 'Rollläden'
 ```
 
 ### Cards and Entities
