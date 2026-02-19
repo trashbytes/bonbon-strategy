@@ -134,11 +134,6 @@ function rgbToHSL(rgb) {
   };
 }
 
-function hexToHSL(hex) {
-  const rgb = hexToRGB(hex);
-  return rgbToHSL(rgb);
-}
-
 export function getColorsFromColor(color, isDark) {
   const step = isDark ? 8 : 3;
 
@@ -227,7 +222,7 @@ export function getAreaColors(area, index, areas, isDark, styles) {
 
   const hue = (colorIndex * (360 / areas.length)) % 360;
   const saturation = isDark ? 20 : 40;
-  let labLightness = isDark ? 35 : 75;
+  let labLightness = isDark ? 37 : 72;
 
   const hslForLab = { h: hue, s: saturation, l: labLightness };
 
