@@ -1,6 +1,6 @@
 # 🍬 Bonbon Strategy
 
-Bonbon Strategy is a Home Assistant strategy which automatically generates a colorful dashboard using Bubble Cards.
+Bonbon Strategy is a Home Assistant strategy which automatically generates a colorful dashboard using Bubble Cards. It's fully featured right out of the gate but can be expanded and customized.
 
 <img width="4270" alt="preview" src="preview.png?v=3" />
 
@@ -21,6 +21,8 @@ By default, disabled and hidden entities won't be displayed in Bonbon Strategy. 
 See the **Wildcards and attribute selectors** section for more details on how to include hidden and diagnostic entities.
 
 ## Supported features
+
+These features and domains are included by default and will "just work".
 
 - Weather
 - Persons
@@ -254,7 +256,7 @@ cards:
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
-**Important note:** A dashboard strategy generates YAML, which is inherently static! `[state=on]` will not react to state changes without refreshing the dashboard! I don't think it's a big issue, as most cards shouldn't come and go willy-nilly anyway, but it's something you should keep in mind when building your dashboards. I use a more complex workaround for the `show_floor_lights_toggle` and `show_area_lights_toggle`.
+**Important note:** A dashboard strategy generates YAML, which is inherently static! `[state=on]` will not react to state changes without refreshing the dashboard! I don't think it's a big issue, as most cards shouldn't come and go willy-nilly anyway, but it's something you should keep in mind when building your dashboards. I use a more complex workaround for the `show_floor_lights_toggle` and `show_area_lights_toggle`. If you do need a feature like that consider using your own cards and wrapping them in conditional cards. I may add support for it natively in the future.
 
 ### Styling and Colors
 
@@ -268,7 +270,7 @@ This is the primary color used for `on` states.
 
 ```yaml
 styles:
-  primary_accent_color: '#9373c9'
+  primary_accent_color: '#009ac7'
 ```
 
 #### Card Background Colors
@@ -321,6 +323,12 @@ The main dashboard view with a fixed layout showing your home overview.
 - `bonbon_favorites` - Entities with the `favorite` label
 - `bonbon_areas` - Area cards for navigation to individual areas
 
+**Feature-Specific Properties:**
+
+- **show_temperature**, **show_humidity**, **show_co2** - Show sensors in area cards
+- **show_floor_lights_toggle** - Floor lights toggle: `'when-on'` (default), `'always'`, or `false`
+- **show_area_lights_toggle** - Light toggle buttons: `'when-on'` (default), `'always'`, or `false`
+
 **Basic example:**
 
 ```yaml
@@ -342,12 +350,12 @@ Automatically created sub-views for each area in your Home Assistant setup. Each
 **Built-in sections:**
 
 - `bonbon_environment` - Temperature, humidity, CO2 sensors
-- `bonbon_climate` - Thermostats and climate entities
 - `bonbon_lights` - Light switches
 - `bonbon_switches` - Other switches and automations
 - `bonbon_media` - Media player devices
-- `bonbon_openings` - Door and window sensors
+- `bonbon_climate` - Thermostats and climate entities
 - `bonbon_covers` - Blinds and sliding doors
+- `bonbon_openings` - Door and window sensors
 - `bonbon_miscellaneous` - Everything else
 
 ### Section Properties
@@ -363,15 +371,13 @@ All sections share common properties. Use these to customize appearance and beha
 
 **Layout Properties:**
 
-- **min_columns** - Minimum number of columns (default: `1`)
-- **max_columns** - Maximum number of columns (default: `2`)
-- **hide_separator** - If `true`, hide the separator bar above section (default: `false`)
+- **min_columns** - Minimum number of column
+- **max_columns** - Maximum number of columns
+- **hide_separator** - `true` hides the separator bar above section
 
 **Feature-Specific Properties:**
 
-- **show_temperature**, **show_humidity**, **show_co2** - Show sensors in area cards
 - **show_area_lights_toggle** - Light toggle buttons: `'when-on'` (default), `'always'`, or `false`
-- **show_floor_lights_toggle** - Floor lights toggle: `'when-on'` (default), `'always'`, or `false`
 
 ### Custom Sections
 
@@ -395,9 +401,11 @@ views:
 
 **Area-specific sections:**
 
-When adding custom sections under `bonbon_area`, they automatically show in areas with matching entities and won't show in areas without matching entities. To force entities to match, add `[area_id=area_id]` or `[area_id=*]` to the selector to override the restriction to the current area.
+When adding custom sections under `bonbon_area`, they automatically show in areas with matching entities and won't show in areas without matching entities. To force entities to match, add `[area_id=area_id]` or `[area_id=*]` to the selector to override the restriction to the current area. This, in turn, will also mean that these will match in any area, so use `area_id: <area_id>` in the section properties to restrict them to a specific area.
 
 When using custom cards, which have an entity which belongs to a different area, you can add `area_id: area_id` or `bonbon_area_id: area_id` to the card options to assign that card to one or more different areas so that it will show up in those areas instead. This will override the detected area from the entity.
+
+Example:
 
 ```yaml
 views:
@@ -421,7 +429,7 @@ views:
 
 ### Custom Separator Buttons
 
-Add buttons to the separator bar above a section using `separator_buttons`:
+Add buttons to the separator bar above a custom section using `separator_buttons`:
 
 ```yaml
 views:
@@ -429,12 +437,13 @@ views:
     sections:
       my_server_section:
         name: Server Status
+        icon: mdi:server
+        separator_buttons:
+          - binary_sensor.server*status
         cards:
           - sensor.server_storage
           - sensor.server_cpu
           - switch.server_restart
-        separator_buttons:
-          - binary_sensor.server*status
 ```
 
 ### Custom Views
@@ -447,15 +456,17 @@ views:
     title: Diagnostics
     icon: mdi:bug
     sections:
-      system_sensors:
-        name: System Health
+      desktop_pc:
+        name: Desktop PC
+        icon: mdi:desktop-classic
         cards:
           - sensor.*cpu*
           - sensor.*memory*
           - sensor.*disk*
 
       battery_status:
-        name: Low Batteries
+        name: Batteries
+        icon: mdi:battery
         cards:
           - sensor.*battery[entity_category=diagnostic]
 ```
@@ -464,10 +475,12 @@ views:
 
 Bonbon Strategy provides a consistent visual design through CSS variables that you can use when adding your own cards.
 You can use Bubble Cards to keep it consistent, but with `card-mod` you can make basically any card look like a Bonbon card.
+Home Assistant default cards will receive some light styling automatically, custom cards will need to be styled manually.
 
 #### Available CSS Variables
 
-The following variables are available for styling custom cards with `card-mod`:
+If you are attempting this you probably already know what you're doing.
+Here are some useful variables you can use to style custom cards with `card-mod`:
 
 **Card Styling:**
 
