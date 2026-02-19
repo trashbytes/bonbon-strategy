@@ -91,6 +91,71 @@ export const getStyles = (config, isDark) => {
       );
     }
   `;
+  const areaSubButtonBase = css`
+    .fixed-top .bubble-sub-button-container {
+      margin-top: 8px;
+    }
+    ha-ripple {
+      display: none;
+    }
+    .bubble-button {
+      background: var(--area-light-color);
+      overflow: hidden;
+    }
+    .bubble-button-background {
+      opacity: 1 !important;
+      background: var(--area-light-color) !important;
+    }
+    .bubble-main-icon-container {
+      background: transparent;
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: -4px;
+      transform: translateY(-50%);
+      overflow: visible;
+    }
+    .bubble-main-icon-container:before {
+      display: block;
+      width: 1000%;
+      height: 1000%;
+      content: '';
+      background: var(--area-medium-color);
+      position: absolute;
+      top: 50%;
+      right: -4px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+    }
+    .bubble-container:hover .bubble-button-background {
+      background: var(--area-medium-color) !important;
+    }
+    .bubble-container:hover .bubble-main-icon-container:before {
+      background: var(--area-shade-color) !important;
+    }
+    .bubble-name-container {
+      margin-left: 62px !important;
+    }
+    .bubble-name {
+      font-size: 16px;
+    }
+    .bubble-sub-button-bottom-container,
+    .bubble-sub-button-bottom-container * {
+      pointer-events: none !important;
+    }
+    .bubble-sub-button-bottom-container .bubble-sub-button:first-child {
+      margin-left: 42px !important;
+    }
+    .bubble-sub-button-bottom-container .bubble-sub-button {
+      padding-right: 0;
+    }
+    .bubble-sub-button-bottom-container .icon-with-state {
+      margin-right: 2px;
+    }
+    .bubble-sub-button-group {
+      gap: 0;
+    }
+  `;
   const styles = {
     cardmodGlobal: globalStyles,
     bubbleGlobal:
@@ -285,197 +350,75 @@ export const getStyles = (config, isDark) => {
         display: none !important;
       }
     `,
-    bubbleAreaSubButtonAlways: css`
-      .fixed-top .bubble-sub-button-container {
-        margin-top: 8px;
-      }
-      ha-ripple {
-        display: none;
-      }
-      .bubble-button {
-        background: var(--area-light-color);
-        overflow: hidden;
-      }
-      .bubble-button-background {
-        opacity: 1 !important;
-        background: var(--area-light-color) !important;
-      }
-      .bubble-main-icon-container {
-        background: transparent;
-        margin: 0;
-        position: absolute;
-        top: 50%;
-        left: -4px;
-        transform: translateY(-50%);
-        overflow: visible;
-      }
-      .bubble-main-icon-container:before {
-        display: block;
-        width: 1000%;
-        height: 1000%;
-        content: '';
-        background: var(--area-medium-color);
-        position: absolute;
-        top: 50%;
-        right: -4px;
-        transform: translateY(-50%);
-        border-radius: 50%;
-      }
-      .bubble-container:hover .bubble-button-background {
-        background: var(--area-medium-color) !important;
-      }
-      .bubble-container:hover .bubble-main-icon-container:before {
-        background: var(--area-shade-color) !important;
-      }
-      .bubble-name-container {
-        margin-left: 62px !important;
-      }
-      .bubble-name {
-        font-size: 16px;
-      }
-      .bubble-sub-button-bottom-container,
-      .bubble-sub-button-bottom-container * {
-        pointer-events: none !important;
-      }
-      .bubble-sub-button-bottom-container .bubble-sub-button:first-child {
-        margin-left: 42px !important;
-      }
-      .bubble-sub-button-bottom-container .bubble-sub-button {
-        padding-right: 0;
-      }
-      .bubble-sub-button-bottom-container .icon-with-state {
-        margin-right: 2px;
-      }
-      .bubble-sub-button-group {
-        gap: 0;
-      }
-      .bubble-sub-button-container.fixed-top .bubble-sub-button {
-        background: var(--area-medium-color) !important;
-      }
-      .bubble-container:hover
+    bubbleAreaSubButtonAlways:
+      areaSubButtonBase +
+      css`
+        .bubble-sub-button-container.fixed-top .bubble-sub-button {
+          background: var(--area-medium-color) !important;
+        }
+        .bubble-container:hover
+          .bubble-sub-button-container.fixed-top
+          .bubble-sub-button,
+        .bubble-container:hover
+          .bubble-sub-button-container.fixed-top:not(:has(.background-on))
+          .bubble-sub-button {
+          background: var(--area-shade-color) !important;
+        }
+        .bubble-sub-button-container.fixed-top .background-on {
+          background: var(--area-medium-color) !important;
+        }
+        .bubble-container:hover
+          .bubble-sub-button-container.fixed-top
+          .background-on {
+          background: var(--area-shade-color) !important;
+        }
         .bubble-sub-button-container.fixed-top
-        .bubble-sub-button,
-      .bubble-container:hover
+          .bubble-sub-button:not(.background-on),
+        .bubble-sub-button-container.fixed-top
+          .bubble-sub-button.background-on
+          ~ .bubble-sub-button.background-on {
+          display: none !important;
+        }
+      `,
+    bubbleAreaSubButtonDefault:
+      areaSubButtonBase +
+      css`
+        .bubble-sub-button-container.fixed-top .bubble-sub-button,
         .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-        .bubble-sub-button {
-        background: var(--area-shade-color) !important;
-      }
-      .bubble-sub-button-container.fixed-top .background-on {
-        background: var(--area-medium-color) !important;
-      }
-      .bubble-container:hover
-        .bubble-sub-button-container.fixed-top
-        .background-on {
-        background: var(--area-shade-color) !important;
-      }
-      .bubble-sub-button-container.fixed-top
-        .bubble-sub-button:not(.background-on),
-      .bubble-sub-button-container.fixed-top
-        .bubble-sub-button.background-on
-        ~ .bubble-sub-button.background-on {
-        display: none !important;
-      }
-    `,
-    bubbleAreaSubButtonDefault: css`
-      .fixed-top .bubble-sub-button-container {
-        margin-top: 8px;
-      }
-      ha-ripple {
-        display: none;
-      }
-      .bubble-button {
-        background: var(--area-light-color);
-        overflow: hidden;
-      }
-      .bubble-button-background {
-        opacity: 1 !important;
-        background: var(--area-light-color) !important;
-      }
-      .bubble-main-icon-container {
-        background: transparent;
-        margin: 0;
-        position: absolute;
-        top: 50%;
-        left: -4px;
-        transform: translateY(-50%);
-        overflow: visible;
-      }
-      .bubble-main-icon-container:before {
-        display: block;
-        width: 1000%;
-        height: 1000%;
-        content: '';
-        background: var(--area-medium-color);
-        position: absolute;
-        top: 50%;
-        right: -4px;
-        transform: translateY(-50%);
-        border-radius: 50%;
-      }
-      .bubble-container:hover .bubble-button-background {
-        background: var(--area-medium-color) !important;
-      }
-      .bubble-container:hover .bubble-main-icon-container:before {
-        background: var(--area-shade-color) !important;
-      }
-      .bubble-name-container {
-        margin-left: 62px !important;
-      }
-      .bubble-name {
-        font-size: 16px;
-      }
-      .bubble-sub-button-bottom-container,
-      .bubble-sub-button-bottom-container * {
-        pointer-events: none !important;
-      }
-      .bubble-sub-button-bottom-container .bubble-sub-button:first-child {
-        margin-left: 42px !important;
-      }
-      .bubble-sub-button-bottom-container .bubble-sub-button {
-        padding-right: 0;
-      }
-      .bubble-sub-button-bottom-container .icon-with-state {
-        margin-right: 2px;
-      }
-      .bubble-sub-button-group {
-        gap: 0;
-      }
-      .bubble-sub-button-container.fixed-top .bubble-sub-button,
-      .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-        .bubble-sub-button {
-        background: var(--area-medium-color) !important;
-      }
-      .bubble-container:hover
-        .bubble-sub-button-container.fixed-top
-        .bubble-sub-button,
-      .bubble-container:hover
-        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-        .bubble-sub-button {
-        background: var(--area-shade-color) !important;
-      }
-      .bubble-sub-button-container.fixed-top:has(.background-on)
-        .bubble-sub-button,
-      .bubble-container:hover
+          .bubble-sub-button {
+          background: var(--area-medium-color) !important;
+        }
+        .bubble-container:hover
+          .bubble-sub-button-container.fixed-top
+          .bubble-sub-button,
+        .bubble-container:hover
+          .bubble-sub-button-container.fixed-top:not(:has(.background-on))
+          .bubble-sub-button {
+          background: var(--area-shade-color) !important;
+        }
         .bubble-sub-button-container.fixed-top:has(.background-on)
-        .bubble-sub-button {
-        background: var(--bubble-default-color) !important;
-        color: #fff !important;
-      }
-      .bubble-sub-button-container.fixed-top:has(.background-on)
-        .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-      .bubble-sub-button-container.fixed-top:has(.background-on)
-        .bubble-sub-button[data-tap-action*='light.turn_off']
-        ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-        display: none !important;
-      }
-      .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-        .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-      .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-        .bubble-sub-button[data-tap-action*='light.turn_on']
-        ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-        display: none !important;
-      }
-    `,
+          .bubble-sub-button,
+        .bubble-container:hover
+          .bubble-sub-button-container.fixed-top:has(.background-on)
+          .bubble-sub-button {
+          background: var(--bubble-default-color) !important;
+          color: #fff !important;
+        }
+        .bubble-sub-button-container.fixed-top:has(.background-on)
+          .bubble-sub-button:not([data-tap-action*='light.turn_off']),
+        .bubble-sub-button-container.fixed-top:has(.background-on)
+          .bubble-sub-button[data-tap-action*='light.turn_off']
+          ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
+          display: none !important;
+        }
+        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
+          .bubble-sub-button:not([data-tap-action*='light.turn_on']),
+        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
+          .bubble-sub-button[data-tap-action*='light.turn_on']
+          ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
+          display: none !important;
+        }
+      `,
     environmentGraphCard: css`
       ${haCardBase}
       :host {
