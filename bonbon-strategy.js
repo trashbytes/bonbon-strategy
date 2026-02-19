@@ -1055,7 +1055,6 @@ export class BonbonStrategy {
           return newStruct;
         });
       };
-
       const dashboard = {
         views: applyGlobalStyles(views),
       };

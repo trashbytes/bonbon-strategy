@@ -64,10 +64,10 @@ export const getStyles = (config, isDark) => {
         ? 'rgba(0,0,0,0.1)'
         : 'rgba(0,0,0,0.03)'};
 
-      --bonbon-icon-color-on: ${isDark
-        ? 'var(--bonbon-primary-accent-color)'
-        : 'var(--bonbon-primary-accent-color)'};
-      --bonbon-icon-background-on: ${isDark ? '#fff' : '#fff'};
+      --bonbon-icon-color-on: #fff;
+      --bonbon-icon-background-on: ${isDark
+        ? 'rgba(0,0,0,0.1)'
+        : 'rgba(0,0,0,0.03)'};
       --bonbon-border-radius: 12px;
       --bubble-border-radius: var(--bonbon-border-radius);
       --bubble-icon-border-radius: 8px;
@@ -123,6 +123,9 @@ export const getStyles = (config, isDark) => {
         }
         ha-card {
           position: relative;
+        }
+        ha-card.footer-mode .bubble-container::before {
+          display: none;
         }
         .bubble-main-icon-container {
           pointer-events: none;
@@ -475,6 +478,9 @@ export const getStyles = (config, isDark) => {
     `,
     environmentGraphCard: css`
       ${haCardBase}
+      :host {
+        min-height: 56px;
+      }
       ha-card {
         padding: 0 !important;
       }
