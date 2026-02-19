@@ -206,8 +206,8 @@ export const getStyles = (config, isDark) => {
       .is-on .bubble-name-container[class] {
         color: var(--primary-text-color) !important;
       }
-
       .is-on .bubble-icon-container[class] {
+        --icon-primary-color: var(--bonbon-primary-text-color);
         background-color: var(--bonbon-icon-background-off);
       }
       .is-on .bubble-button-background[class] {

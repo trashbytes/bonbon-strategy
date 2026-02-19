@@ -33,7 +33,8 @@ export function createButtonCard(c, options = {}) {
 
     base.button_type = 'state';
     base.entity = c.entity?.entity_id;
-    base.show_last_changed = isToggle || isBinary;
+    base.show_last_changed =
+      (isToggle || isBinary) && !c.entity?.entity_id.startsWith('person.');
     base.button_action.tap_action.action = isToggle ? 'toggle' : 'more-info';
 
     if (!isToggle && !isBinary) {
