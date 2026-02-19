@@ -156,6 +156,15 @@ export const getStyles = (config, isDark) => {
       gap: 0;
     }
   `;
+  const separatorLightsSubButtonBase = css`
+    [data-group-id='g_main_0'] .bubble-sub-button {
+      background-color: var(
+        --ha-card-background,
+        var(--card-background-color, #fff)
+      );
+      box-shadow: 0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'});
+    }
+  `;
   const styles = {
     cardmodGlobal: globalStyles,
     bubbleGlobal:
@@ -292,64 +301,51 @@ export const getStyles = (config, isDark) => {
         background-color: var(--bubble-default-color);
       }
     `,
-    bubbleSeparatorLightsSubButtonAlways: css`
-      [data-group-id=\"g_main_0\"] .bubble-sub-button,
-      .bubble-sub-button-container:not(:has(.background-on))
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button {
-        background-color: var(
-          --ha-card-background,
-          var(--card-background-color, #fff)
-        );
-        box-shadow: 0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'});
-      }
-      .bubble-sub-button-container:has(.background-on)
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button {
-        color: #fff;
-        background-color: var(--bubble-default-color);
-      }
-      .bubble-sub-button-container:has(.background-on)
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-      .bubble-sub-button-container:has(.background-on)
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button[data-tap-action*='light.turn_off']
-        ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-        display: none !important;
-      }
-      .bubble-sub-button-container:not(:has(.background-on))
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-      .bubble-sub-button-container:not(:has(.background-on))
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button[data-tap-action*='light.turn_on']
-        ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-        display: none !important;
-      }
-    `,
-    bubbleSeparatorLightsSubButtonDefault: css`
-      [data-group-id=\"g_main_0\"] .bubble-sub-button {
-        background-color: var(
-          --ha-card-background,
-          var(--card-background-color, #fff)
-        );
-        box-shadow: 0 2px 6px rgba(0, 0, 0, ${isDark ? '0.2' : '0.05'});
-      }
-      [data-group-id=\"g_main_0\"] .background-on {
-        color: #fff;
-        background-color: var(--bubble-default-color);
-      }
-      .bubble-sub-button-container
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button:not(.background-on),
-      .bubble-sub-button-container
-        [data-group-id=\"g_main_0\"]
-        .bubble-sub-button.background-on
-        ~ .bubble-sub-button.background-on {
-        display: none !important;
-      }
-    `,
+    bubbleSeparatorLightsSubButtonAlways:
+      separatorLightsSubButtonBase +
+      css`
+        .bubble-sub-button-container:has(.background-on)
+          [data-group-id='g_main_0']
+          .bubble-sub-button {
+          color: #fff;
+          background-color: var(--bubble-default-color);
+        }
+        .bubble-sub-button-container:has(.background-on)
+          [data-group-id='g_main_0']
+          .bubble-sub-button:not([data-tap-action*='light.turn_off']),
+        .bubble-sub-button-container:has(.background-on)
+          [data-group-id='g_main_0']
+          .bubble-sub-button[data-tap-action*='light.turn_off']
+          ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
+          display: none !important;
+        }
+        .bubble-sub-button-container:not(:has(.background-on))
+          [data-group-id='g_main_0']
+          .bubble-sub-button:not([data-tap-action*='light.turn_on']),
+        .bubble-sub-button-container:not(:has(.background-on))
+          [data-group-id='g_main_0']
+          .bubble-sub-button[data-tap-action*='light.turn_on']
+          ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
+          display: none !important;
+        }
+      `,
+    bubbleSeparatorLightsSubButtonDefault:
+      separatorLightsSubButtonBase +
+      css`
+        [data-group-id='g_main_0'] .background-on {
+          color: #fff;
+          background-color: var(--bubble-default-color);
+        }
+        .bubble-sub-button-container
+          [data-group-id='g_main_0']
+          .bubble-sub-button:not(.background-on),
+        .bubble-sub-button-container
+          [data-group-id='g_main_0']
+          .bubble-sub-button.background-on
+          ~ .bubble-sub-button.background-on {
+          display: none !important;
+        }
+      `,
     bubbleAreaSubButtonAlways:
       areaSubButtonBase +
       css`
