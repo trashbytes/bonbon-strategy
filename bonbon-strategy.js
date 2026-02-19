@@ -169,7 +169,7 @@ export class BonbonStrategy {
                         [
                           {
                             type: 'weather-forecast',
-                            entity: weather_entity_id,
+                            entity: weather_entity?.entity?.entity_id,
                             show_current: true,
                             show_forecast:
                               sectionConfig.show_weather_card === 'daily' ||
