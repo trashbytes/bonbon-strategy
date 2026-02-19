@@ -79,7 +79,7 @@ export class BonbonStrategy {
         'Home';
 
       const metaScheme = document.querySelector('meta[name="color-scheme"]');
-      const isDark = metaScheme.getAttribute('content') === 'dark';
+      const isDark = metaScheme?.getAttribute('content') === 'dark';
 
       if (metaScheme) {
         const observer = new MutationObserver(() => {
