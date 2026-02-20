@@ -160,7 +160,6 @@ export class BonbonStrategy {
                       separatorName,
                       separatorIcon,
                       separatorSubButtons,
-                      ['bubbleSeparatorSubButtonBase'],
                     ),
                   );
                   if (sectionConfig.show_weather_card) {
@@ -362,9 +361,7 @@ export class BonbonStrategy {
                         separatorName,
                         separatorIcon,
                         separatorSubButtons,
-                        ['bubbleSeparatorSubButtonBase'].concat(
-                          separatorStyles,
-                        ),
+                        separatorStyles,
                       ),
                     );
                   }
@@ -628,9 +625,7 @@ export class BonbonStrategy {
                                 sectionConfig.name,
                                 sectionConfig.icon,
                                 separatorSubButtons,
-                                ['bubbleSeparatorSubButtonBase'].concat(
-                                  separatorStyles,
-                                ),
+                                separatorStyles,
                               ),
                             );
                           }
@@ -860,7 +855,6 @@ export class BonbonStrategy {
                                   sectionConfig.icon ||
                                     'mdi:view-dashboard-edit',
                                   [userSubButtons],
-                                  ['bubbleSeparatorSubButtonBase'],
                                 ),
                               );
                             }
@@ -915,7 +909,6 @@ export class BonbonStrategy {
                         sectionConfig.name || 'Custom Section',
                         sectionConfig.icon || 'mdi:view-dashboard-edit',
                         [userSubButtons],
-                        ['bubbleSeparatorSubButtonBase'],
                       ),
                     );
                   }
@@ -984,7 +977,6 @@ export class BonbonStrategy {
                         sectionConfig.name || 'Custom Section',
                         sectionConfig.icon || 'mdi:view-dashboard-edit',
                         [userSubButtons],
-                        ['bubbleSeparatorSubButtonBase'],
                       ),
                     );
                   }
@@ -1018,6 +1010,43 @@ export class BonbonStrategy {
           }
         });
 
+      const getInferredBubbleStyles = (card) => {
+        if (!card?.type?.startsWith('custom:bubble-card')) {
+          return [];
+        }
+
+        const entityId =
+          typeof card?.entity === 'string'
+            ? card.entity
+            : card?.entity?.entity_id || '';
+        const isToggle = card?.button_action?.tap_action?.action === 'toggle';
+        const isBinary =
+          entityId.startsWith('binary_sensor.') ||
+          entityId.startsWith('person.') ||
+          (card?.card_type && card.card_type !== 'button');
+        const cardType = card?.card_type || 'button';
+
+        if (cardType === 'button' && !isToggle && !isBinary) {
+          return ['bubbleButtonNonBinary'];
+        }
+
+        if (cardType === 'separator') {
+          const subButtonGroups = Array.isArray(card?.sub_button?.main)
+            ? card.sub_button.main
+            : [];
+          const flattenedSubButtons = subButtonGroups
+            .map((group) => group?.group)
+            .filter((group) => Array.isArray(group))
+            .flat();
+
+          return flattenedSubButtons.length
+            ? ['bubbleSeparatorSubButtonBase']
+            : [];
+        }
+
+        return [];
+      };
+
       const applyGlobalStyles = (data) => {
         if (!Array.isArray(data)) return data;
         return data.map((struct) => {
@@ -1026,12 +1055,18 @@ export class BonbonStrategy {
             newStruct.type &&
             newStruct.type.startsWith('custom:bubble-card')
           ) {
+            const inferredBonbonStyles = getInferredBubbleStyles(newStruct);
+            const allBonbonStyles = [
+              ...(newStruct.bonbon_styles || []),
+              ...inferredBonbonStyles,
+            ].filter(
+              (styleName, index, arr) => arr.indexOf(styleName) === index,
+            );
+
             newStruct.styles =
               styles.bubbleGlobal +
               (newStruct.styles || '') +
-              (newStruct.bonbon_styles
-                ?.map((s) => styles[s] || '')
-                .join('\n') || '');
+              (allBonbonStyles?.map((s) => styles[s] || '').join('\n') || '');
           }
           if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {
