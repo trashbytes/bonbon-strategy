@@ -23,7 +23,6 @@ export function createButtonCard(c, options = {}) {
     button_action: {
       tap_action: { action: 'none' },
     },
-    bonbon_styles: [],
   };
   if (c?.entity) {
     const isToggle = isTogglableEntity(c);
@@ -36,12 +35,7 @@ export function createButtonCard(c, options = {}) {
     base.show_last_changed =
       (isToggle || isBinary) && !c.entity?.entity_id.startsWith('person.');
     base.button_action.tap_action.action = isToggle ? 'toggle' : 'more-info';
-
-    if (!isToggle && !isBinary) {
-      base.bonbon_styles = base.bonbon_styles.concat(['bubbleButtonNonBinary']);
-    }
   }
-  base.bonbon_styles = base.bonbon_styles.concat(options?.bonbon_styles || []);
   const merged = { ...base, ...(options || {}) };
   return merged;
 }
@@ -69,7 +63,6 @@ export function createSubButton(c, options = {}) {
     content_layout: 'icon-left',
     fill_width: false,
     tap_action: { action: 'more-info' },
-    bonbon_styles: [],
   };
   if (c?.entity) {
     const isToggle = isTogglableEntity(c);
@@ -77,7 +70,6 @@ export function createSubButton(c, options = {}) {
     base.show_state = !isToggle;
     base.show_background = isToggle && !options.show_attribute;
   }
-  base.bonbon_styles = base.bonbon_styles.concat(options?.bonbon_styles || []);
   const merged = { ...base, ...(options || {}) };
   return merged;
 }
