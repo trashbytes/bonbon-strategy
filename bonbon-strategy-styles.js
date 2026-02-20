@@ -50,6 +50,7 @@ export const getStyles = (config, isDark) => {
         ? config?.card_background_color_dark || '#222'
         : config?.card_background_color_light || '#fff'};
       --ha-card-background: var(--bonbon-card-background);
+      --card-background-color: var(--bonbon-card-background);
       --bubble-main-background-color: var(--bonbon-card-background);
       --bubble-media-player-main-background-color: var(
         --bonbon-card-background
