@@ -101,7 +101,7 @@ strategy:
     # Global styling options
     styles:
       use_bonbon_colors: true # use auto-generated area colors (true) or use card background colors (false)
-      primary_accent_color: '#9373c9' # primary accent color used for "on" states (in HEX)
+      primary_accent_color: '#009ac7' # primary accent color used for "on" states (in HEX)
       card_background_color_light: '#fff' # card background color for light mode (in HEX)
       card_background_color_dark: '#222' # card background color for dark mode (in HEX)
       card_text_color_light: '#111' # card text color for light mode (in HEX)
@@ -113,6 +113,7 @@ strategy:
     views:
       view_key:
         max_columns: 1 # max grid columns for this view
+        icon: mdi:icon-name # icon for this view
         sections:
           section_key:
             # Common section properties
