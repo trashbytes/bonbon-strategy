@@ -237,14 +237,11 @@ export class BonbonStrategy {
                 return floor;
               });
 
-              const nightlights = [];
-              const notNightlights = [];
+              const subButtonLights = [];
 
               resolveEntities('light.*').forEach((c) => {
-                if (hasLabel(c.entity, 'nightlight')) {
-                  nightlights.push(c);
-                } else {
-                  notNightlights.push(c);
+                if (!hasLabel(c.entity, 'nightlight')) {
+                  subButtonLights.push(c);
                 }
               });
 
@@ -317,9 +314,11 @@ export class BonbonStrategy {
                 );
                 if (floorAreas.length) {
                   if (!sectionConfig.hide_separator) {
-                    const notNightlightsOnFloor = notNightlights.filter((c) => {
-                      return onFloor(c, floor);
-                    });
+                    const subButtonLightsOnFloor = subButtonLights.filter(
+                      (c) => {
+                        return onFloor(c, floor);
+                      },
+                    );
                     const separatorName = floor.name;
                     const separatorIcon =
                       floor.icon ||
@@ -327,7 +326,7 @@ export class BonbonStrategy {
                         String(floor.level).replace('-', 'negative-');
                     const floorLightsSubButtons =
                       sectionConfig.show_floor_lights_toggle
-                        ? (notNightlightsOnFloor || [])
+                        ? (subButtonLightsOnFloor || [])
                             .map((c, index, filtered) => {
                               return ['off', 'on'].map((state) =>
                                 createSubButton(c, {
@@ -367,9 +366,11 @@ export class BonbonStrategy {
                   }
 
                   const floorCards = floorAreas.map((area) => {
-                    const notNightlightsInArea = notNightlights.filter((c) => {
-                      return inArea(c, area);
-                    });
+                    const subButtonLightsInArea = subButtonLights.filter(
+                      (c) => {
+                        return inArea(c, area);
+                      },
+                    );
                     return createButtonCard(null, {
                       icon: area.icon,
                       show_state: false,
@@ -383,7 +384,7 @@ export class BonbonStrategy {
                       },
                       sub_button: {
                         main: sectionConfig.show_area_lights_toggle
-                          ? (notNightlightsInArea || [])
+                          ? (subButtonLightsInArea || [])
                               .map((c, index, filtered) => {
                                 return ['off', 'on'].map((state) =>
                                   createSubButton(c, {
@@ -581,7 +582,7 @@ export class BonbonStrategy {
                         break;
                       case 'bonbon_lights':
                         if (area._lights.length) {
-                          const notNightlightsInArea = notNightlights.filter(
+                          const subButtonLightsInArea = subButtonLights.filter(
                             (c) => {
                               return inArea(c, area);
                             },
@@ -589,7 +590,7 @@ export class BonbonStrategy {
                           if (!sectionConfig.hide_separator) {
                             const areaLightsSubButtons =
                               sectionConfig.show_area_lights_toggle
-                                ? (notNightlightsInArea || [])
+                                ? (subButtonLightsInArea || [])
                                     .map((c, index, filtered) => {
                                       return ['off', 'on'].map((state) =>
                                         createSubButton(c, {
