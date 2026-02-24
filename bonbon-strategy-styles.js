@@ -138,7 +138,8 @@ export const getStyles = (config, isDark) => {
       margin-left: 62px !important;
     }
     .bubble-name {
-      font-size: 16px;
+      font-size: 15px;
+      padding-top: 3px;
     }
     .bubble-sub-button-bottom-container,
     .bubble-sub-button-bottom-container * {
