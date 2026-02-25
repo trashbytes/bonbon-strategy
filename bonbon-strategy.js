@@ -198,7 +198,11 @@ export class BonbonStrategy {
                 }
                 section.cards.push(
                   createGrid(
-                    persons.map((c) => createButtonCard(c)),
+                    persons.map((c) =>
+                      createButtonCard(c, {
+                        show_last_changed: false,
+                      }),
+                    ),
                     sectionConfig,
                   ),
                 );
@@ -563,18 +567,7 @@ export class BonbonStrategy {
                                 )
                               );
                             })
-                            .map((c) =>
-                              createButtonCard(c, {
-                                card_type: 'climate',
-                                sub_button: [
-                                  {
-                                    select_attribute: 'hvac_modes',
-                                    show_arrow: false,
-                                    state_background: false,
-                                  },
-                                ],
-                              }),
-                            );
+                            .map((c) => createButtonCard(c));
                           section.cards.push(
                             createGrid(climateCards, sectionConfig),
                           );
@@ -695,11 +688,7 @@ export class BonbonStrategy {
                                 )
                               );
                             })
-                            .map((c) =>
-                              createButtonCard(c, {
-                                card_type: 'media-player',
-                              }),
-                            );
+                            .map((c) => createButtonCard(c));
                           section.cards.push(
                             createGrid(mediaCards, sectionConfig),
                           );
@@ -753,11 +742,7 @@ export class BonbonStrategy {
                                 )
                               );
                             })
-                            .map((c) =>
-                              createButtonCard(c, {
-                                card_type: 'cover',
-                              }),
-                            );
+                            .map((c) => createButtonCard(c));
                           section.cards.push(
                             createGrid(coverCards, sectionConfig),
                           );
