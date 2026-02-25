@@ -97,6 +97,59 @@ export class BonbonStrategy {
 
       const styles = getStyles(config.styles, isDark);
 
+      const normalizeSectionColumn = (column) => {
+        if (column === undefined || column === null || column === 'auto') {
+          return 'auto';
+        }
+
+        const parsedColumn = Number(column);
+        return Number.isInteger(parsedColumn) && parsedColumn > 0
+          ? parsedColumn
+          : 'auto';
+      };
+
+      const applySectionColumns = (sections, maxColumns) => {
+        const cleanSection = ({ bonbon_column, ...section }) => section;
+        const viewMaxColumns = Number(maxColumns) || 1;
+
+        if (viewMaxColumns <= 1) {
+          return sections.map(cleanSection);
+        }
+
+        const fixedSections = sections.filter(
+          (section) =>
+            Number.isInteger(section.bonbon_column) &&
+            section.bonbon_column > 0,
+        );
+
+        if (!fixedSections.length) {
+          return sections.map(cleanSection);
+        }
+
+        const groupedByColumn = fixedSections.reduce((acc, section) => {
+          const column = section.bonbon_column;
+          (acc[column] ??= []).push(section);
+          return acc;
+        }, {});
+
+        const groupedSections = Object.keys(groupedByColumn)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .map((column) => {
+            return {
+              cards: groupedByColumn[column].flatMap(
+                (section) => section.cards,
+              ),
+            };
+          });
+
+        const autoSections = sections
+          .filter((section) => section.bonbon_column === 'auto')
+          .map(cleanSection);
+
+        return [...groupedSections, ...autoSections];
+      };
+
       const homeSections = Object.keys(config?.views?.bonbon_home?.sections)
         .filter((key) => {
           return !config.views.bonbon_home.sections[key].disabled;
@@ -114,6 +167,7 @@ export class BonbonStrategy {
           const sectionConfig = config.views.bonbon_home.sections[key];
           const section = {
             cards: [],
+            bonbon_column: normalizeSectionColumn(sectionConfig.column),
           };
           switch (key) {
             case 'bonbon_weather':
@@ -489,6 +543,9 @@ export class BonbonStrategy {
                       config.views.bonbon_area.sections[key];
                     const section = {
                       cards: [],
+                      bonbon_column: normalizeSectionColumn(
+                        sectionConfig.column,
+                      ),
                     };
                     switch (key) {
                       case 'bonbon_environment':
@@ -872,7 +929,10 @@ export class BonbonStrategy {
                   path: `bonbon_area_${area.area_id}`,
                   type: 'sections',
                   max_columns: config?.views?.bonbon_area?.max_columns || 1,
-                  sections: areaSections,
+                  sections: applySectionColumns(
+                    areaSections,
+                    config?.views?.bonbon_area?.max_columns || 1,
+                  ),
                 });
               });
               break;
@@ -924,7 +984,10 @@ export class BonbonStrategy {
         path: 'bonbon_home',
         type: 'sections',
         max_columns: config?.views?.bonbon_home?.max_columns || 1,
-        sections: homeSections,
+        sections: applySectionColumns(
+          homeSections,
+          config?.views?.bonbon_home?.max_columns || 1,
+        ),
       };
       views.unshift(homeView);
 
@@ -943,7 +1006,10 @@ export class BonbonStrategy {
             })
             .map((key) => {
               const sectionConfig = viewConfig.sections[key];
-              const section = { cards: [] };
+              const section = {
+                cards: [],
+                bonbon_column: normalizeSectionColumn(sectionConfig.column),
+              };
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = resolveEntities(sectionConfig.cards).map(
                   function (c) {
@@ -991,7 +1057,10 @@ export class BonbonStrategy {
               path: 'custom_' + viewKey,
               type: 'sections',
               max_columns: viewConfig.max_columns || 1,
-              sections,
+              sections: applySectionColumns(
+                sections,
+                viewConfig.max_columns || 1,
+              ),
             });
           }
         });

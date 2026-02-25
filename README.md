@@ -119,7 +119,8 @@ strategy:
             # Common section properties
             name: 'Display Name'
             icon: 'mdi:icon-name'
-            order: 1 # sort order, ascending
+            column: auto # fixed view column (1..n) or auto, will be stacked on mobile
+            order: 1 # sort order, ascending, if a fixed column is assigned ordering is limited to that column
             disabled: false # disable entire section
             hide_separator: false # hide separator bar above section
             min_columns: 1 # minimum columns when rendering
@@ -374,6 +375,7 @@ All sections share common properties. Use these to customize appearance and beha
 
 - **min_columns** - Minimum number of column
 - **max_columns** - Maximum number of columns
+- **column** - Column assignment for views with `max_columns > 1` (`1..n` or `'auto'`, default mostly `'auto'`)
 - **hide_separator** - `true` hides the separator bar above section
 
 **Feature-Specific Properties:**
