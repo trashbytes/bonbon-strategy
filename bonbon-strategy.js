@@ -16,8 +16,9 @@ const {
 const { createButtonCard, createSeparatorCard, createGrid, createSubButton } =
   await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
 
-const { resolveEntity, resolveEntities, onFloor, inArea, hasLabel } =
-  await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
+const { createEntityApi } = await import(
+  `./bonbon-strategy-entities.js?hacstag=${hacstag}`
+);
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
@@ -56,16 +57,15 @@ export class BonbonStrategy {
       return acc;
     }, {});
 
-    if (typeof window !== 'undefined') {
-      window.__bonbon = {
+    const { resolveEntity, resolveEntities, onFloor, inArea, hasLabel } =
+      createEntityApi({
         entities,
         devices,
         states,
         labels,
         floors,
         areas,
-      };
-    }
+      });
 
     androidGesturesFix();
 

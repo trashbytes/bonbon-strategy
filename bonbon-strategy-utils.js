@@ -329,22 +329,36 @@ export function isObject(item) {
   return item && typeof item === 'object' && !Array.isArray(item);
 }
 
-export function mergeDeep(target, ...sources) {
-  if (!sources.length) return target;
-  const source = sources.shift();
+function cloneValue(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => cloneValue(item));
+  }
+  if (isObject(value)) {
+    return Object.keys(value).reduce((acc, key) => {
+      acc[key] = cloneValue(value[key]);
+      return acc;
+    }, {});
+  }
+  return value;
+}
 
-  if (isObject(target) && isObject(source)) {
-    for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
+export function mergeDeep(target, ...sources) {
+  const base = isObject(target) ? cloneValue(target) : {};
+
+  return (sources || []).reduce((acc, source) => {
+    if (!isObject(source)) return acc;
+
+    const merged = { ...acc };
+    for (const key of Object.keys(source)) {
+      const sourceValue = source[key];
+      const targetValue = merged[key];
+
+      if (isObject(sourceValue) && isObject(targetValue)) {
+        merged[key] = mergeDeep(targetValue, sourceValue);
       } else {
-        if (!isObject(target[key])) {
-          Object.assign(target, { [key]: source[key] });
-        }
+        merged[key] = cloneValue(sourceValue);
       }
     }
-  }
-
-  return mergeDeep(target, ...sources);
+    return merged;
+  }, base);
 }
