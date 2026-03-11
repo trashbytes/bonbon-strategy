@@ -30,8 +30,8 @@ export function createStylesApi(panelUrl) {
       [cssVariable('icon-background-on')]: 'rgba(0,0,0,0.03)',
       [cssVariable('border-radius')]: '12px',
       [cssVariable('box-shadow')]: `0 2px 6px rgba(0, 0, 0, 0.05),
-      inset 0 0.5px 0 0 rgba(255, 255, 255, 0.2),
-      inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.10)`,
+        inset 0 0.5px 0 0 rgba(255, 255, 255, 0.2),
+        inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.10)`,
       [cssVariable('primary-accent-color')]: config?.primary_accent_color_light,
     },
     dark: {
@@ -48,8 +48,8 @@ export function createStylesApi(panelUrl) {
       [cssVariable('icon-background-on')]: 'rgba(0,0,0,0.1)',
       [cssVariable('border-radius')]: '12px',
       [cssVariable('box-shadow')]: `0 2px 6px rgba(0, 0, 0, 0.2),
-      inset 0 0.5px 0 0 rgba(255, 255, 255, 0.01),
-      inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.8)`,
+        inset 0 0.5px 0 0 rgba(255, 255, 255, 0.01),
+        inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.8)`,
       [cssVariable('primary-accent-color')]: config?.primary_accent_color_dark,
     },
   });
