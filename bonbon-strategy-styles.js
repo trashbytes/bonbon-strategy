@@ -3,11 +3,7 @@ const metaScheme = document.querySelector('meta[name="color-scheme"]');
 export const css = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] || ''), '');
 
 export const getBonbonVarName = (panelUrl, suffix) => `--bonbon-${panelUrl}-${suffix}`;
-
-export const getBonbonVarValue = (panelUrl, suffix, fallback) => {
-  const variableName = getBonbonVarName(panelUrl, suffix);
-  return fallback ? `var(${variableName}, ${fallback})` : `var(${variableName})`;
-};
+export const getBonbonVarValue = (panelUrl, suffix) => `var(${getBonbonVarName(panelUrl, suffix)})`;
 
 export const isDark = () => {
   return metaScheme?.getAttribute('content') === 'dark';
@@ -444,7 +440,7 @@ export const getStyles = (config, panelUrl) => {
         color: var(--primary-text-color) !important;
         border-radius: var(
           --bubble-button-icon-border-radius,
-          var(--bubble-icon-border-radius, ${getBonbonVarValue(panelUrl, 'border-radius', '50%')})
+          var(--bubble-icon-border-radius, ${getBonbonVarValue(panelUrl, 'border-radius')})
         ) !important;
         background-color: ${getBonbonVarValue(panelUrl, 'icon-background-off')};
         padding: 9px !important;
