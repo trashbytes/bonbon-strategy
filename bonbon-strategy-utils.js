@@ -44,12 +44,9 @@ function hexToRGB(hex) {
 }
 
 function rgbToLAB(rgb) {
-  let r =
-    rgb.r > 0.04045 ? Math.pow((rgb.r + 0.055) / 1.055, 2.4) : rgb.r / 12.92;
-  let g =
-    rgb.g > 0.04045 ? Math.pow((rgb.g + 0.055) / 1.055, 2.4) : rgb.g / 12.92;
-  let b =
-    rgb.b > 0.04045 ? Math.pow((rgb.b + 0.055) / 1.055, 2.4) : rgb.b / 12.92;
+  let r = rgb.r > 0.04045 ? Math.pow((rgb.r + 0.055) / 1.055, 2.4) : rgb.r / 12.92;
+  let g = rgb.g > 0.04045 ? Math.pow((rgb.g + 0.055) / 1.055, 2.4) : rgb.g / 12.92;
+  let b = rgb.b > 0.04045 ? Math.pow((rgb.b + 0.055) / 1.055, 2.4) : rgb.b / 12.92;
 
   let x = r * 0.4124 + g * 0.3576 + b * 0.1805;
   let y = r * 0.2126 + g * 0.7152 + b * 0.0722;
@@ -149,10 +146,7 @@ export function getColorsFromColor(color, isDark) {
   const minLightnessActive = 50;
   const maxLightnessActive = 60;
 
-  const activeL = Math.min(
-    Math.max(lab.l, minLightnessActive),
-    maxLightnessActive,
-  );
+  const activeL = Math.min(Math.max(lab.l, minLightnessActive), maxLightnessActive);
 
   if (!isDark) {
     lab.l = Math.min(Math.max(lab.l, minLightness), maxLightness);
@@ -196,9 +190,7 @@ export function getAreaColors(area, index, areas, isDark, styles) {
   const step = isDark ? 8 : 3;
 
   if (area.label) {
-    const hexMatch = area.label.match(
-      /^(bonbon_)?color_([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-    );
+    const hexMatch = area.label.match(/^(bonbon_)?color_([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
     if (hexMatch) {
       const hexCode = `#${hexMatch[2]}`;
       return getColorsFromColor(hexCode, isDark);
@@ -206,9 +198,7 @@ export function getAreaColors(area, index, areas, isDark, styles) {
   }
 
   if (!styles.use_bonbon_colors) {
-    const baseColor = isDark
-      ? styles.card_background_color_dark
-      : styles.card_background_color_light;
+    const baseColor = isDark ? styles.card_background_color_dark : styles.card_background_color_light;
 
     return getColorsFromColor(baseColor, isDark);
   }

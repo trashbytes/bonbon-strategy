@@ -9,13 +9,7 @@ export function createEntityApi(ctx = {}) {
   function hasLabel(entity, label) {
     const labels = [label, `bonbon_${label}`];
     if (entity.labels?.some((l) => labels.includes(l))) return true;
-    if (
-      entity.device_id &&
-      context.devices?.[entity.device_id]?.labels?.some((l) =>
-        labels.includes(l),
-      )
-    )
-      return true;
+    if (entity.device_id && context.devices?.[entity.device_id]?.labels?.some((l) => labels.includes(l))) return true;
     return false;
   }
 
@@ -26,22 +20,15 @@ export function createEntityApi(ctx = {}) {
   function getOrderNumber(c) {
     const allLabels = [];
     if (c?.object?.bonbon_order || c?.object?.order) {
-      allLabels.push(
-        'order_' + parseInt(c?.object?.bonbon_order || c?.object?.order),
-      );
+      allLabels.push('order_' + parseInt(c?.object?.bonbon_order || c?.object?.order));
     }
     if (c?.entity?.labels) {
       allLabels.push(...c.entity.labels);
     }
-    if (
-      c?.entity?.device_id &&
-      context.devices?.[c?.entity.device_id]?.labels
-    ) {
+    if (c?.entity?.device_id && context.devices?.[c?.entity.device_id]?.labels) {
       allLabels.push(...context.devices[c?.entity.device_id].labels);
     }
-    const orderLabel = allLabels.find((label) =>
-      /^bonbon_order_\d+$|^order_\d+$/.test(label),
-    );
+    const orderLabel = allLabels.find((label) => /^bonbon_order_\d+$|^order_\d+$/.test(label));
     if (orderLabel) {
       const match = orderLabel.match(/order_(\d+)/);
       if (match) return parseInt(match[1], 10);
@@ -99,10 +86,8 @@ export function createEntityApi(ctx = {}) {
       objects: groups[devId],
     }));
     groupEntries.sort((a, b) => {
-      const firstA =
-        a.objects && a.objects.length ? getEntityDisplayName(a.objects[0]) : '';
-      const firstB =
-        b.objects && b.objects.length ? getEntityDisplayName(b.objects[0]) : '';
+      const firstA = a.objects && a.objects.length ? getEntityDisplayName(a.objects[0]) : '';
+      const firstB = b.objects && b.objects.length ? getEntityDisplayName(b.objects[0]) : '';
       return firstA.localeCompare(firstB);
     });
     const groupedObjects = groupEntries.flatMap((g) => g.objects);
@@ -125,11 +110,7 @@ export function createEntityApi(ctx = {}) {
                   c = notMatch[1].trim();
                   const notSelector = notMatch[2];
                   const excludedElements = resolveEntities(notSelector);
-                  excludedEntity_ids = new Set(
-                    excludedElements
-                      .map((e) => e.entity?.entity_id)
-                      .filter(Boolean),
-                  );
+                  excludedEntity_ids = new Set(excludedElements.map((e) => e.entity?.entity_id).filter(Boolean));
                 }
               }
 
@@ -140,19 +121,11 @@ export function createEntityApi(ctx = {}) {
                 if (!c) c = '*';
                 attrFilterMatches.forEach((match) => {
                   const inside = match.slice(1, -1).trim();
-                  const m = inside.match(
-                    /^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(\*)|(.+))$/,
-                  );
+                  const m = inside.match(/^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(\*)|(.+))$/);
                   if (m) {
                     const key = m[1];
                     const operator = m[2];
-                    const valueStr = (
-                      m[3] ||
-                      m[4] ||
-                      m[5] ||
-                      m[6] ||
-                      ''
-                    ).trim();
+                    const valueStr = (m[3] || m[4] || m[5] || m[6] || '').trim();
                     if (operator === '=' && !valueStr) {
                       attrFilters.push({
                         key,
@@ -175,14 +148,12 @@ export function createEntityApi(ctx = {}) {
 
               const getAttributeValue = (entity, key) => {
                 if (!entity) return undefined;
-                if (key === 'name' || key === 'friendly_name')
-                  return getEntityDisplayName({ entity });
+                if (key === 'name' || key === 'friendly_name') return getEntityDisplayName({ entity });
                 const attrFromEntity = entity[key];
                 if (attrFromEntity !== undefined) return attrFromEntity;
                 const stateVal = context.states?.[entity.entity_id]?.[key];
                 if (stateVal !== undefined) return stateVal;
-                const stateAttr =
-                  context.states?.[entity.entity_id]?.attributes?.[key];
+                const stateAttr = context.states?.[entity.entity_id]?.attributes?.[key];
                 if (stateAttr !== undefined) return stateAttr;
                 return entity[key];
               };
@@ -190,21 +161,11 @@ export function createEntityApi(ctx = {}) {
               const hasAttribute = (entity, key) => {
                 if (!entity) return false;
                 if (key === 'name' || key === 'friendly_name') return true;
-                if (Object.prototype.hasOwnProperty.call(entity, key))
-                  return true;
+                if (Object.prototype.hasOwnProperty.call(entity, key)) return true;
                 const stateVals = context.states?.[entity.entity_id];
-                if (
-                  stateVals &&
-                  Object.prototype.hasOwnProperty.call(stateVals, key)
-                )
-                  return true;
-                const stateAttrs =
-                  context.states?.[entity.entity_id]?.attributes;
-                if (
-                  stateAttrs &&
-                  Object.prototype.hasOwnProperty.call(stateAttrs, key)
-                )
-                  return true;
+                if (stateVals && Object.prototype.hasOwnProperty.call(stateVals, key)) return true;
+                const stateAttrs = context.states?.[entity.entity_id]?.attributes;
+                if (stateAttrs && Object.prototype.hasOwnProperty.call(stateAttrs, key)) return true;
                 return false;
               };
 
@@ -229,9 +190,7 @@ export function createEntityApi(ctx = {}) {
               };
 
               const checkEntityCategory = (entity) => {
-                const hasEntityCategoryFilter = attrFilters.some(
-                  (f) => f.key === 'entity_category',
-                );
+                const hasEntityCategoryFilter = attrFilters.some((f) => f.key === 'entity_category');
                 if (!hasEntityCategoryFilter) {
                   return !entity.entity_category;
                 }
@@ -251,9 +210,7 @@ export function createEntityApi(ctx = {}) {
               };
 
               const checkHidden = (entity) => {
-                const hasHiddenFilter = attrFilters.some(
-                  (f) => f.key === 'hidden',
-                );
+                const hasHiddenFilter = attrFilters.some((f) => f.key === 'hidden');
                 if (!hasHiddenFilter) return !isHidden(entity);
 
                 return attrFilters
@@ -261,18 +218,12 @@ export function createEntityApi(ctx = {}) {
                   .every((f) => {
                     if (f.operator === 'exists-truthy') return isHidden(entity);
                     if (f.operator === 'exists-any') return true;
-                    return matchValue(
-                      String(isHidden(entity)),
-                      f.operator,
-                      f.values,
-                    );
+                    return matchValue(String(isHidden(entity)), f.operator, f.values);
                   });
               };
 
               const getOtherFilters = () =>
-                attrFilters.filter(
-                  (f) => f.key !== 'entity_category' && f.key !== 'hidden',
-                );
+                attrFilters.filter((f) => f.key !== 'entity_category' && f.key !== 'hidden');
 
               const checkOtherAttributes = (entity) => {
                 const otherFilters = getOtherFilters();
@@ -284,8 +235,7 @@ export function createEntityApi(ctx = {}) {
                       const attr = getAttributeValue(entity, key);
                       return isTruthy(attr);
                     }
-                    if (operator === 'exists-any')
-                      return hasAttribute(entity, key);
+                    if (operator === 'exists-any') return hasAttribute(entity, key);
                     const attr = getAttributeValue(entity, key);
                     if (attr === undefined || attr === null) return false;
                     return matchValue(attr, operator, values);
@@ -359,13 +309,9 @@ export function createEntityApi(ctx = {}) {
                   });
                 }
               }
-            } else if (
-              (c.entity_id || c.entity) &&
-              (context.entities[c.entity_id] || context.entities[c.entity])
-            ) {
+            } else if ((c.entity_id || c.entity) && (context.entities[c.entity_id] || context.entities[c.entity])) {
               elements.push({
-                entity:
-                  context.entities[c.entity_id] || context.entities[c.entity],
+                entity: context.entities[c.entity_id] || context.entities[c.entity],
                 object: c,
               });
             } else {
