@@ -1,9 +1,7 @@
 const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
 const { defaultConfig } = await import(`./bonbon-strategy-config.js?hacstag=${hacstag}`);
-const { css, getBonbonVarValue, getStyles, getVariables, observeDarkMode } = await import(
-  `./bonbon-strategy-styles.js?hacstag=${hacstag}`
-);
+const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { getWeatherIcon, androidGesturesFix, mergeDeep, getAreaColors, getColorsFromColor } = await import(
   `./bonbon-strategy-utils.js?hacstag=${hacstag}`
 );
@@ -57,6 +55,7 @@ export class BonbonStrategy {
       floors,
       areas,
     });
+    const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl);
 
     androidGesturesFix();
 
@@ -76,8 +75,8 @@ export class BonbonStrategy {
         ? getColorsFromColor(config.styles.primary_accent_color, true).activeColor
         : config.styles.primary_accent_color;
 
-      const styles = getStyles(config.styles, panelUrl);
-      const cssVars = getVariables(config.styles, panelUrl);
+      const styles = getStyles(config.styles);
+      const cssVars = getVariables(config.styles);
 
       Object.values(areas)
         .filter((a) => !a.labels?.includes('hidden') && !a.labels?.includes('bonbon_hidden'))
@@ -481,7 +480,7 @@ export class BonbonStrategy {
                                       show_line: false,
                                     },
                                   ],
-                                  line_color: getBonbonVarValue(panelUrl, 'primary-accent-color'),
+                                  line_color: cssValue('primary-accent-color'),
                                   show: {
                                     points: false,
                                     labels: false,
@@ -705,7 +704,7 @@ export class BonbonStrategy {
                 views.push({
                   title: area.name,
                   icon: area.icon,
-                  background: getBonbonVarValue(panelUrl, 'background-image'),
+                  background: cssValue('background-image'),
                   subview: true,
                   path: `bonbon_area_${area.area_id}`,
                   type: 'sections',
@@ -744,7 +743,7 @@ export class BonbonStrategy {
       const homeView = {
         title: dashboardName,
         icon: config?.views?.bonbon_home?.icon || '',
-        background: getBonbonVarValue(panelUrl, 'background-image'),
+        background: cssValue('background-image'),
         path: 'bonbon_home',
         type: 'sections',
         max_columns: config?.views?.bonbon_home?.max_columns || 1,
@@ -798,7 +797,7 @@ export class BonbonStrategy {
             views.push({
               title: viewConfig.title || viewKey,
               icon: viewConfig.icon || '',
-              background: getBonbonVarValue(panelUrl, 'background-image'),
+              background: cssValue('background-image'),
               path: 'custom_' + viewKey,
               type: 'sections',
               max_columns: viewConfig.max_columns || 1,
