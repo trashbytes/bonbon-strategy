@@ -1,7 +1,6 @@
 const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
 const { defaultConfig } = await import(`./bonbon-strategy-config.js?hacstag=${hacstag}`);
-const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { getWeatherIcon, androidGesturesFix, mergeDeep, getAreaColors, getColorsFromColor } = await import(
   `./bonbon-strategy-utils.js?hacstag=${hacstag}`
 );
@@ -9,6 +8,7 @@ const { createButtonCard, createSeparatorCard, createGrid, createSubButton } = a
   `./bonbon-strategy-builders.js?hacstag=${hacstag}`
 );
 
+const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
 
 export class BonbonStrategy {
