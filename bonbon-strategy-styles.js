@@ -184,7 +184,7 @@ export function createStylesApi(panelUrl) {
     `;
     const separatorLightsSubButtonBase = css`
       [data-group-id='g_main_0'] .bubble-sub-button {
-        background-color: var(--ha-card-background, var(--card-background-color, #fff));
+        background-color: ${cssValue('card-background')};
         box-shadow: 0 2px 6px rgba(0, 0, 0, ${cssValue('sub-button-shadow-opacity')});
       }
     `;
