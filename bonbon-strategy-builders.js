@@ -11,9 +11,7 @@ function isTogglableEntity(c) {
     c.entity?.entity_id?.startsWith('water_heater.') ||
     c.entity?.entity_id?.startsWith('input_boolean.') ||
     c.entity?.entity_id?.startsWith('automation.') ||
-    c.entity?.entity_id?.startsWith('script.') ||
-    c.entity?.entity_id?.startsWith('vacuum.') ||
-    c.entity?.entity_id?.startsWith('lawn_mower.')
+    c.entity?.entity_id?.startsWith('script.')
   );
 }
 
@@ -60,9 +58,7 @@ export function createButtonCard(c, options = {}) {
     const isMedia = c.entity.entity_id.startsWith('media_player.');
     const isCover = c.entity.entity_id.startsWith('cover.');
     const isToggle = isTogglableEntity(c);
-    const isBinary =
-      hasBinaryState(c) ||
-      (options?.card_type && options?.card_type != 'button');
+    const isBinary = hasBinaryState(c) || (options?.card_type && options?.card_type != 'button');
 
     if (isToggle) {
       base.button_type = 'switch';
@@ -136,10 +132,7 @@ export function createSubButton(c, options = {}) {
 export function resolveColumns(sectionConfig, count) {
   return (
     sectionConfig.columns ||
-    Math.min(
-      Math.max(sectionConfig.min_columns || 1, count || 0),
-      sectionConfig.max_columns || 1,
-    )
+    Math.min(Math.max(sectionConfig.min_columns || 1, count || 0), sectionConfig.max_columns || 1)
   );
 }
 
