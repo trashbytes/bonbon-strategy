@@ -11,7 +11,8 @@ function isTogglableEntity(c) {
     c.entity?.entity_id?.startsWith('water_heater.') ||
     c.entity?.entity_id?.startsWith('input_boolean.') ||
     c.entity?.entity_id?.startsWith('automation.') ||
-    c.entity?.entity_id?.startsWith('script.')
+    c.entity?.entity_id?.startsWith('script.') ||
+    c.entity?.entity_id?.startsWith('scene.')
   );
 }
 
@@ -29,6 +30,7 @@ function hasBinaryState(c) {
     c.entity?.entity_id?.startsWith('input_boolean.') ||
     c.entity?.entity_id?.startsWith('automation.') ||
     c.entity?.entity_id?.startsWith('script.') ||
+    c.entity?.entity_id?.startsWith('scene.') ||
     c.entity?.entity_id?.startsWith('vacuum.') ||
     c.entity?.entity_id?.startsWith('lawn_mower.') ||
     c.entity?.entity_id?.startsWith('binary_sensor.') ||
