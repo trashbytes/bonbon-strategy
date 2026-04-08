@@ -42,6 +42,26 @@ function hasBinaryState(c) {
 }
 
 export function createButtonCard(c, options = {}) {
+  if (
+    (c?.entity?.hasLabel('graph') || options.show_graph) &&
+    window.customCards?.map((cc) => cc.type).includes('mini-graph-card')
+  ) {
+    return {
+      type: 'custom:mini-graph-card',
+      height: 56,
+      entities: [
+        {
+          entity: c.entity?.entity_id,
+          show_line: false,
+        },
+      ],
+      show: {
+        points: false,
+        labels: false,
+        labels_secondary: false,
+      },
+    };
+  }
   const base = {
     type: 'custom:bubble-card',
     card_type: 'button',

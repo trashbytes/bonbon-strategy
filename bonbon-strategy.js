@@ -37,6 +37,15 @@ export class BonbonStrategy {
       if (updatedEntity.area_id) {
         updatedEntity.floor_id = areas?.[updatedEntity.area_id]?.floor_id;
       }
+      updatedEntity.hasLabel = function (label) {
+        const labels = [label, `bonbon_${label}`];
+        if (this.labels?.some((l) => labels.includes(l))) return true;
+        if (this.device_id && devices?.[this.device_id]?.labels?.some((l) => labels.includes(l))) return true;
+        return false;
+      };
+      updatedEntity.isHidden = function () {
+        return updatedEntity.hidden || updatedEntity.hasLabel('hidden');
+      };
       acc[entity_id] = updatedEntity;
       return acc;
     }, {});
@@ -47,7 +56,7 @@ export class BonbonStrategy {
       return acc;
     }, {});
 
-    const { resolveEntity, resolveEntities, onFloor, inArea, hasLabel } = createEntityApi({
+    const { resolveEntity, resolveEntities, onFloor, inArea } = createEntityApi({
       entities,
       devices,
       states,
@@ -284,7 +293,7 @@ export class BonbonStrategy {
               const subButtonLights = [];
 
               resolveEntities('light.*').forEach((c) => {
-                if (!hasLabel(c.entity, 'nightlight')) {
+                if (!c?.entity?.hasLabel('nightlight')) {
                   subButtonLights.push(c);
                 }
               });
@@ -469,28 +478,12 @@ export class BonbonStrategy {
                             );
                           })
                           .map((e_id) => {
-                            return sectionConfig.show_graphs &&
-                              window.customCards?.map((cc) => cc.type).includes('mini-graph-card')
-                              ? {
-                                  type: 'custom:mini-graph-card',
-                                  height: 56,
-                                  entities: [
-                                    {
-                                      entity: e_id,
-                                      show_line: false,
-                                    },
-                                  ],
-                                  line_color: cssValue('primary-accent-color'),
-                                  show: {
-                                    points: false,
-                                    labels: false,
-                                    labels_secondary: false,
-                                  },
-                                  card_mod: {
-                                    style: styles.environmentGraphCard,
-                                  },
-                                }
-                              : createButtonCard({ entity: entities[e_id] });
+                            return createButtonCard(
+                              { entity: entities[e_id] },
+                              {
+                                show_graph: sectionConfig.show_graphs,
+                              },
+                            );
                           });
                         section.cards.push(createGrid(envCards, sectionConfig));
                         break;
@@ -856,8 +849,12 @@ export class BonbonStrategy {
               style:
                 styles.cardmodGlobal +
                 (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
+                (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
                 (newStruct.card_mod?.style || ''),
             };
+            if (newStruct.type == 'custom:mini-graph-card') {
+              newStruct.line_color = cssValue('primary-accent-color');
+            }
           }
           if (newStruct.elements && Array.isArray(newStruct.elements)) {
             newStruct.elements = applyGlobalStyles(newStruct.elements);

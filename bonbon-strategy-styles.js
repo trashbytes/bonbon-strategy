@@ -292,6 +292,15 @@ export function createStylesApi(panelUrl) {
           .bubble-dropdown-inner-border {
             display: none !important;
           }
+          ha-dropdown-item {
+            --wa-color-text-normal: ${cssValue('primary-text-color')};
+            --primary-text-color: ${cssValue('primary-text-color')};
+            --icon-primary-color: ${cssValue('primary-text-color')};
+          }
+          ha-dropdown-item[selected] {
+            --primary-text-color: #fff;
+            --icon-primary-color: #fff;
+          }
           .bubble-separator .bubble-sub-button-container {
             right: 0;
           }
@@ -414,13 +423,16 @@ export function createStylesApi(panelUrl) {
             display: none !important;
           }
         `,
-      environmentGraphCard: css`
+      graphCard: css`
         ${haCardBase}
         :host {
           min-height: 56px;
         }
         ha-card {
           padding: 0 !important;
+        }
+        ha-spinner {
+          display: none !important;
         }
         .header {
           position: absolute !important;

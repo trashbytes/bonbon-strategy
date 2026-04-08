@@ -6,17 +6,6 @@ export function createEntityApi(ctx = {}) {
     labels: ctx.labels || {},
   };
 
-  function hasLabel(entity, label) {
-    const labels = [label, `bonbon_${label}`];
-    if (entity.labels?.some((l) => labels.includes(l))) return true;
-    if (entity.device_id && context.devices?.[entity.device_id]?.labels?.some((l) => labels.includes(l))) return true;
-    return false;
-  }
-
-  function isHidden(entity) {
-    return entity.hidden || hasLabel(entity, 'hidden');
-  }
-
   function getOrderNumber(c) {
     const allLabels = [];
     if (c?.object?.bonbon_order || c?.object?.order) {
@@ -211,14 +200,14 @@ export function createEntityApi(ctx = {}) {
 
               const checkHidden = (entity) => {
                 const hasHiddenFilter = attrFilters.some((f) => f.key === 'hidden');
-                if (!hasHiddenFilter) return !isHidden(entity);
+                if (!hasHiddenFilter) return !entity?.isHidden();
 
                 return attrFilters
                   .filter((f) => f.key === 'hidden')
                   .every((f) => {
-                    if (f.operator === 'exists-truthy') return isHidden(entity);
+                    if (f.operator === 'exists-truthy') return entity?.isHidden();
                     if (f.operator === 'exists-any') return true;
-                    return matchValue(String(isHidden(entity)), f.operator, f.values);
+                    return matchValue(String(entity?.isHidden()), f.operator, f.values);
                   });
               };
 
@@ -384,7 +373,6 @@ export function createEntityApi(ctx = {}) {
   }
 
   return {
-    hasLabel,
     sortByName,
     sortEntities,
     resolveEntities,
