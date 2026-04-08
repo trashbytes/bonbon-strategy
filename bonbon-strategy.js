@@ -687,7 +687,7 @@ export class BonbonStrategy {
                                   area.categorizedEntityIds.push(c?.entity?.entity_id)),
                             )
                             .map(function (c) {
-                              return c.object || createButtonCard(c);
+                              return createButtonCard(c);
                             });
                           if (userCards.length) {
                             if (!sectionConfig.hide_separator) {
@@ -743,7 +743,7 @@ export class BonbonStrategy {
             default:
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = resolveEntities(sectionConfig.cards, sectionConfig, 'home').map(function (c) {
-                  return c.object || createButtonCard(c);
+                  return createButtonCard(c);
                 });
                 if (userCards.length) {
                   if (!sectionConfig.hide_separator) {
@@ -800,7 +800,7 @@ export class BonbonStrategy {
               };
               if (sectionConfig.cards && sectionConfig.cards.length) {
                 const userCards = resolveEntities(sectionConfig.cards, sectionConfig, viewKey).map(function (c) {
-                  return c.object || createButtonCard(c);
+                  return createButtonCard(c);
                 });
 
                 if (userCards.length) {

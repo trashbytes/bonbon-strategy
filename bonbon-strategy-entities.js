@@ -8,8 +8,12 @@ export function createEntityApi(ctx = {}) {
 
   function getOrderNumber(c, sectionConfig = {}, viewScope = '') {
     const allLabels = [];
-    if (c?.object?.bonbon_order || c?.object?.order) {
-      allLabels.push('order_' + parseInt(c?.object?.bonbon_order || c?.object?.order));
+    if (c?.object) {
+      Object.keys(c.object).forEach((key) => {
+        if (key == 'order' || key == 'bonbon_order' || key.startsWith('order_') || key.startsWith('bonbon_order')) {
+          allLabels.push(key + '_' + c.object[key]);
+        }
+      });
     }
     if (c?.entity?.labels) {
       allLabels.push(...c.entity.labels);
@@ -324,6 +328,7 @@ export function createEntityApi(ctx = {}) {
               }
             } else if ((c.entity_id || c.entity) && (context.entities[c.entity_id] || context.entities[c.entity])) {
               elements.push({
+                bonbon_card: true,
                 entity: context.entities[c.entity_id] || context.entities[c.entity],
                 object: c,
               });
