@@ -29,8 +29,6 @@ function hasBinaryState(c) {
     c.entity?.entity_id?.startsWith('water_heater.') ||
     c.entity?.entity_id?.startsWith('input_boolean.') ||
     c.entity?.entity_id?.startsWith('automation.') ||
-    c.entity?.entity_id?.startsWith('script.') ||
-    c.entity?.entity_id?.startsWith('scene.') ||
     c.entity?.entity_id?.startsWith('vacuum.') ||
     c.entity?.entity_id?.startsWith('lawn_mower.') ||
     c.entity?.entity_id?.startsWith('binary_sensor.') ||
@@ -79,6 +77,8 @@ export function createButtonCard(c, options = {}) {
     const isClimate = c.entity.entity_id.startsWith('climate.');
     const isMedia = c.entity.entity_id.startsWith('media_player.');
     const isCover = c.entity.entity_id.startsWith('cover.');
+    const isScript = c.entity.entity_id.startsWith('script.');
+    const isScene = c.entity.entity_id.startsWith('scene.');
     const isToggle = isTogglableEntity(c);
     const isBinary = hasBinaryState(c) || (options?.card_type && options?.card_type != 'button');
 
@@ -92,6 +92,9 @@ export function createButtonCard(c, options = {}) {
 
     if (isToggle || isBinary) {
       base.show_last_changed = true;
+    }
+    if (isScript || isScene) {
+      base.show_state = false;
     }
 
     if (isClimate) {
