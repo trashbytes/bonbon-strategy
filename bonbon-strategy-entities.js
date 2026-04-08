@@ -6,7 +6,7 @@ export function createEntityApi(ctx = {}) {
     labels: ctx.labels || {},
   };
 
-  function getOrderNumber(c) {
+  function getOrderNumber(c, sectionConfig = {}, viewScope = '') {
     const allLabels = [];
     if (c?.object?.bonbon_order || c?.object?.order) {
       allLabels.push('order_' + parseInt(c?.object?.bonbon_order || c?.object?.order));
@@ -17,10 +17,34 @@ export function createEntityApi(ctx = {}) {
     if (c?.entity?.device_id && context.devices?.[c?.entity.device_id]?.labels) {
       allLabels.push(...context.devices[c?.entity.device_id].labels);
     }
-    const orderLabel = allLabels.find((label) => /^bonbon_order_\d+$|^order_\d+$/.test(label));
+
+    const scopes = ['']
+      .concat(
+        [
+          viewScope ? viewScope + '_' : '',
+          sectionConfig?.key ? sectionConfig?.key + '_' : '',
+          viewScope && sectionConfig?.key ? viewScope + '_' + sectionConfig?.key + '_' : '',
+        ].filter(Boolean),
+      )
+      .map((scope) => {
+        return ['order_' + scope, 'bonbon_order_' + scope];
+      })
+      .flat();
+
+    let orderLabel = '';
+
+    scopes.forEach((scope) => {
+      allLabels.forEach((label) => {
+        const suffix = label.slice(scope.length);
+        if (label.startsWith(scope) && /^\d+(?:\.\d+)?$/.test(suffix)) {
+          orderLabel = label;
+        }
+      });
+    });
+
     if (orderLabel) {
-      const match = orderLabel.match(/order_(\d+)/);
-      if (match) return parseInt(match[1], 10);
+      const match = orderLabel.match(/(\d+(?:\.\d+)?)$/);
+      if (match) return parseFloat(match[1]);
     }
     return Infinity;
   }
@@ -42,12 +66,12 @@ export function createEntityApi(ctx = {}) {
     });
   }
 
-  function sortEntities(list) {
+  function sortEntities(list, sectionConfig = {}, viewScope = '') {
     const withOrder = [];
     const withoutOrder = [];
 
     (list || []).forEach((c) => {
-      const order = getOrderNumber(c);
+      const order = getOrderNumber(c, sectionConfig, viewScope);
       if (order !== Infinity) {
         withOrder.push(c);
       } else {
@@ -55,8 +79,8 @@ export function createEntityApi(ctx = {}) {
       }
     });
     withOrder.sort((a, b) => {
-      const orderA = getOrderNumber(a);
-      const orderB = getOrderNumber(b);
+      const orderA = getOrderNumber(a, sectionConfig, viewScope);
+      const orderB = getOrderNumber(b, sectionConfig, viewScope);
       return orderA - orderB;
     });
     const groups = {};
@@ -83,7 +107,7 @@ export function createEntityApi(ctx = {}) {
     return [...withOrder, ...groupedObjects];
   }
 
-  function resolveEntities(c) {
+  function resolveEntities(c, sectionConfig = {}, viewScope = '') {
     return sortEntities(
       (Array.isArray(c) ? c : [c])
         .map(function (c) {
@@ -98,7 +122,7 @@ export function createEntityApi(ctx = {}) {
                 if (notMatch) {
                   c = notMatch[1].trim();
                   const notSelector = notMatch[2];
-                  const excludedElements = resolveEntities(notSelector);
+                  const excludedElements = resolveEntities(notSelector, sectionConfig, viewScope);
                   excludedEntity_ids = new Set(excludedElements.map((e) => e.entity?.entity_id).filter(Boolean));
                 }
               }
@@ -311,11 +335,13 @@ export function createEntityApi(ctx = {}) {
         })
         .flat()
         .filter((c) => c),
+      sectionConfig,
+      viewScope,
     );
   }
 
-  function resolveEntity(c) {
-    return resolveEntities(c)[0];
+  function resolveEntity(c, sectionConfig = {}, viewScope = '') {
+    return resolveEntities(c, sectionConfig, viewScope)[0];
   }
 
   function inArea(c, area) {

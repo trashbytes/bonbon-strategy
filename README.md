@@ -41,10 +41,11 @@ These features and domains are included by default and will "just work".
 
 You can hide anything with the label `hidden` or by disabling the `Visible` setting.
 All entities are ordered alphabetically by default but are grouped by device, if they are in the same section.
-You can override the order by adding labels like `order_1`, `order_2`, etc.
-You can add the prefix `bonbon_` to any of these labels in case it interferes with your setup.
+You can override the order of entities by adding labels like `order_<number>`. They will be sorted in ascending order.
+To order entities in several different views and/or sections independently and differently from each other, you can add more specific labels like `order_home_<number>`, `order_<area_id>_<number>`, `order_<view_key>_<number>`, `order_home_<section_key>_<number>`, `order_<area_id>_<section_key>_<number>` or `order_<view_key>_<section_key>_<number>` etc. A greater specificity gives it a higher priority and will thus override lower priority labels.
 You can add the label `nightlight` to lights to exclude them from area and floor toggles.
 You can add the label `graph` to render the entity using Mini Graph Card instead of Bubble Card (if installed).
+You can add the prefix `bonbon_` to any of these labels in case it interferes with your setup.
 
 ## Dependencies
 
