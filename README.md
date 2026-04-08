@@ -44,6 +44,7 @@ All entities are ordered alphabetically by default but are grouped by device, if
 You can override the order by adding labels like `order_1`, `order_2`, etc.
 You can add the prefix `bonbon_` to any of these labels in case it interferes with your setup.
 You can add the label `nightlight` to lights to exclude them from area and floor toggles.
+You can add the label `graph` to render the entity using Mini Graph Card instead of Bubble Card (if installed).
 
 ## Dependencies
 
