@@ -40,6 +40,9 @@ function hasBinaryState(c) {
 }
 
 export function createButtonCard(c, options = {}) {
+  if (c?.object && !c?.bonbon_card) {
+    return c.object;
+  }
   if (
     (c?.entity?.hasLabel('graph') || options.show_graph) &&
     window.customCards?.map((cc) => cc.type).includes('mini-graph-card')
