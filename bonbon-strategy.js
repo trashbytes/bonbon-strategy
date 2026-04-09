@@ -70,7 +70,6 @@ export class BonbonStrategy {
     });
     globals.resolveEntities = resolveEntities;
     globals.resolveEntity = resolveEntity;
-    console.log(states);
     const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl);
 
     androidGesturesFix();
