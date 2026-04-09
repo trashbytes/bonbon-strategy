@@ -183,8 +183,8 @@ export function createEntityApi(ctx = {}) {
                     }
                   }
                 });
-                if (hideAttrFilters.length) {
-                  hide += hideAttrFilters.join('');
+                if (hide.length && hideAttrFilters.length) {
+                  hide = hideAttrFilters.join('') + hide;
                 }
               }
 
