@@ -76,6 +76,13 @@ export function createButtonCard(c, options = {}) {
   };
   if (c?.entity) {
     base.entity = c.entity?.entity_id;
+    if (base.entity && c?.hide) {
+      base.styles =
+        '${this.parentElement ? {{globals}}.resolveEntity("' +
+        base.entity +
+        c?.hide +
+        '", null, null, hass.states) ? this.parentElement.style.display = "none" : this.parentElement.style.display = "block" : ""}';
+    }
 
     const isClimate = c.entity.entity_id.startsWith('climate.');
     const isMedia = c.entity.entity_id.startsWith('media_player.');
