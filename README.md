@@ -258,7 +258,9 @@ To explicitly and only select hidden or diagnostic and config entities:
 ```yaml
 cards:
   - light.* # all lights
+  - light.*:hide([state=off]) # all lights that are turned on
   - sensor.*battery # sensors with entity IDs ending in "battery"
+  - sensor.*battery:hide([state>10]) # sensors with entity IDs ending in "battery" and a battery level below 10
   - light.*[brightness=*] # dimmable lights
   - binary_sensor.*contact[device_class=door|window] # Door or window sensors
   - <device_id> # all entities of a specific device
@@ -266,7 +268,7 @@ cards:
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
-**Important note:** A dashboard strategy generates YAML, which is inherently static! `[state=on]` will not react to state changes without refreshing the dashboard! I don't think it's a big issue, as most cards shouldn't come and go willy-nilly anyway, but it's something you should keep in mind when building your dashboards. I use a more complex workaround for the `show_floor_lights_toggle` and `show_area_lights_toggle`. If you do need a feature like that consider using your own cards and wrapping them in conditional cards. I may add support for it natively in the future.
+**Important note:** While you can use `[state=on]` directly in the selector, because YAML is inherently static it will be evaluated once and will not respond to changes without reloading the dashboard. For a dynamic approach, you have to use the `:hide()` pseudo function, where the buttons are shown and hidden dynamically at runtime. If the selector without the `:hide()` function matches an entity, then it will technically always be there, even if hidden, which means that the separator will also always be there (if enabled), even if no buttons are visible in that section. The `hide()` pseudo function only works with standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's build Bonbon styling will not be applied (yet?).
 
 ### Styling and Colors
 

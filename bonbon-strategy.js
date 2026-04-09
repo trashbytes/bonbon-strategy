@@ -1,3 +1,5 @@
+window.bonbon = window.bonbon || {};
+
 const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
 const { defaultConfig } = await import(`./bonbon-strategy-config.js?hacstag=${hacstag}`);
@@ -13,6 +15,9 @@ const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
     const panelUrl = hass.panelUrl;
+    const globals = {};
+    window.bonbon[panelUrl] = globals;
+
     const states = hass.states;
     const devices = hass.devices;
     const floors = hass.floors;
@@ -63,6 +68,9 @@ export class BonbonStrategy {
       floors,
       areas,
     });
+    globals.resolveEntities = resolveEntities;
+    globals.resolveEntity = resolveEntity;
+    console.log(states);
     const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl);
 
     androidGesturesFix();
@@ -882,8 +890,9 @@ export class BonbonStrategy {
 
             newStruct.styles =
               styles.bubbleGlobal +
-              (newStruct.styles || '') +
-              (allBonbonStyles?.map((s) => styles[s] || '').join('\n') || '');
+              (allBonbonStyles?.map((s) => styles[s] || '').join('\n') || '') +
+              ('\n' + newStruct.styles || '');
+            newStruct.styles = newStruct.styles.replaceAll('{{globals}}', 'window.bonbon["' + panelUrl + '"]');
           }
           if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {

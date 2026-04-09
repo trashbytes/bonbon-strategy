@@ -111,7 +111,7 @@ export function createEntityApi(ctx = {}) {
     return [...withOrder, ...groupedObjects];
   }
 
-  function resolveEntities(c, sectionConfig = {}, viewScope = '') {
+  function resolveEntities(c, sectionConfig = {}, viewScope = '', states = null) {
     return sortEntities(
       (Array.isArray(c) ? c : [c])
         .map(function (c) {
@@ -119,6 +119,10 @@ export function createEntityApi(ctx = {}) {
             const elements = [];
             if (typeof c === 'string') {
               const selector = c;
+              const hideMatch = c.match(/:hide\(([^)]*)\)/);
+              let hide = hideMatch ? hideMatch[1].trim() : '';
+              c = c.replace(/:hide\([^)]*\)/g, '').trim();
+
               let excludedEntity_ids = new Set();
 
               if (c.includes(':not(')) {
@@ -136,9 +140,12 @@ export function createEntityApi(ctx = {}) {
               if (attrFilterMatches) {
                 c = c.replace(/\[([^\]]+)\]/g, '').trim();
                 if (!c) c = '*';
+                const hideAttrFilters = [];
                 attrFilterMatches.forEach((match) => {
                   const inside = match.slice(1, -1).trim();
-                  const m = inside.match(/^([a-zA-Z0-9_-]+)\s*(\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(\*)|(.+))$/);
+                  const m = inside.match(
+                    /^([a-zA-Z0-9_-]+)\s*(>=|<=|>|<|\*=|\^=|\$=|=)\s*(?:"([^"]+)"|'([^']+)'|(\*)|(.*))$/,
+                  );
                   if (m) {
                     const key = m[1];
                     const operator = m[2];
@@ -153,14 +160,23 @@ export function createEntityApi(ctx = {}) {
                       const values = valueStr.split('|').map((v) => v.trim());
                       attrFilters.push({ key, operator, values });
                     }
+                    if (key === 'entity_category' || key === 'hidden') {
+                      hideAttrFilters.push(match);
+                    }
                   } else if (/^[a-zA-Z0-9_-]+$/.test(inside)) {
                     attrFilters.push({
                       key: inside,
                       operator: 'exists-truthy',
                       values: [],
                     });
+                    if (inside === 'entity_category' || inside === 'hidden') {
+                      hideAttrFilters.push(match);
+                    }
                   }
                 });
+                if (hideAttrFilters.length) {
+                  hide += hideAttrFilters.join('');
+                }
               }
 
               const getAttributeValue = (entity, key) => {
@@ -168,9 +184,9 @@ export function createEntityApi(ctx = {}) {
                 if (key === 'name' || key === 'friendly_name') return getEntityDisplayName({ entity });
                 const attrFromEntity = entity[key];
                 if (attrFromEntity !== undefined) return attrFromEntity;
-                const stateVal = context.states?.[entity.entity_id]?.[key];
+                const stateVal = (states || context.states)?.[entity.entity_id]?.[key];
                 if (stateVal !== undefined) return stateVal;
-                const stateAttr = context.states?.[entity.entity_id]?.attributes?.[key];
+                const stateAttr = (states || context.states)?.[entity.entity_id]?.attributes?.[key];
                 if (stateAttr !== undefined) return stateAttr;
                 return entity[key];
               };
@@ -179,9 +195,9 @@ export function createEntityApi(ctx = {}) {
                 if (!entity) return false;
                 if (key === 'name' || key === 'friendly_name') return true;
                 if (Object.prototype.hasOwnProperty.call(entity, key)) return true;
-                const stateVals = context.states?.[entity.entity_id];
+                const stateVals = (states || context.states)?.[entity.entity_id];
                 if (stateVals && Object.prototype.hasOwnProperty.call(stateVals, key)) return true;
-                const stateAttrs = context.states?.[entity.entity_id]?.attributes;
+                const stateAttrs = (states || context.states)?.[entity.entity_id]?.attributes;
                 if (stateAttrs && Object.prototype.hasOwnProperty.call(stateAttrs, key)) return true;
                 return false;
               };
@@ -195,6 +211,13 @@ export function createEntityApi(ctx = {}) {
                   if (operator === '*=') return a.includes(val);
                   if (operator === '^=') return a.startsWith(val);
                   if (operator === '$=') return a.endsWith(val);
+                  if (operator === '>' || operator === '>=' || operator === '<' || operator === '<=') {
+                    const cmp = a.localeCompare(val);
+                    if (operator === '>') return cmp > 0;
+                    if (operator === '>=') return cmp >= 0;
+                    if (operator === '<') return cmp < 0;
+                    if (operator === '<=') return cmp <= 0;
+                  }
                   return false;
                 });
               };
@@ -273,7 +296,7 @@ export function createEntityApi(ctx = {}) {
                       checkHidden(e) &&
                       checkOtherAttributes(e)
                     ) {
-                      elements.push({ selector: selector, entity: e });
+                      elements.push({ selector: selector, hide: hide, entity: e });
                     }
                   });
               } else {
@@ -285,7 +308,7 @@ export function createEntityApi(ctx = {}) {
                     checkHidden(e) &&
                     checkOtherAttributes(e)
                   ) {
-                    elements.push({ selector: selector, entity: e });
+                    elements.push({ selector: selector, hide: hide, entity: e });
                   }
                 }
                 if (context.devices?.[c]) {
@@ -297,7 +320,7 @@ export function createEntityApi(ctx = {}) {
                       checkHidden(e) &&
                       checkOtherAttributes(e)
                     ) {
-                      elements.push({ selector: selector, entity: e });
+                      elements.push({ selector: selector, hide: hide, entity: e });
                     }
                   });
                 }
@@ -309,7 +332,7 @@ export function createEntityApi(ctx = {}) {
                       checkHidden(e) &&
                       checkOtherAttributes(e)
                     ) {
-                      elements.push({ selector: selector, entity: e });
+                      elements.push({ selector: selector, hide: hide, entity: e });
                     }
                   });
                 }
@@ -321,7 +344,7 @@ export function createEntityApi(ctx = {}) {
                       checkHidden(e) &&
                       checkOtherAttributes(e)
                     ) {
-                      elements.push({ selector: selector, entity: e });
+                      elements.push({ selector: selector, hide: hide, entity: e });
                     }
                   });
                 }
@@ -345,8 +368,8 @@ export function createEntityApi(ctx = {}) {
     );
   }
 
-  function resolveEntity(c, sectionConfig = {}, viewScope = '') {
-    return resolveEntities(c, sectionConfig, viewScope)[0];
+  function resolveEntity(c, sectionConfig = {}, viewScope = '', states = null) {
+    return resolveEntities(c, sectionConfig, viewScope, states)[0];
   }
 
   function inArea(c, area) {
