@@ -1,4 +1,4 @@
-function isTogglableEntity(c) {
+export function isTogglableEntity(c) {
   return (
     c.entity?.entity_id?.startsWith('light.') ||
     c.entity?.entity_id?.startsWith('switch.') ||
@@ -16,7 +16,7 @@ function isTogglableEntity(c) {
   );
 }
 
-function hasBinaryState(c) {
+export function hasBinaryState(c) {
   return (
     c.entity?.entity_id?.startsWith('light.') ||
     c.entity?.entity_id?.startsWith('switch.') ||

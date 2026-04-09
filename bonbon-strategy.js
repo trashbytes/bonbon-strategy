@@ -4,9 +4,8 @@ const { defaultConfig } = await import(`./bonbon-strategy-config.js?hacstag=${ha
 const { getWeatherIcon, androidGesturesFix, mergeDeep, getAreaColors, getColorsFromColor } = await import(
   `./bonbon-strategy-utils.js?hacstag=${hacstag}`
 );
-const { createButtonCard, createSeparatorCard, createGrid, createSubButton } = await import(
-  `./bonbon-strategy-builders.js?hacstag=${hacstag}`
-);
+const { createButtonCard, createSeparatorCard, createGrid, createSubButton, isTogglableEntity, hasBinaryState } =
+  await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
 
 const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
@@ -844,11 +843,14 @@ export class BonbonStrategy {
         }
 
         const entityId = typeof card?.entity === 'string' ? card.entity : card?.entity?.entity_id || '';
-        const isToggle = card?.button_action?.tap_action?.action === 'toggle';
+        const isToggle =
+          card?.button_action?.tap_action?.action === 'toggle' ||
+          (entityId && entities[entityId] && isTogglableEntity({ entity: entities[entityId] }));
         const isBinary =
           entityId.startsWith('binary_sensor.') ||
           entityId.startsWith('person.') ||
-          (card?.card_type && card.card_type !== 'button');
+          (card?.card_type && card.card_type !== 'button') ||
+          (entityId && entities[entityId] && hasBinaryState({ entity: entities[entityId] }));
         const cardType = card?.card_type || 'button';
 
         if (cardType === 'button' && !isToggle && !isBinary) {
@@ -903,6 +905,9 @@ export class BonbonStrategy {
           }
           if (newStruct.sections && Array.isArray(newStruct.sections)) {
             newStruct.sections = applyGlobalStyles(newStruct.sections);
+          }
+          if (newStruct.type && newStruct.type == 'conditional' && newStruct.card) {
+            newStruct.card = applyGlobalStyles([newStruct.card])[0];
           }
           return newStruct;
         });
