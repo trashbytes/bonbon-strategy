@@ -70,6 +70,15 @@ export function createEntityApi(ctx = {}) {
     });
   }
 
+  function isHiddenInScope(c, sectionConfig = {}, viewScope = '') {
+    const scopes = [
+      viewScope ? 'hidden_' + viewScope : '',
+      sectionConfig?.key ? 'hidden_' + sectionConfig?.key : '',
+      viewScope && sectionConfig?.key ? 'hidden_' + viewScope + '_' + sectionConfig?.key : '',
+    ].filter(Boolean);
+    return scopes.some((scope) => c?.entity?.hasLabel(scope));
+  }
+
   function sortEntities(list, sectionConfig = {}, viewScope = '') {
     const withOrder = [];
     const withoutOrder = [];
@@ -251,14 +260,20 @@ export function createEntityApi(ctx = {}) {
 
               const checkHidden = (entity) => {
                 const hasHiddenFilter = attrFilters.some((f) => f.key === 'hidden');
-                if (!hasHiddenFilter) return !entity?.isHidden();
+                if (!hasHiddenFilter)
+                  return !entity?.isHidden() && !isHiddenInScope({ entity: entity }, sectionConfig, viewScope);
 
                 return attrFilters
                   .filter((f) => f.key === 'hidden')
                   .every((f) => {
-                    if (f.operator === 'exists-truthy') return entity?.isHidden();
+                    if (f.operator === 'exists-truthy')
+                      return entity?.isHidden() || isHiddenInScope({ entity: entity }, sectionConfig, viewScope);
                     if (f.operator === 'exists-any') return true;
-                    return matchValue(String(entity?.isHidden()), f.operator, f.values);
+                    return matchValue(
+                      String(entity?.isHidden() || isHiddenInScope({ entity: entity }, sectionConfig, viewScope)),
+                      f.operator,
+                      f.values,
+                    );
                   });
               };
 
