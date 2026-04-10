@@ -258,11 +258,11 @@ To explicitly and only select hidden or diagnostic and config entities:
 ```yaml
 cards:
   - light.* # all lights
-  - light.*:hide([state=off]) # all lights that are turned on
+  - light.*:not([label=nightlight|ambientlight]):hide([state=off]) # all lights, that are not marked as nightlight or ambient light, which are currently turned on
   - sensor.*battery # sensors with entity IDs ending in "battery"
   - sensor.*battery:hide([state>10]) # sensors with entity IDs ending in "battery" and a battery level below 10
   - light.*[brightness=*] # dimmable lights
-  - binary_sensor.*contact[device_class=door|window]:not([label=indoors]) # Door or window sensors excluding those marked as indoors
+  - binary_sensor.*contact[device_class=door|window]:not([label=indoors]):hide([state=off]) # Doors or windows, excluding those marked as indoors, that are currently open
   - <device_id> # all entities of a specific device
 ```
 
