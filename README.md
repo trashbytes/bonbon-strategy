@@ -237,8 +237,13 @@ Entity selectors use wildcards and CSS-like attribute filters to match entities 
 
 **Multiple filters (AND logic):**
 
+- `[filter1][filter2][filter3]` - all must match
+
+**Pseudo functions:**
+
 ```
-[filter1][filter2][filter3]  # all must match
+- `:not(<selector>)` - excludes entities matching `<selector>` at startup
+- `:hide(<selector>)` - dynamically hides entities matching `<selector>` at runtime
 ```
 
 **Default filtering behavior:**
@@ -268,7 +273,7 @@ cards:
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
-**Important note:** You can use pseudo functions `:not()` and `:hide()`. `:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long. Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard, which means that the separator will also always be there (if enabled), even if no buttons are currently visible in that section. The `hide()` pseudo function also only works with standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
+**Important note:** `:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long. Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard, which means that the separator will also always be there (if enabled), even if no buttons are currently visible in that section. The `hide()` pseudo function also only works with standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
 
 ### Styling and Colors
 
