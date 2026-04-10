@@ -1,10 +1,62 @@
 export function createEntityApi(ctx = {}) {
   const context = {
     entities: ctx.entities || {},
-    devices: ctx.devices || {},
     states: ctx.states || {},
-    labels: ctx.labels || {},
+    devices: ctx.devices || {},
+    floors: ctx.floors || {},
+    areas: ctx.areas || {},
   };
+
+  function prepareEntities(entities, states, devices, floors, areas) {
+    context.states = states || context.states;
+    context.devices = devices || context.devices;
+    context.floors = floors || context.floors;
+    context.areas = areas || context.areas;
+    return Object.keys(entities).reduce((acc, entity_id) => {
+      const originalEntity = entities[entity_id];
+      const device = context.devices?.[originalEntity?.device_id];
+      const area_id = originalEntity?.area_id || device?.area_id;
+      const area = context.areas?.[area_id]?.name;
+      const floor_id = context.areas[area_id]?.floor_id;
+      const floor = context.floors?.[floor_id]?.name;
+      const name =
+        context.states?.[originalEntity.entity_id]?.attributes?.friendly_name ||
+        originalEntity.name ||
+        originalEntity.entity_id;
+      const updatedEntity = {
+        ...originalEntity,
+        area_id: area_id,
+        area: area,
+        floor_id: floor_id,
+        floor: floor,
+        name: name,
+        labels: [...(originalEntity?.labels || []), ...(device?.labels || [])],
+      };
+      if (updatedEntity.area_id) {
+        updatedEntity.floor_id = context.areas?.[updatedEntity.area_id]?.floor_id;
+      }
+      updatedEntity.hasLabel = function (label) {
+        const labels = [label, `bonbon_${label}`];
+        if (this.labels?.some((l) => labels.includes(l))) return true;
+        if (this.device_id && context.devices?.[this.device_id]?.labels?.some((l) => labels.includes(l))) return true;
+        return false;
+      };
+      acc[entity_id] = updatedEntity;
+      return acc;
+    }, {});
+  }
+  context.entities = prepareEntities(context.entities);
+
+  function getLabels(entities) {
+    entities = entities || context.entities;
+    return Object.values(entities).reduce((acc, e) => {
+      (e.labels ?? []).forEach((label) => {
+        (acc[label] ??= []).push(e);
+      });
+      return acc;
+    }, {});
+  }
+  context.labels = getLabels();
 
   function getOrderNumber(c, sectionConfig = {}, viewScope = '') {
     const allLabels = [];
@@ -53,30 +105,28 @@ export function createEntityApi(ctx = {}) {
     return Infinity;
   }
 
-  function getEntityDisplayName(c) {
-    const name =
-      context.states?.[c?.entity?.entity_id]?.attributes?.friendly_name ||
-      c?.entity?.name ||
-      c?.entity?.entity_id ||
-      '';
-    return name;
-  }
-
   function sortByName(list) {
     return (list || []).sort((a, b) => {
-      const nameA = getEntityDisplayName(a);
-      const nameB = getEntityDisplayName(b);
+      const nameA = a?.entity?.name;
+      const nameB = b?.entity?.name;
       return nameA.localeCompare(nameB);
     });
   }
 
-  function isHiddenInScope(c, sectionConfig = {}, viewScope = '') {
-    const scopes = [
-      viewScope ? 'hidden_' + viewScope : '',
-      sectionConfig?.key ? 'hidden_' + sectionConfig?.key : '',
-      viewScope && sectionConfig?.key ? 'hidden_' + viewScope + '_' + sectionConfig?.key : '',
-    ].filter(Boolean);
-    return scopes.some((scope) => c?.entity?.hasLabel(scope));
+  function isHidden(c, sectionConfig = {}, viewScope = '') {
+    const scopes = ['']
+      .concat(
+        [
+          viewScope ? '_' + viewScope : '',
+          sectionConfig?.key ? '_' + sectionConfig?.key : '',
+          viewScope && sectionConfig?.key ? '_' + viewScope + '_' + sectionConfig?.key : '',
+        ].filter(Boolean),
+      )
+      .map((scope) => {
+        return ['hidden' + scope, 'bonbon_hidden' + scope];
+      })
+      .flat();
+    return c?.entity?.hidden || scopes.some((scope) => c?.entity?.hasLabel(scope));
   }
 
   function sortEntities(list, sectionConfig = {}, viewScope = '') {
@@ -112,15 +162,20 @@ export function createEntityApi(ctx = {}) {
       objects: groups[devId],
     }));
     groupEntries.sort((a, b) => {
-      const firstA = a.objects && a.objects.length ? getEntityDisplayName(a.objects[0]) : '';
-      const firstB = b.objects && b.objects.length ? getEntityDisplayName(b.objects[0]) : '';
+      const firstA = a.objects && a.objects.length ? a.objects[0]?.entity?.name : '';
+      const firstB = b.objects && b.objects.length ? b.objects[0]?.entity?.name : '';
       return firstA.localeCompare(firstB);
     });
     const groupedObjects = groupEntries.flatMap((g) => g.objects);
     return [...withOrder, ...groupedObjects];
   }
 
-  function resolveEntities(c, sectionConfig = {}, viewScope = '', states = null) {
+  function resolveEntities(c, sectionConfig = {}, viewScope = '', entities, states, devices, floors, areas) {
+    context.entities = entities ? { ...context.entities, ...prepareEntities(entities) } : context.entities;
+    context.states = states || context.states;
+    context.devices = devices || context.devices;
+    context.floors = floors || context.floors;
+    context.areas = areas || context.areas;
     return sortEntities(
       (Array.isArray(c) ? c : [c])
         .map(function (c) {
@@ -128,21 +183,40 @@ export function createEntityApi(ctx = {}) {
             const elements = [];
             if (typeof c === 'string') {
               const selector = c;
-              const hideMatch = c.match(/:hide\(([^)]*)\)/);
-              let hide = hideMatch ? hideMatch[1].trim() : '';
-              c = c.replace(/:hide\([^)]*\)/g, '').trim();
+              let hideSelectors = [];
+              c = c.replace(/:hide\(([^)]*)\)/g, (_, hideSelector) => {
+                const normalizedSelector = (hideSelector || '').trim();
+                if (normalizedSelector) {
+                  hideSelectors.push(normalizedSelector);
+                }
+                return '';
+              });
+              // let hide = hideSelectors.join('&&');
 
               let excludedEntity_ids = new Set();
 
-              if (c.includes(':not(')) {
-                const notMatch = c.match(/^(.*):not\(([^)]+)\)$/);
-                if (notMatch) {
-                  c = notMatch[1].trim();
-                  const notSelector = notMatch[2];
-                  const excludedElements = resolveEntities(notSelector, sectionConfig, viewScope);
-                  excludedEntity_ids = new Set(excludedElements.map((e) => e.entity?.entity_id).filter(Boolean));
+              const notSelectors = [];
+              c = c.replace(/:not\(([^)]*)\)/g, (_, notSelector) => {
+                const normalizedSelector = (notSelector || '').trim();
+                if (normalizedSelector) {
+                  notSelectors.push(normalizedSelector);
                 }
+                return '';
+              });
+
+              if (notSelectors.length) {
+                notSelectors.forEach((notSelector) => {
+                  const excludedElements = resolveEntities(notSelector, sectionConfig, viewScope);
+                  excludedElements.forEach((excluded) => {
+                    const excludedEntityId = excluded.entity?.entity_id;
+                    if (excludedEntityId) {
+                      excludedEntity_ids.add(excludedEntityId);
+                    }
+                  });
+                });
               }
+
+              c = c.trim();
 
               const attrFilters = [];
               const attrFilterMatches = c.match(/\[([^\]]+)\]/g);
@@ -183,38 +257,46 @@ export function createEntityApi(ctx = {}) {
                     }
                   }
                 });
-                if (hide.length && hideAttrFilters.length) {
-                  hide = hideAttrFilters.join('') + hide;
+                if (hideSelectors.length && hideAttrFilters.length) {
+                  hideSelectors = hideSelectors.map((hs) => hideAttrFilters.join('') + hs);
                 }
               }
+              const hide = hideSelectors.join('&&');
 
               const getAttributeValue = (entity, key) => {
+                if (key == 'label') {
+                  key = 'labels';
+                }
                 if (!entity) return undefined;
-                if (key === 'name' || key === 'friendly_name') return getEntityDisplayName({ entity });
                 const attrFromEntity = entity[key];
                 if (attrFromEntity !== undefined) return attrFromEntity;
-                const stateVal = (states || context.states)?.[entity.entity_id]?.[key];
+                const stateVal = context.states?.[entity.entity_id]?.[key];
                 if (stateVal !== undefined) return stateVal;
-                const stateAttr = (states || context.states)?.[entity.entity_id]?.attributes?.[key];
+                const stateAttr = context.states?.[entity.entity_id]?.attributes?.[key];
                 if (stateAttr !== undefined) return stateAttr;
                 return entity[key];
               };
 
               const hasAttribute = (entity, key) => {
+                if (key == 'label') {
+                  key = 'labels';
+                }
                 if (!entity) return false;
-                if (key === 'name' || key === 'friendly_name') return true;
                 if (Object.prototype.hasOwnProperty.call(entity, key)) return true;
-                const stateVals = (states || context.states)?.[entity.entity_id];
+                const stateVals = context.states?.[entity.entity_id];
                 if (stateVals && Object.prototype.hasOwnProperty.call(stateVals, key)) return true;
-                const stateAttrs = (states || context.states)?.[entity.entity_id]?.attributes;
+                const stateAttrs = context.states?.[entity.entity_id]?.attributes;
                 if (stateAttrs && Object.prototype.hasOwnProperty.call(stateAttrs, key)) return true;
                 return false;
               };
 
               const matchValue = (actualValue, operator, allowedValues) => {
-                const a = String(actualValue).toLowerCase();
-                return allowedValues.some((v) => {
-                  const val = String(v).toLowerCase();
+                const actualValues = Array.isArray(actualValue) ? actualValue : [actualValue];
+
+                const matchesSingleValue = (singleValue, valueToMatch) => {
+                  const a = String(singleValue).toLowerCase();
+                  const val = String(valueToMatch).toLowerCase();
+
                   if (val === '*') return true;
                   if (operator === '=') return a === val;
                   if (operator === '*=') return a.includes(val);
@@ -228,7 +310,11 @@ export function createEntityApi(ctx = {}) {
                     if (operator === '<=') return cmp <= 0;
                   }
                   return false;
-                });
+                };
+
+                return actualValues.some((singleValue) =>
+                  allowedValues.some((valueToMatch) => matchesSingleValue(singleValue, valueToMatch)),
+                );
               };
 
               const isTruthy = (value) => {
@@ -260,17 +346,15 @@ export function createEntityApi(ctx = {}) {
 
               const checkHidden = (entity) => {
                 const hasHiddenFilter = attrFilters.some((f) => f.key === 'hidden');
-                if (!hasHiddenFilter)
-                  return !entity?.isHidden() && !isHiddenInScope({ entity: entity }, sectionConfig, viewScope);
+                if (!hasHiddenFilter) return !isHidden({ entity: entity }, sectionConfig, viewScope);
 
                 return attrFilters
                   .filter((f) => f.key === 'hidden')
                   .every((f) => {
-                    if (f.operator === 'exists-truthy')
-                      return entity?.isHidden() || isHiddenInScope({ entity: entity }, sectionConfig, viewScope);
+                    if (f.operator === 'exists-truthy') return isHidden({ entity: entity }, sectionConfig, viewScope);
                     if (f.operator === 'exists-any') return true;
                     return matchValue(
-                      String(entity?.isHidden() || isHiddenInScope({ entity: entity }, sectionConfig, viewScope)),
+                      String(isHidden({ entity: entity }, sectionConfig, viewScope)),
                       f.operator,
                       f.values,
                     );
@@ -383,8 +467,13 @@ export function createEntityApi(ctx = {}) {
     );
   }
 
-  function resolveEntity(c, sectionConfig = {}, viewScope = '', states = null) {
-    return resolveEntities(c, sectionConfig, viewScope, states)[0];
+  function resolveEntity(c, sectionConfig = {}, viewScope = '', entities, states, devices, floors, areas) {
+    context.entities = entities ? { ...context.entities, ...prepareEntities(entities) } : context.entities;
+    context.states = states || context.states;
+    context.devices = devices || context.devices;
+    context.floors = floors || context.floors;
+    context.areas = areas || context.areas;
+    return resolveEntities(c, sectionConfig, viewScope)[0];
   }
 
   function inArea(c, area) {
@@ -442,6 +531,8 @@ export function createEntityApi(ctx = {}) {
   }
 
   return {
+    getLabels,
+    prepareEntities,
     sortByName,
     sortEntities,
     resolveEntities,
