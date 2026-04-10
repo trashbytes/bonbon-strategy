@@ -241,10 +241,10 @@ Entity selectors use wildcards and CSS-like attribute filters to match entities 
 
 **Pseudo functions:**
 
-```
 - `:not(<selector>)` - excludes entities matching `<selector>` at startup
 - `:hide(<selector>)` - dynamically hides entities matching `<selector>` at runtime
-```
+
+Note: While you can chain pseudo functions, you cannot nest them!
 
 **Default filtering behavior:**
 
