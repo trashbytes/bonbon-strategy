@@ -18,56 +18,16 @@ export class BonbonStrategy {
     const globals = {};
     window.bonbon[panelUrl] = globals;
 
-    const states = hass.states;
-    const devices = hass.devices;
-    const floors = hass.floors;
-    const areas = Object.keys(hass.areas).reduce((acc, area_id) => {
-      const area = hass.areas[area_id];
-      const colorLabel = area.labels?.find((label) => /^(bonbon_)?color_([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(label));
-      acc[area_id] = {
-        ...area,
-        label: colorLabel,
-      };
-      return acc;
-    }, {});
-    const entities = Object.keys(hass.entities).reduce((acc, entity_id) => {
-      const originalEntity = hass.entities[entity_id];
-      const device = devices?.[originalEntity?.device_id];
-      const updatedEntity = {
-        ...originalEntity,
-        area_id: originalEntity?.area_id || device?.area_id,
-        labels: [...(originalEntity?.labels || []), ...(device?.labels || [])],
-      };
-      if (updatedEntity.area_id) {
-        updatedEntity.floor_id = areas?.[updatedEntity.area_id]?.floor_id;
-      }
-      updatedEntity.hasLabel = function (label) {
-        const labels = [label, `bonbon_${label}`];
-        if (this.labels?.some((l) => labels.includes(l))) return true;
-        if (this.device_id && devices?.[this.device_id]?.labels?.some((l) => labels.includes(l))) return true;
-        return false;
-      };
-      updatedEntity.isHidden = function () {
-        return updatedEntity.hidden || updatedEntity.hasLabel('hidden');
-      };
-      acc[entity_id] = updatedEntity;
-      return acc;
-    }, {});
-    const labels = Object.values(entities).reduce((acc, e) => {
-      (e.labels ?? []).forEach((label) => {
-        (acc[label] ??= []).push(e);
-      });
-      return acc;
-    }, {});
-
-    const { resolveEntity, resolveEntities, onFloor, inArea } = createEntityApi({
-      entities,
-      devices,
-      states,
-      labels,
-      floors,
-      areas,
+    const { prepareEntities, resolveEntity, resolveEntities, onFloor, inArea } = createEntityApi({
+      entities: hass.entities,
+      devices: hass.devices,
+      states: hass.states,
+      floors: hass.floors,
+      areas: hass.areas,
     });
+
+    const entities = prepareEntities(hass.entities, hass.states, hass.devices, hass.floors, hass.areas);
+
     globals.resolveEntities = resolveEntities;
     globals.resolveEntity = resolveEntity;
     const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl);
@@ -93,7 +53,7 @@ export class BonbonStrategy {
       const styles = getStyles(config.styles);
       const cssVars = getVariables(config.styles);
 
-      Object.values(areas)
+      Object.values(hass.areas)
         .filter((a) => !a.labels?.includes('hidden') && !a.labels?.includes('bonbon_hidden'))
         .map(function (area, index, areas) {
           const lightAreaColors = getAreaColors(area, index, areas, false, config.styles);
@@ -200,16 +160,16 @@ export class BonbonStrategy {
               } else {
                 weather_entity = resolveEntity(weather_entity_id);
               }
-              if (weather_entity && states[weather_entity?.entity?.entity_id]) {
+              if (weather_entity && hass.states[weather_entity?.entity?.entity_id]) {
                 if (!sectionConfig.hide_separator) {
                   const separatorName = !sectionConfig.show_weather_card
                     ? entities[weather_entity?.entity?.entity_id]?.name ||
-                      states[weather_entity?.entity?.entity_id]?.attributes?.friendly_name ||
-                      devices[entities[weather_entity?.entity?.entity_id]?.device_id]?.name ||
+                      hass.states[weather_entity?.entity?.entity_id]?.attributes?.friendly_name ||
+                      hass.devices[entities[weather_entity?.entity?.entity_id]?.device_id]?.name ||
                       sectionConfig.name
                     : sectionConfig.name;
                   const separatorIcon = !sectionConfig.show_weather_card
-                    ? getWeatherIcon(states[weather_entity?.entity?.entity_id]?.state)
+                    ? getWeatherIcon(hass.states[weather_entity?.entity?.entity_id]?.state)
                     : sectionConfig.icon;
                   const separatorSubButtons = [
                     !sectionConfig.show_weather_card
@@ -285,7 +245,7 @@ export class BonbonStrategy {
               break;
             case 'bonbon_areas':
               const _floors = Object.values({
-                ...(floors || {}),
+                ...(hass.floors || {}),
                 _areas: {
                   name: sectionConfig.name,
                   floor_id: '_areas',
@@ -305,7 +265,7 @@ export class BonbonStrategy {
                 }
               });
 
-              const _areas = Object.values(areas)
+              const _areas = Object.values(hass.areas)
                 .filter((a) => !a.labels?.includes('hidden') && !a.labels?.includes('bonbon_hidden'))
                 .map(function (area, index, areas) {
                   area.categorizedEntityIds = [];

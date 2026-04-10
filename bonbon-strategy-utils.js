@@ -189,8 +189,8 @@ export function getAreaColors(area, index, areas, isDark, styles) {
   }
   const step = isDark ? 8 : 3;
 
-  if (area.label) {
-    const hexMatch = area.label.match(/^(bonbon_)?color_([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+  for (const label of area.labels) {
+    const hexMatch = label.match(/^(bonbon_)?color_([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
     if (hexMatch) {
       const hexCode = `#${hexMatch[2]}`;
       return getColorsFromColor(hexCode, isDark);

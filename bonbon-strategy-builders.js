@@ -78,10 +78,17 @@ export function createButtonCard(c, options = {}) {
     base.entity = c.entity?.entity_id;
     if (base.entity && c?.hide) {
       base.styles =
-        '${this.parentElement ? {{globals}}.resolveEntity("' +
+        '${hass.entities["' +
         base.entity +
+        '"] && this.parentElement ? "' +
         c?.hide +
-        '", null, null, hass.states) ? this.parentElement.style.display = "none" : this.parentElement.style.display = "block" : ""}';
+        '".split("&&").map((s) => {return {{globals}}.resolveEntity("' +
+        base.entity +
+        '" + s, null, null, {"' +
+        base.entity +
+        '": hass.entities["' +
+        base.entity +
+        '"]}, hass.states, hass.devices, hass.floors, hass.areas)}).filter(Boolean).length ? this.parentElement.style.display = "none" : this.parentElement.style.display = "block" : ""}';
     }
 
     const isClimate = c.entity.entity_id.startsWith('climate.');
