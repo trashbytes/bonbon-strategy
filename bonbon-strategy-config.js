@@ -9,6 +9,12 @@ export const defaultConfig = {
     background_image_light: null,
     background_image_dark: null,
   },
+  actions: {
+    default: {
+      icon: 'none',
+      button: 'auto',
+    },
+  },
   views: {
     bonbon_home: {
       max_columns: 1,
@@ -32,6 +38,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 2,
           disabled: false,
+          cards: 'person.*',
         },
         bonbon_favorites: {
           name: 'Favorites',
@@ -42,6 +49,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 2,
           disabled: false,
+          cards: '*[label=favorite]',
         },
         bonbon_areas: {
           name: 'Areas',
@@ -54,10 +62,11 @@ export const defaultConfig = {
           show_temperature: true,
           show_humidity: true,
           show_co2: true,
-          show_floor_lights_toggle: 'when-on',
-          show_area_lights_toggle: 'when-on',
           disabled: false,
           bonbon_colors: true,
+          floor_lights: 'light.*:not([label=nightlight])',
+          show_floor_lights_toggle: 'when-on',
+          show_area_lights_toggle: 'when-on',
         },
       },
     },
@@ -74,8 +83,11 @@ export const defaultConfig = {
           max_columns: 3,
           show_graphs: true,
           show_temperature: true,
+          temperature_entity: 'auto',
           show_humidity: true,
+          humidity_entity: 'auto',
           show_co2: true,
+          co2_entity: 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]',
           disabled: false,
         },
         bonbon_lights: {
@@ -86,8 +98,10 @@ export const defaultConfig = {
           hide_separator: false,
           min_columns: 1,
           max_columns: 2,
-          show_area_lights_toggle: 'always',
           disabled: false,
+          cards: 'light.*',
+          area_lights: 'light.*:not([label=nightlight])',
+          show_area_lights_toggle: 'always',
         },
         bonbon_switches: {
           name: 'Switches',
@@ -98,6 +112,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 2,
           disabled: false,
+          cards: 'switch.*',
         },
         bonbon_media: {
           name: 'Media Players',
@@ -108,6 +123,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 1,
           disabled: false,
+          cards: 'media_player.*',
         },
         bonbon_climate: {
           name: 'Climate',
@@ -118,6 +134,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 1,
           disabled: false,
+          cards: 'climate.*',
         },
         bonbon_covers: {
           name: 'Shutters & Shades',
@@ -128,6 +145,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 1,
           disabled: false,
+          cards: 'cover.*',
         },
         bonbon_openings: {
           name: 'Doors & Windows',
@@ -138,6 +156,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 2,
           disabled: false,
+          cards: 'binary_sensor.*[device_class=door|garage_door|window|opening]',
         },
         bonbon_miscellaneous: {
           name: 'Miscellaneous',
@@ -148,6 +167,7 @@ export const defaultConfig = {
           min_columns: 1,
           max_columns: 2,
           disabled: false,
+          cards: '*',
         },
       },
     },
