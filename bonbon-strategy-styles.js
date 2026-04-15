@@ -1,4 +1,4 @@
-export function createStylesApi(panelUrl) {
+export function createStylesApi(panelUrl, config) {
   const metaScheme = document.querySelector('meta[name="color-scheme"]');
   const css = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] || ''), '');
   const isDark = () => {
@@ -15,13 +15,13 @@ export function createStylesApi(panelUrl) {
   const cssVariable = (suffix) => `--bonbon-${panelUrl}-${suffix}`;
   const cssValue = (suffix) => `var(${cssVariable(suffix)})`;
 
-  const getVariables = (config) => ({
+  const getVariables = () => ({
     light: {
-      [cssVariable('background-image')]: config?.background_image_light
-        ? 'top / cover no-repeat fixed url("' + config?.background_image_light + '")'
+      [cssVariable('background-image')]: config?.styles?.background_image_light
+        ? 'top / cover no-repeat fixed url("' + config?.styles?.background_image_light + '")'
         : 'none',
-      [cssVariable('primary-text-color')]: config?.card_text_color_light || '#222',
-      [cssVariable('card-background')]: config?.card_background_color_light || '#fff',
+      [cssVariable('primary-text-color')]: config?.styles?.card_text_color_light || '#222',
+      [cssVariable('card-background')]: config?.styles?.card_background_color_light || '#fff',
       [cssVariable('hover-overlay-background')]: 'rgba(0,0,0,0.02)',
       [cssVariable('sub-button-shadow-opacity')]: '0.05',
       [cssVariable('icon-color-off')]: cssValue('primary-text-color'),
@@ -32,14 +32,14 @@ export function createStylesApi(panelUrl) {
       [cssVariable('box-shadow')]: `0 2px 6px rgba(0, 0, 0, 0.05),
         inset 0 0.5px 0 0 rgba(255, 255, 255, 0.2),
         inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.10)`,
-      [cssVariable('primary-accent-color')]: config?.primary_accent_color_light,
+      [cssVariable('primary-accent-color')]: config?.styles?.primary_accent_color_light,
     },
     dark: {
-      [cssVariable('background-image')]: config?.background_image_dark
-        ? 'top / cover no-repeat fixed url("' + config?.background_image_dark + '")'
+      [cssVariable('background-image')]: config?.styles?.background_image_dark
+        ? 'top / cover no-repeat fixed url("' + config?.styles?.background_image_dark + '")'
         : 'none',
-      [cssVariable('primary-text-color')]: config?.card_text_color_dark || '#ddd',
-      [cssVariable('card-background')]: config?.card_background_color_dark || '#222',
+      [cssVariable('primary-text-color')]: config?.styles?.card_text_color_dark || '#ddd',
+      [cssVariable('card-background')]: config?.styles?.card_background_color_dark || '#222',
       [cssVariable('hover-overlay-background')]: 'rgba(255,255,255,0.02)',
       [cssVariable('sub-button-shadow-opacity')]: '0.2',
       [cssVariable('icon-color-off')]: cssValue('primary-text-color'),
@@ -50,11 +50,11 @@ export function createStylesApi(panelUrl) {
       [cssVariable('box-shadow')]: `0 2px 6px rgba(0, 0, 0, 0.2),
         inset 0 0.5px 0 0 rgba(255, 255, 255, 0.01),
         inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.8)`,
-      [cssVariable('primary-accent-color')]: config?.primary_accent_color_dark,
+      [cssVariable('primary-accent-color')]: config?.styles?.primary_accent_color_dark,
     },
   });
 
-  const getStyles = (config) => {
+  const getStyles = () => {
     const shadowOverlay = css`
       border-radius: ${cssValue('border-radius')};
       pointer-events: none;
@@ -225,7 +225,7 @@ export function createStylesApi(panelUrl) {
             display: none;
           }
           .bubble-main-icon-container {
-            pointer-events: none;
+            cursor: pointer;
           }
           .bubble-container,
           .bubble-button-container {

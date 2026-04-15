@@ -16,9 +16,11 @@ export function createEntityApi(ctx = {}) {
       const originalEntity = entities[entity_id];
       const device = context.devices?.[originalEntity?.device_id];
       const area_id = originalEntity?.area_id || device?.area_id;
-      const area = context.areas?.[area_id]?.name;
+      const area_name = context.areas?.[area_id]?.name;
       const floor_id = context.areas[area_id]?.floor_id;
-      const floor = context.floors?.[floor_id]?.name;
+      const floor_name = context.floors?.[floor_id]?.name;
+      const device_name = device?.name || '';
+      const device_id = device?.id || '';
       const name =
         context.states?.[originalEntity.entity_id]?.attributes?.friendly_name ||
         originalEntity.name ||
@@ -26,9 +28,11 @@ export function createEntityApi(ctx = {}) {
       const updatedEntity = {
         ...originalEntity,
         area_id: area_id,
-        area: area,
+        area: area_name,
         floor_id: floor_id,
-        floor: floor,
+        floor: floor_name,
+        device: device_name,
+        device_id: device_id,
         name: name,
         labels: [...(originalEntity?.labels || []), ...(device?.labels || [])],
       };
@@ -37,8 +41,7 @@ export function createEntityApi(ctx = {}) {
       }
       updatedEntity.hasLabel = function (label) {
         const labels = [label, `bonbon_${label}`];
-        if (this.labels?.some((l) => labels.includes(l))) return true;
-        if (this.device_id && context.devices?.[this.device_id]?.labels?.some((l) => labels.includes(l))) return true;
+        if (updatedEntity.labels?.some((l) => labels.includes(l))) return true;
         return false;
       };
       acc[entity_id] = updatedEntity;
@@ -476,6 +479,26 @@ export function createEntityApi(ctx = {}) {
     return resolveEntities(c, sectionConfig, viewScope)[0];
   }
 
+  function hasScopeFilter(selector, scopeKeys = ['floor_id', 'area_id']) {
+    if (typeof selector !== 'string') return false;
+    return scopeKeys.some((scopeKey) => selector.includes(`[${scopeKey}=`));
+  }
+
+  function withDefaultScopeFilter(selector, scopeFilter, scopeKeys = ['floor_id', 'area_id']) {
+    if (typeof selector !== 'string' || !scopeFilter) return selector;
+    return hasScopeFilter(selector, scopeKeys) ? selector : selector + scopeFilter;
+  }
+
+  function withAreaScope(selector, areaId, scopeKeys = ['floor_id', 'area_id']) {
+    if (!areaId) return selector;
+    return withDefaultScopeFilter(selector, `[area_id=${areaId}]`, scopeKeys);
+  }
+
+  function withFloorScope(selector, floorId, scopeKeys = ['floor_id', 'area_id']) {
+    if (!floorId) return selector;
+    return withDefaultScopeFilter(selector, `[floor_id=${floorId}]`, scopeKeys);
+  }
+
   function inArea(c, area) {
     const areaId = area?.area_id || area;
 
@@ -537,6 +560,10 @@ export function createEntityApi(ctx = {}) {
     sortEntities,
     resolveEntities,
     resolveEntity,
+    hasScopeFilter,
+    withDefaultScopeFilter,
+    withAreaScope,
+    withFloorScope,
     inArea,
     onFloor,
   };

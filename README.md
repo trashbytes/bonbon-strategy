@@ -117,6 +117,12 @@ strategy:
       background_image_light: null # background image for light mode (null | path/to/image)
       background_image_dark: null # background image for dark mode (null | path/to/image)
 
+    # Button actions
+    actions:
+      default: # the default config all domains, you can add overrides per domain (note: graphs will always call 'more-info')
+        icon: none # action on icon tap ('auto' | 'toggle' | 'more-info' | 'none')
+        button: auto # action on button tap ('none' | 'toggle' | 'more-info' | 'auto')
+
     # View definitions
     views:
       view_key:
@@ -134,6 +140,7 @@ strategy:
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
             separator_buttons: null # buttons to add to a separator, only in custom sections
+            prefix: false # name prefix, useful for "Ceiling light" etc., which you may have tons of ('area' | 'floor' | 'device' | false)
             cards: # custom cards and entities, only in custom sections
               - entity_id
               - light.*
