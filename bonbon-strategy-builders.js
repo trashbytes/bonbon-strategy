@@ -62,12 +62,13 @@ export function createBuildersApi(panelUrl, config) {
         type: 'weather-forecast',
         entity: c.entity.entity_id,
         show_current: true,
-        show_forecast: c.entity.hasLabel('forecast_daily') || c.entity.hasLabel('forecast_hourly'),
+        show_forecast:
+          c.entity.hasLabel('forecast_daily') || c.entity.hasLabel('forecast_hourly') || options.show_forecast,
         forecast_type: c.entity.hasLabel('forecast_daily')
           ? 'daily'
           : c.entity.hasLabel('forecast_hourly')
             ? 'hourly'
-            : undefined,
+            : options.show_forecast,
       };
     }
     if (

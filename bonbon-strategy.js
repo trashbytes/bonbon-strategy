@@ -331,8 +331,17 @@ export class BonbonStrategy {
               cards: [],
               bonbon_column: normalizeSectionColumn(sectionConfig.column),
             };
+            if (key == 'bonbon_weather') {
+              console.log(sectionConfig.cards);
+            }
             const cards = resolveEntities(sectionConfig.cards, sectionConfig, viewKey).map(function (c) {
-              return createButtonCard(c, sectionConfig, sectionConfig.show_graphs ? { show_graph: true } : {});
+              if (key == 'bonbon_weather') {
+                console.log(c);
+              }
+              return createButtonCard(c, sectionConfig, {
+                show_graph: sectionConfig.show_graphs,
+                show_forecast: sectionConfig.show_forecast,
+              });
             });
 
             if (!sectionConfig.hide_separator && (cards.length || sectionConfig.show_if_empty)) {
@@ -377,9 +386,14 @@ export class BonbonStrategy {
                   : ['bubbleSeparatorLightsSubButtonDefault']
                 : [];
               if (key == 'bonbon_weather') {
-                sectionConfig.icon =
-                  getWeatherIcon(hass.states[separatorSubButtons?.[0]?.entity?.entity_id]?.state) || sectionConfig.icon;
-                sectionConfig.name = separatorSubButtons?.[0]?.entity?.name || sectionConfig.name;
+                if (sectionConfig.icon == 'auto') {
+                  sectionConfig.icon =
+                    getWeatherIcon(hass.states[separatorSubButtons?.[0]?.entity?.entity_id]?.state) ||
+                    'mdi:cloud-question';
+                }
+                if (sectionConfig.name == 'auto') {
+                  sectionConfig.name = separatorSubButtons?.[0]?.entity?.name || 'Weather';
+                }
               }
               section.cards.push(
                 createSeparatorCard(

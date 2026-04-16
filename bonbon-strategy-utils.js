@@ -400,23 +400,26 @@ export function applySectionColumns(sections, maxColumns) {
 
 export function upgradeConfig(config) {
   const bonbon_weather = config.views.bonbon_home.sections.bonbon_weather;
-  if (bonbon_weather.show_weather_card == false) {
+  if (bonbon_weather.show_weather_card === false) {
     bonbon_weather.show_if_empty = true;
     bonbon_weather.separator_buttons =
       bonbon_weather.weather_entity_id == 'auto' ? 'weather.*' : bonbon_weather.weather_entity_id;
   } else {
-    bonbon_weather.cards = bonbon_weather.weather_entity_id == 'auto' ? 'weather.*' : bonbon_weather.weather_entity_id;
-    bonbon_weather.show_forecast = bonbon_weather.show_weather_card;
+    bonbon_weather.cards =
+      bonbon_weather.weather_entity_id == 'auto'
+        ? 'weather.*'
+        : bonbon_weather.weather_entity_id || bonbon_weather.cards;
+    bonbon_weather.show_forecast = bonbon_weather.show_weather_card || bonbon_weather.show_forecast;
   }
 
   const bonbon_areas = config.views.bonbon_home.sections.bonbon_areas;
-  if (bonbon_areas.show_temperature == false) {
+  if (bonbon_areas.show_temperature === false) {
     bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter((c) => c != 'area.temperature_entity_id');
   }
-  if (bonbon_areas.show_humidity == false) {
+  if (bonbon_areas.show_humidity === false) {
     bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter((c) => c != 'area.humidity_entity_id');
   }
-  if (bonbon_areas.show_co2 == false) {
+  if (bonbon_areas.show_co2 === false) {
     bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter(
       (c) => c != 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]',
     );
@@ -438,10 +441,10 @@ export function upgradeConfig(config) {
   if (bonbon_environment.show_temperature === false) {
     bonbon_environment.cards = bonbon_environment.cards.filter((c) => c != 'area.temperature_entity_id');
   }
-  if (bonbon_environment.show_humidity == false) {
+  if (bonbon_environment.show_humidity === false) {
     bonbon_environment.cards = bonbon_environment.cards.filter((c) => c != 'area.humidity_entity_id');
   }
-  if (bonbon_environment.show_co2 == false) {
+  if (bonbon_environment.show_co2 === false) {
     bonbon_environment.cards = bonbon_environment.cards.filter(
       (c) => c != 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]',
     );

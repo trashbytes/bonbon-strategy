@@ -20,8 +20,8 @@ export const defaultConfig = {
       max_columns: 1,
       sections: {
         bonbon_weather: {
-          name: 'Weather',
-          icon: 'mdi:cloud-question',
+          name: 'auto',
+          icon: 'auto',
           order: 1,
           column: 'auto',
           hide_separator: false,
@@ -29,6 +29,7 @@ export const defaultConfig = {
           show_if_empty: true,
           separator_buttons: 'weather.*',
           show_forecast: false,
+          cards: 'weather.*',
         },
         bonbon_persons: {
           name: 'Persons',
