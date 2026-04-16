@@ -116,7 +116,10 @@ export function createStylesApi(panelUrl, config) {
         --bubble-state-climate-auto-color: ${cssValue('primary-accent-color')};
       }
     `;
-    const areaSubButtonBase = css`
+    const bubbleAreaBase = css`
+      .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
+        color: #fff !important;
+      }
       .fixed-top .bubble-sub-button-container {
         margin-top: 8px;
       }
@@ -371,58 +374,58 @@ export function createStylesApi(panelUrl, config) {
             display: none !important;
           }
         `,
-      bubbleAreaSubButtonAlways:
-        areaSubButtonBase +
-        css`
-          .bubble-sub-button-container.fixed-top .bubble-sub-button {
-            background: var(--area-medium-color) !important;
-          }
-          .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-          .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-            background: var(--area-shade-color) !important;
-          }
-          .bubble-sub-button-container.fixed-top .background-on {
-            background: var(--area-medium-color) !important;
-          }
-          .bubble-container:hover .bubble-sub-button-container.fixed-top .background-on {
-            background: var(--area-shade-color) !important;
-          }
-          .bubble-sub-button-container.fixed-top .bubble-sub-button:not(.background-on),
-          .bubble-sub-button-container.fixed-top .bubble-sub-button.background-on ~ .bubble-sub-button.background-on {
-            display: none !important;
-          }
-        `,
-      bubbleAreaSubButtonDefault:
-        areaSubButtonBase +
-        css`
-          .bubble-sub-button-container.fixed-top .bubble-sub-button,
-          .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-            background: var(--area-medium-color) !important;
-          }
-          .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-          .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-            background: var(--area-shade-color) !important;
-          }
-          .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button,
-          .bubble-container:hover .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
-            background: var(--bubble-default-color) !important;
-            color: #fff !important;
-          }
-          .bubble-sub-button-container.fixed-top:has(.background-on)
-            .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-          .bubble-sub-button-container.fixed-top:has(.background-on)
-            .bubble-sub-button[data-tap-action*='light.turn_off']
-            ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-            display: none !important;
-          }
-          .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-            .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-          .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-            .bubble-sub-button[data-tap-action*='light.turn_on']
-            ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-            display: none !important;
-          }
-        `,
+      bubbleAreaBase: bubbleAreaBase,
+      bubbleAreaSubButtonDefault: css`
+        .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
+          color: var(--primary-text-color) !important;
+        }
+        .bubble-sub-button-container.fixed-top .bubble-sub-button {
+          background: var(--area-medium-color) !important;
+        }
+        .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
+        .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
+          background: var(--area-shade-color) !important;
+        }
+        .bubble-sub-button-container.fixed-top .background-on {
+          background: var(--area-medium-color) !important;
+        }
+        .bubble-container:hover .bubble-sub-button-container.fixed-top .background-on {
+          background: var(--area-shade-color) !important;
+        }
+        .bubble-sub-button-container.fixed-top .bubble-sub-button:not(.background-on),
+        .bubble-sub-button-container.fixed-top .bubble-sub-button.background-on ~ .bubble-sub-button.background-on {
+          display: none !important;
+        }
+      `,
+      bubbleAreaSubButtonAlways: css`
+        .bubble-sub-button-container.fixed-top .bubble-sub-button,
+        .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
+          background: var(--area-medium-color) !important;
+        }
+        .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
+        .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
+          background: var(--area-shade-color) !important;
+        }
+        .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button,
+        .bubble-container:hover .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
+          background: var(--bubble-default-color) !important;
+          color: #fff !important;
+        }
+        .bubble-sub-button-container.fixed-top:has(.background-on)
+          .bubble-sub-button:not([data-tap-action*='light.turn_off']),
+        .bubble-sub-button-container.fixed-top:has(.background-on)
+          .bubble-sub-button[data-tap-action*='light.turn_off']
+          ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
+          display: none !important;
+        }
+        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
+          .bubble-sub-button:not([data-tap-action*='light.turn_on']),
+        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
+          .bubble-sub-button[data-tap-action*='light.turn_on']
+          ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
+          display: none !important;
+        }
+      `,
       graphCard: css`
         ${haCardBase}
         :host {

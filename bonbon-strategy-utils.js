@@ -352,3 +352,48 @@ export function mergeDeep(target, ...sources) {
     return merged;
   }, base);
 }
+
+export function normalizeSectionColumn(column) {
+  if (column === undefined || column === null || column === 'auto') {
+    return 'auto';
+  }
+
+  const parsedColumn = Number(column);
+  return Number.isInteger(parsedColumn) && parsedColumn > 0 ? parsedColumn : 'auto';
+}
+
+export function applySectionColumns(sections, maxColumns) {
+  const cleanSection = ({ bonbon_column, ...section }) => section;
+  const viewMaxColumns = Number(maxColumns) || 1;
+
+  if (viewMaxColumns <= 1) {
+    return sections.map(cleanSection);
+  }
+
+  const fixedSections = sections.filter(
+    (section) => Number.isInteger(section.bonbon_column) && section.bonbon_column > 0,
+  );
+
+  if (!fixedSections.length) {
+    return sections.map(cleanSection);
+  }
+
+  const groupedByColumn = fixedSections.reduce((acc, section) => {
+    const column = section.bonbon_column;
+    (acc[column] ??= []).push(section);
+    return acc;
+  }, {});
+
+  const groupedSections = Object.keys(groupedByColumn)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((column) => {
+      return {
+        cards: groupedByColumn[column].flatMap((section) => section.cards),
+      };
+    });
+
+  const autoSections = sections.filter((section) => section.bonbon_column === 'auto').map(cleanSection);
+
+  return [...groupedSections, ...autoSections];
+}

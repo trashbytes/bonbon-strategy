@@ -110,8 +110,8 @@ export function createEntityApi(ctx = {}) {
 
   function sortByName(list) {
     return (list || []).sort((a, b) => {
-      const nameA = a?.entity?.name;
-      const nameB = b?.entity?.name;
+      const nameA = a?.entity?.name || '';
+      const nameB = b?.entity?.name || '';
       return nameA.localeCompare(nameB);
     });
   }
@@ -457,6 +457,8 @@ export function createEntityApi(ctx = {}) {
                 entity: context.entities[c.entity_id] || context.entities[c.entity],
                 object: c,
               });
+            } else if (c.entity && c.selector) {
+              elements.push(c);
             } else {
               elements.push({ object: c });
             }
@@ -480,11 +482,24 @@ export function createEntityApi(ctx = {}) {
   }
 
   function hasScopeFilter(selector, scopeKeys = ['floor_id', 'area_id']) {
+    if (Array.isArray(selector)) {
+      return selector.some(
+        (entry) => typeof entry === 'string' && scopeKeys.some((scopeKey) => entry.includes(`[${scopeKey}=`)),
+      );
+    }
+
     if (typeof selector !== 'string') return false;
     return scopeKeys.some((scopeKey) => selector.includes(`[${scopeKey}=`));
   }
 
   function withDefaultScopeFilter(selector, scopeFilter, scopeKeys = ['floor_id', 'area_id']) {
+    if (Array.isArray(selector)) {
+      return selector.map((entry) => {
+        if (typeof entry !== 'string') return entry;
+        return hasScopeFilter(entry, scopeKeys) ? entry : entry + scopeFilter;
+      });
+    }
+
     if (typeof selector !== 'string' || !scopeFilter) return selector;
     return hasScopeFilter(selector, scopeKeys) ? selector : selector + scopeFilter;
   }
@@ -498,6 +513,20 @@ export function createEntityApi(ctx = {}) {
     if (!floorId) return selector;
     return withDefaultScopeFilter(selector, `[floor_id=${floorId}]`, scopeKeys);
   }
+
+  const cardMatchesAreaScope = (c, area, sectionConfig) => {
+    return (
+      c.object?.bonbon_area_id == area.area_id ||
+      c.object?.area_id == area.area_id ||
+      (!c.object?.bonbon_area_id &&
+        !c.object?.area_id &&
+        (inArea(c, area) ||
+          (sectionConfig.area_id &&
+            (Array.isArray(sectionConfig.area_id)
+              ? sectionConfig.area_id.some((areaId) => inArea(c, areaId))
+              : inArea(c, sectionConfig.area_id)))))
+    );
+  };
 
   function inArea(c, area) {
     const areaId = area?.area_id || area;
@@ -564,7 +593,6 @@ export function createEntityApi(ctx = {}) {
     withDefaultScopeFilter,
     withAreaScope,
     withFloorScope,
-    inArea,
-    onFloor,
+    cardMatchesAreaScope,
   };
 }
