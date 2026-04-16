@@ -360,8 +360,8 @@ views:
       bonbon_weather:
         name: 'Weather'
         icon: 'mdi:cloud-question'
-        show_weather_card: false # or 'current', 'daily', or 'hourly'
-        weather_entity_id: 'auto'
+        cards: 'weather.*'
+        show_forecast: false # false, 'daily', or 'hourly'
 ```
 
 #### bonbon_area

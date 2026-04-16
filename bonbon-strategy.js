@@ -11,6 +11,7 @@ const {
   getColorsFromColor,
   normalizeSectionColumn,
   applySectionColumns,
+  upgradeConfig,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
 
@@ -48,7 +49,7 @@ export class BonbonStrategy {
 
     try {
       const views = [];
-      const config = mergeDeep(defaultConfig, userConfig);
+      const config = upgradeConfig(mergeDeep(defaultConfig, userConfig));
 
       const dashboardName =
         Object.values(hass?.panels).find((p) => p?.url_path === panelUrl)?.title ||
@@ -140,11 +141,11 @@ export class BonbonStrategy {
         floorAreas.forEach((area) => {
           const subButtons = resolveEntities(
             withAreaScope(
-              (Array.isArray(sectionConfig.sub_buttons) ? sectionConfig.sub_buttons : [sectionConfig.sub_buttons]).map(
-                (c) => {
-                  return c.startsWith('area.') ? area[c.split('.')[1]] || '' : c;
-                },
-              ),
+              (Array.isArray(sectionConfig.sub_buttons) ? sectionConfig.sub_buttons : [sectionConfig.sub_buttons])
+                .filter(Boolean)
+                .map((c) => {
+                  return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
+                }),
               area.area_id,
             ),
             sectionConfig,
@@ -176,9 +177,11 @@ export class BonbonStrategy {
               (Array.isArray(sectionConfig.inline_buttons)
                 ? sectionConfig.inline_buttons
                 : [sectionConfig.inline_buttons]
-              ).map((c) => {
-                return c.startsWith('area.') ? area[c.split('.')[1]] || '' : c;
-              }),
+              )
+                .filter(Boolean)
+                .map((c) => {
+                  return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
+                }),
               area.area_id,
             ),
             sectionConfig,
@@ -270,16 +273,12 @@ export class BonbonStrategy {
           .forEach((key) => {
             const sectionConfig = { ...areaViewConfig.sections[key] };
             sectionConfig.key = key;
-            // const section = {
-            //   cards: [],
-            //   bonbon_column: normalizeSectionColumn(sectionConfig.column),
-            // };
 
-            const areaCards = (Array.isArray(sectionConfig.cards) ? sectionConfig.cards : [sectionConfig.cards]).map(
-              (c) => {
+            const areaCards = (Array.isArray(sectionConfig.cards) ? sectionConfig.cards : [sectionConfig.cards])
+              .filter(Boolean)
+              .map((c) => {
                 return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
-              },
-            );
+              });
             if (
               areaCards &&
               areaCards.length &&
@@ -314,6 +313,7 @@ export class BonbonStrategy {
 
       Object.keys(transformedViews || {}).forEach((viewKey) => {
         const viewConfig = { ...(transformedViews[viewKey] || {}) };
+        viewConfig.max_columns = viewConfig.max_columns || 1;
 
         const sections = Object.keys(viewConfig?.sections)
           .filter((key) => {
