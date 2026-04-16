@@ -155,6 +155,7 @@ export class BonbonStrategy {
                 if (c.entity.entity_id.startsWith('light.')) {
                   return ['off', 'on'].map((state) =>
                     createSubButton(c, {
+                      icon: sectionConfig.sub_combine_lights == 'always' ? 'mdi:lightbulb-group' : '',
                       tap_action: {
                         action: 'call-service',
                         service: 'light.turn_' + state,
@@ -343,6 +344,7 @@ export class BonbonStrategy {
                     if (c.entity.entity_id.startsWith('light.')) {
                       return ['off', 'on'].map((state) =>
                         createSubButton(c, {
+                          icon: sectionConfig.separator_combine_lights == 'always' ? 'mdi:lightbulb-group' : '',
                           tap_action: {
                             action: 'call-service',
                             service: 'light.turn_' + state,
