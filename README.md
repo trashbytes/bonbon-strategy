@@ -163,7 +163,7 @@ strategy:
         sections:
           bonbon_lights:
             separator_buttons: light.*:not([label=nightlight]) # lights to be included on separator, area_id is implied if missing
-            separator_combine_lights: 'always' # smartly combine lights into a single toggle on area cards ('when-on' | 'always' | false), will discard all entities that aren't lights
+            separator_combine_lights: 'always' # smartly combine lights into a single toggle on separator ('when-on' | 'always' | false), will discard all entities that aren't lights
 ```
 
 ### Translations
