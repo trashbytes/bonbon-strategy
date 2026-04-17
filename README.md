@@ -375,7 +375,7 @@ Automatically created sub-views for each area in your Home Assistant setup. Each
 - `bonbon_switches` - Other switches and automations
 - `bonbon_media` - Media player devices
 - `bonbon_climate` - Thermostats and climate entities
-- `bonbon_covers` - Blinds and sliding doors
+- `bonbon_covers` - Blinds, shutters and shades
 - `bonbon_openings` - Door and window sensors
 - `bonbon_miscellaneous` - Everything else
 
