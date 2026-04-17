@@ -404,6 +404,8 @@ export function upgradeConfig(config) {
     bonbon_weather.show_if_empty = true;
     bonbon_weather.separator_buttons =
       bonbon_weather.weather_entity_id == 'auto' ? 'weather.*' : bonbon_weather.weather_entity_id;
+    bonbon_weather.name = 'auto';
+    bonbon_weather.icon = 'auto';
   } else {
     bonbon_weather.cards =
       bonbon_weather.weather_entity_id == 'auto'

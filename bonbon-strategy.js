@@ -331,13 +331,7 @@ export class BonbonStrategy {
               cards: [],
               bonbon_column: normalizeSectionColumn(sectionConfig.column),
             };
-            if (key == 'bonbon_weather') {
-              console.log(sectionConfig.cards);
-            }
             const cards = resolveEntities(sectionConfig.cards, sectionConfig, viewKey).map(function (c) {
-              if (key == 'bonbon_weather') {
-                console.log(c);
-              }
               return createButtonCard(c, sectionConfig, {
                 show_graph: sectionConfig.show_graphs,
                 show_forecast: sectionConfig.show_forecast,
@@ -388,11 +382,11 @@ export class BonbonStrategy {
               if (key == 'bonbon_weather') {
                 if (sectionConfig.icon == 'auto') {
                   sectionConfig.icon =
-                    getWeatherIcon(hass.states[separatorSubButtons?.[0]?.entity?.entity_id]?.state) ||
+                    getWeatherIcon(hass.states[separatorSubEntities?.[0]?.entity?.entity_id]?.state) ||
                     'mdi:cloud-question';
                 }
                 if (sectionConfig.name == 'auto') {
-                  sectionConfig.name = separatorSubButtons?.[0]?.entity?.name || 'Weather';
+                  sectionConfig.name = separatorSubEntities?.[0]?.entity?.name || 'Weather';
                 }
               }
               section.cards.push(

@@ -63,7 +63,10 @@ export function createBuildersApi(panelUrl, config) {
         entity: c.entity.entity_id,
         show_current: true,
         show_forecast:
-          c.entity.hasLabel('forecast_daily') || c.entity.hasLabel('forecast_hourly') || options.show_forecast,
+          c.entity.hasLabel('forecast_daily') ||
+          c.entity.hasLabel('forecast_hourly') ||
+          c.entity.hasLabel('forecast') ||
+          options.show_forecast,
         forecast_type: c.entity.hasLabel('forecast_daily')
           ? 'daily'
           : c.entity.hasLabel('forecast_hourly')
@@ -72,7 +75,8 @@ export function createBuildersApi(panelUrl, config) {
       };
     }
     if (
-      (c?.entity?.hasLabel('graph') || options.show_graph) &&
+      (c?.entity?.entity_id.startsWith('sensor.') || c?.entity?.entity_id.startsWith('binary_sensor.')) &&
+      (c?.entity?.hasLabel('graph') || c?.entity?.hasLabel('graphs') || options.show_graph) &&
       window.customCards?.map((cc) => cc.type).includes('mini-graph-card')
     ) {
       const graph = {

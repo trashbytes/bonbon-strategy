@@ -430,6 +430,7 @@ export function createStylesApi(panelUrl, config) {
         ${haCardBase}
         :host {
           min-height: 56px;
+          -webkit-tap-highlight-color: transparent !important;
         }
         ha-card {
           padding: 0 !important;

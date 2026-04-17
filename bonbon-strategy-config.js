@@ -29,7 +29,6 @@ export const defaultConfig = {
           show_if_empty: true,
           separator_buttons: 'weather.*',
           show_forecast: false,
-          cards: 'weather.*',
         },
         bonbon_persons: {
           name: 'Persons',

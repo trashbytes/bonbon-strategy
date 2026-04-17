@@ -119,7 +119,7 @@ strategy:
 
     # Button actions
     actions:
-      default: # the default config all domains, you can add overrides per domain (note: graphs will always call 'more-info')
+      default: # the default config all domains, you can add overrides per domain (note: only applies to default Bubble Cards, doesn't apply to Graphs, Weather-Forecasts or custom cards)
         icon: none # action on icon tap ('auto' | 'toggle' | 'more-info' | 'none')
         button: auto # action on button tap ('none' | 'toggle' | 'more-info' | 'auto')
 
