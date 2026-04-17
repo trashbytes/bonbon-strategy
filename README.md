@@ -119,7 +119,7 @@ strategy:
 
     # Button actions
     actions:
-      default: # the default config all domains, you can add overrides per domain (note: graphs will always call 'more-info')
+      default: # the default config all domains, you can add overrides per domain (note: only applies to default Bubble Cards, doesn't apply to Graphs, Weather-Forecasts or custom cards)
         icon: none # action on icon tap ('auto' | 'toggle' | 'more-info' | 'none')
         button: auto # action on button tap ('none' | 'toggle' | 'more-info' | 'auto')
 
@@ -139,32 +139,29 @@ strategy:
             hide_separator: false # hide separator bar above section
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
-            separator_buttons: null # buttons to add to a separator, only in custom sections
+            separator_buttons: null # buttons to add to a separator
             prefix: false # name prefix, useful for "Ceiling light" etc., which you may have tons of ('area' | 'floor' | 'device' | false)
-            cards: # custom cards and entities, only in custom sections
+            cards: # cards and entities
               - entity_id
               - light.*
               - binary_sensor.*[device_class=door]
               - etc.
 
-      # Feature-specific properties (depending on section type)
+      # Feature-specific properties (depending on section type) that could use explaining
 
       bonbon_home:
         sections:
           bonbon_areas:
-            show_floor_lights_toggle: 'when-on' # show lights toggle on floor separators ('when-on' | 'always' | false)
-            show_area_lights_toggle: 'when-on' # show lights toggle on area cards ('when-on' | 'always' | false)
+            separator_buttons: light.*:not([label=nightlight]) # lights to be included on floor separators, floor_id is implied if missing
+            separator_combine_lights: 'when-on' # show lights toggle on floor separators ('when-on' | 'always' | false)
+            sub_buttons: light.*:not([label=nightlight]) # lights to be included on area cards, area_id is implied if missing
+            sub_comine_lights: 'when-on' # show lights toggle on area cards ('when-on' | 'always' | false)
 
       bonbon_area:
         sections:
-          bonbon_environment:
-            show_temperature: true # assign an entity in the HA area properties, otherwise it'll try and pick one automatically
-            show_humidity: true # assign an entity in the HA area properties, otherwise it'll try and pick one automatically
-            show_co2: true # it'll try and pick one automatically
-            show_graphs: true # will only work when mini-graph-card is installed
-
           bonbon_lights:
-            show_area_lights_toggle: 'always' # show lights toggle on lights separator ('when-on' | 'always' | false)
+            separator_buttons: light.*:not([label=nightlight]) # lights to be included on separator, area_id is implied if missing
+            separator_combine_lights: 'always' # show lights toggle on area cards ('when-on' | 'always' | false)
 ```
 
 ### Translations
@@ -363,8 +360,8 @@ views:
       bonbon_weather:
         name: 'Weather'
         icon: 'mdi:cloud-question'
-        show_weather_card: false # or 'current', 'daily', or 'hourly'
-        weather_entity_id: 'auto'
+        cards: 'weather.*'
+        show_forecast: false # false, 'daily', or 'hourly'
 ```
 
 #### bonbon_area

@@ -57,8 +57,26 @@ export function createBuildersApi(panelUrl, config) {
     if (c?.object && !c?.bonbon_card) {
       return c.object;
     }
+    if (c?.entity?.entity_id?.startsWith('weather.') && sectionConfig.key == 'bonbon_weather') {
+      return {
+        type: 'weather-forecast',
+        entity: c.entity.entity_id,
+        show_current: true,
+        show_forecast:
+          c.entity.hasLabel('forecast_daily') ||
+          c.entity.hasLabel('forecast_hourly') ||
+          c.entity.hasLabel('forecast') ||
+          options.show_forecast,
+        forecast_type: c.entity.hasLabel('forecast_daily')
+          ? 'daily'
+          : c.entity.hasLabel('forecast_hourly')
+            ? 'hourly'
+            : options.show_forecast,
+      };
+    }
     if (
-      (c?.entity?.hasLabel('graph') || options.show_graph) &&
+      (c?.entity?.entity_id.startsWith('sensor.') || c?.entity?.entity_id.startsWith('binary_sensor.')) &&
+      (c?.entity?.hasLabel('graph') || c?.entity?.hasLabel('graphs') || options.show_graph) &&
       window.customCards?.map((cc) => cc.type).includes('mini-graph-card')
     ) {
       const graph = {
@@ -123,6 +141,7 @@ export function createBuildersApi(panelUrl, config) {
       const isCover = c.entity.entity_id.startsWith('cover.');
       const isScript = c.entity.entity_id.startsWith('script.');
       const isScene = c.entity.entity_id.startsWith('scene.');
+      const isPerson = c.entity.entity_id.startsWith('person.');
       const isToggle = isTogglableEntity(c);
       const isBinary = hasBinaryState(c) || (options?.card_type && options?.card_type != 'button');
 
@@ -160,6 +179,9 @@ export function createBuildersApi(panelUrl, config) {
 
       if (isToggle || isBinary) {
         base.show_last_changed = true;
+      }
+      if (isPerson) {
+        base.show_last_changed = false;
       }
       if (isScript || isScene) {
         base.show_state = false;
