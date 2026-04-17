@@ -344,7 +344,7 @@ The main dashboard view with a fixed layout showing your home overview.
 - `bonbon_weather` - Weather information
 - `bonbon_persons` - Person entities
 - `bonbon_favorites` - Entities with the `favorite` label
-- `bonbon_areas` - Area cards for navigation to individual areas
+- `bonbon_areas` - Area cards for navigation to individual areas, this is a dynamic section, that will be replaced with a section for each floor containing cards for each area on that floor. Areas that are not on a floor will be grouped in a separate section with name and icon from `bonbon_areas`
 
 **Basic example:**
 
