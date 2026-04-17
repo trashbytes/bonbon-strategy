@@ -399,7 +399,7 @@ All sections share common properties. Use these to customize appearance and beha
 
 ### Custom Sections
 
-Add your own sections to any view to organize entities your way:
+Add your own sections to any view to organize entities your way. You can also override what's included in built-in sections by changing `cards` for example.
 
 **Basic custom section:**
 
@@ -407,21 +407,23 @@ Add your own sections to any view to organize entities your way:
 views:
   bonbon_home:
     sections:
-      bonbon_weather:
-        disabled: true
-      my_way_better_weather_section:
-        name: Weather
-        icon: mdi:cloud
-        order: 1
-        cards:
-          - type: custom:the-best-weather-card
+      open_doors:
+        name: Open doors
+        icon: mdi:door-open
+        order: 2.1
+        cards: binary_sensor.*[device_class=door|garage_door]:hide([state=off])
+      low_batteries:
+        name: Low batteries
+        icon: mdi:battery-low
+        order: 2.2
+        cards: sensor.*battery:hide([state>10])
 ```
 
 **Area-specific sections:**
 
 When adding custom sections under `bonbon_area`, they automatically show in areas with matching entities and won't show in areas without matching entities. To force entities to match, add `[area_id=area_id]` or `[area_id=*]` to the selector to override the restriction to the current area. This, in turn, will also mean that these will match in any area, so use `area_id: <area_id>` in the section properties to restrict them to a specific area.
 
-When using custom cards, which have an entity which belongs to a different area, you can add `area_id: area_id` or `bonbon_area_id: area_id` to the card options to assign that card to one or more different areas so that it will show up in those areas instead. This will override the detected area from the entity.
+When using custom cards, which have an entity which belongs to a different area, you can add `area_id: area_id` or `bonbon_area_id: area_id` to the card options to assign that card to one or more different areas so that it will show up in those areas instead. This will override the auto-detected area from the entity.
 
 Example:
 
