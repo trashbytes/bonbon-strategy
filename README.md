@@ -419,6 +419,8 @@ views:
         cards: sensor.*battery:hide([state>10])
 ```
 
+These particular examples would work well when included in `bonbon_favorites` as well, as they will probably be empty most of the time anyway. Alternatively set `hide_separator` to `true`, but due to the nature of HA dashboards such a section will still take up some space, even when there is no separator and all cards are hidden.
+
 **Area-specific sections:**
 
 When adding custom sections under `bonbon_area`, they automatically show in areas with matching entities and won't show in areas without matching entities. To force entities to match, add `[area_id=area_id]` or `[area_id=*]` to the selector to override the restriction to the current area. This, in turn, will also mean that these will match in any area, so use `area_id: <area_id>` in the section properties to restrict them to a specific area.
