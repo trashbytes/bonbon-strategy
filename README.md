@@ -481,6 +481,7 @@ views:
       desktop_pc:
         name: Desktop PC
         icon: mdi:desktop-classic
+        show_graphs: true
         cards:
           - sensor.*cpu*
           - sensor.*memory*
