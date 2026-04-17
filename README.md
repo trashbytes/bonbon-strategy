@@ -344,13 +344,9 @@ The main dashboard view with a fixed layout showing your home overview.
 - `bonbon_favorites` - Entities with the `favorite` label
 - `bonbon_areas` - Area cards for navigation to individual areas
 
-**Feature-Specific Properties:**
-
-- **show_temperature**, **show_humidity**, **show_co2** - Show sensors in area cards
-- **show_floor_lights_toggle** - Floor lights toggle: `'when-on'` (default), `'always'`, or `false`
-- **show_area_lights_toggle** - Light toggle buttons: `'when-on'` (default), `'always'`, or `false`
-
 **Basic example:**
+
+This will change the default minified look of `bonbon_weather` to a more generic section with a regular Title and a weather card with daily forecast and then enable the "Persons" separator, that's hidden by default, to separate these sections.
 
 ```yaml
 views:
@@ -359,9 +355,11 @@ views:
     sections:
       bonbon_weather:
         name: 'Weather'
-        icon: 'mdi:cloud-question'
+        separator_buttons: false
         cards: 'weather.*'
-        show_forecast: false # false, 'daily', or 'hourly'
+        show_forecast: 'daily'
+      bonbon_persons:
+        hide_separator: false
 ```
 
 #### bonbon_area
@@ -396,10 +394,6 @@ All sections share common properties. Use these to customize appearance and beha
 - **max_columns** - Maximum number of columns
 - **column** - Column assignment for views with `max_columns > 1` (`1..n` or `'auto'`, default mostly `'auto'`)
 - **hide_separator** - `true` hides the separator bar above section
-
-**Feature-Specific Properties:**
-
-- **show_area_lights_toggle** - Light toggle buttons: `'when-on'` (default), `'always'`, or `false`
 
 ### Custom Sections
 
