@@ -254,10 +254,8 @@ export class BonbonStrategy {
         const viewConfig = {
           title: area.name,
           icon: area.icon,
-          background: cssValue('background-image'),
           subview: true,
           path: viewKey,
-          type: 'sections',
           max_columns: areaViewConfig.max_columns || 1,
           sections: {},
         };
@@ -406,6 +404,8 @@ export class BonbonStrategy {
           .filter((section) => section);
 
         viewConfig.sections = applySectionColumns(sections, viewConfig.max_columns || 1);
+        viewConfig.background = cssValue('background-image');
+        viewConfig.type = 'sections';
         if (viewKey == 'bonbon_home') {
           viewConfig.title = dashboardName || viewConfig.title || viewKey;
           views.unshift(viewConfig);
@@ -464,7 +464,6 @@ export class BonbonStrategy {
               styles.bubbleGlobal +
               (allBonbonStyles?.map((s) => styles[s] || '').join('\n') || '') +
               ('\n' + newStruct.styles || '');
-            newStruct.styles = newStruct.styles.replaceAll('{{globals}}', 'window.bonbon["' + panelUrl + '"]');
           }
           if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {
