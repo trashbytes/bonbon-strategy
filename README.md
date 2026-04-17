@@ -140,6 +140,8 @@ strategy:
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
             separator_buttons: null # buttons to add to a separator
+            show_graphs: false # render `sensor` and `binary_sensor` cards as graphs, can be done with the label `graph` individually as well
+            show_forecast: false # render `weather` cards with forecast ('daily' | 'hourly' | false), can be done with the labels `forecast_daily` or `forecast_hourly` individually as well
             prefix: false # name prefix, useful for "Ceiling light" etc., which you may have tons of ('area' | 'floor' | 'device' | false)
             cards: # cards and entities
               - entity_id
@@ -217,7 +219,7 @@ cards:
 
 **2. Entity selectors** - Use strings or an array of strings with wildcards and filters to automatically match entities:
 
-Entity selectors use wildcards and CSS-like attribute filters to match entities precisely. You'll use this syntax throughout your configuration in `cards`, `separator_buttons`, labels, and other places.
+Entity selectors use wildcards and CSS-like attribute filters to match entities precisely. You'll use this syntax throughout your configuration in `cards`, `separator_buttons`, `sub_buttons`, `inline_buttons`.
 
 **Wildcard syntax:**
 
@@ -246,7 +248,7 @@ Entity selectors use wildcards and CSS-like attribute filters to match entities 
 **Pseudo functions:**
 
 - `:not(<selector>)` - excludes entities matching `<selector>` at startup
-- `:hide(<selector>)` - dynamically hides entities matching `<selector>` at runtime
+- `:hide(<selector>)` - dynamically hides entities matching `<selector>` at runtime (only supported in `cards`)
 
 Note: While you can chain pseudo functions, you cannot nest them!
 
@@ -277,7 +279,7 @@ cards:
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
-**Important note:** `:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long. Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard, which means that the separator will also always be there (if enabled), even if no buttons are currently visible in that section. The `hide()` pseudo function also only works with standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
+**Important note:** `:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long. Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard, which means that the separator will also always be there (if enabled), even if no buttons are currently visible in that section. The `hide()` pseudo function also only works in `cards` and with standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
 
 ### Styling and Colors
 
@@ -357,7 +359,7 @@ views:
         name: 'Weather'
         separator_buttons: false
         cards: 'weather.*'
-        show_forecast: 'daily'
+        show_forecast: 'daily' # ('daily' | 'hourly' | false)
       bonbon_persons:
         hide_separator: false
 ```
