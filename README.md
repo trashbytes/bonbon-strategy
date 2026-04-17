@@ -155,15 +155,15 @@ strategy:
         sections:
           bonbon_areas:
             separator_buttons: light.*:not([label=nightlight]) # lights to be included on floor separators, floor_id is implied if missing
-            separator_combine_lights: 'when-on' # smartly combine lights into a single toggle on floor separators ('when-on' | 'always' | false)
+            separator_combine_lights: 'when-on' # smartly combine lights into a single toggle on floor separators ('when-on' | 'always' | false), will discard all entities that aren't lights
             sub_buttons: light.*:not([label=nightlight]) # lights to be included on area cards, area_id is implied if missing
-            sub_comine_lights: 'when-on' # smartly combine lights into a single toggle on area cards ('when-on' | 'always' | false)
+            sub_comine_lights: 'when-on' # smartly combine lights into a single toggle on area cards ('when-on' | 'always' | false), will discard all entities that aren't lights
 
       bonbon_area:
         sections:
           bonbon_lights:
             separator_buttons: light.*:not([label=nightlight]) # lights to be included on separator, area_id is implied if missing
-            separator_combine_lights: 'always' # smartly combine lights into a single toggle on area cards ('when-on' | 'always' | false)
+            separator_combine_lights: 'always' # smartly combine lights into a single toggle on area cards ('when-on' | 'always' | false), will discard all entities that aren't lights
 ```
 
 ### Translations
