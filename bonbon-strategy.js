@@ -153,7 +153,7 @@ export class BonbonStrategy {
           )
             .map((c, index, filtered) => {
               if (sectionConfig.sub_combine_lights) {
-                if (c.entity.entity_id.startsWith('light.')) {
+                if (c?.entity?.entity_id.startsWith('light.')) {
                   return ['off', 'on'].map((state) =>
                     createSubButton(c, {
                       icon: sectionConfig.sub_combine_lights == 'always' ? 'mdi:lightbulb-group' : '',
@@ -161,7 +161,7 @@ export class BonbonStrategy {
                         action: 'call-service',
                         service: 'light.turn_' + state,
                         target: {
-                          entity_id: filtered.map((c) => c.entity.entity_id),
+                          entity_id: filtered.map((c) => c?.entity?.entity_id),
                         },
                       },
                     }),
@@ -292,8 +292,8 @@ export class BonbonStrategy {
               ).filter(
                 (c) =>
                   (hasScopeFilter(c.selector, ['area_id']) || cardMatchesAreaScope(c, area, sectionConfig)) &&
-                  ((key != 'bonbon_miscellaneous' && area.categorizedEntityIds.push(c.entity.entity_id)) ||
-                    !area.categorizedEntityIds.includes(c.entity.entity_id)),
+                  ((key != 'bonbon_miscellaneous' && area.categorizedEntityIds.push(c?.entity?.entity_id)) ||
+                    !area.categorizedEntityIds.includes(c?.entity?.entity_id)),
               );
 
               sectionConfig.separator_buttons = resolveEntities(
@@ -342,7 +342,7 @@ export class BonbonStrategy {
               const separatorSubButtons = separatorSubEntities
                 .map((c, index, filtered) => {
                   if (sectionConfig.separator_combine_lights) {
-                    if (c.entity.entity_id.startsWith('light.')) {
+                    if (c?.entity?.entity_id.startsWith('light.')) {
                       return ['off', 'on'].map((state) =>
                         createSubButton(c, {
                           icon: sectionConfig.separator_combine_lights == 'always' ? 'mdi:lightbulb-group' : '',
@@ -350,7 +350,7 @@ export class BonbonStrategy {
                             action: 'call-service',
                             service: 'light.turn_' + state,
                             target: {
-                              entity_id: filtered.map((c) => c.entity.entity_id),
+                              entity_id: filtered.map((c) => c?.entity?.entity_id),
                             },
                           },
                         }),
