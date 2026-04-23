@@ -71,7 +71,7 @@ export class BonbonStrategy {
       const styles = getStyles();
       const cssVars = getVariables();
 
-      Object.values(hass.areas)
+      Object.values(hass.areas || {})
         .filter((a) => !a.labels?.includes('hidden') && !a.labels?.includes('bonbon_hidden'))
         .map(function (area, index, areas) {
           const lightAreaColors = getAreaColors(area, index, areas, false, config.styles);
@@ -122,7 +122,7 @@ export class BonbonStrategy {
         },
       });
 
-      const _areas = Object.values(hass.areas)
+      const _areas = Object.values(hass.areas || {})
         .filter((a) => !a.labels?.includes('hidden') && !a.labels?.includes('bonbon_hidden'))
         .map(function (area, index, areas) {
           area.categorizedEntityIds = [];
@@ -463,7 +463,7 @@ export class BonbonStrategy {
             newStruct.styles =
               styles.bubbleGlobal +
               (allBonbonStyles?.map((s) => styles[s] || '').join('\n') || '') +
-              ('\n' + newStruct.styles || '');
+              (newStruct.styles ? '\n' + newStruct.styles : '');
           }
           if (newStruct.type && window.cardMod_patch_state) {
             newStruct.card_mod = {
