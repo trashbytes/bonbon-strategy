@@ -399,66 +399,67 @@ export function applySectionColumns(sections, maxColumns) {
 }
 
 export function upgradeConfig(config) {
-  const bonbon_weather = config.views.bonbon_home.sections.bonbon_weather;
-  if (bonbon_weather.show_weather_card === false) {
-    bonbon_weather.show_if_empty = true;
-    bonbon_weather.separator_buttons =
-      bonbon_weather.weather_entity_id == 'auto' ? 'weather.*' : bonbon_weather.weather_entity_id;
-    bonbon_weather.name = 'auto';
-    bonbon_weather.icon = 'auto';
-  } else {
-    bonbon_weather.cards =
-      bonbon_weather.weather_entity_id == 'auto'
-        ? 'weather.*'
-        : bonbon_weather.weather_entity_id || bonbon_weather.cards;
-    bonbon_weather.show_forecast = bonbon_weather.show_weather_card || bonbon_weather.show_forecast;
-  }
-
-  const bonbon_areas = config.views.bonbon_home.sections.bonbon_areas;
-  if (bonbon_areas.show_temperature === false) {
-    bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter((c) => c != 'area.temperature_entity_id');
-  }
-  if (bonbon_areas.show_humidity === false) {
-    bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter((c) => c != 'area.humidity_entity_id');
-  }
-  if (bonbon_areas.show_co2 === false) {
-    bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter(
-      (c) => c != 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]',
-    );
-  }
-  if (bonbon_areas.show_floor_lights_toggle !== undefined) {
-    bonbon_areas.separator_combine_lights = bonbon_areas.show_floor_lights_toggle;
-    if (bonbon_areas.separator_combine_lights === false) {
-      bonbon_areas.separator_buttons = false;
-    }
-  }
-  if (bonbon_areas.show_area_lights_toggle !== undefined) {
-    bonbon_areas.sub_combine_lights = bonbon_areas.show_area_lights_toggle;
-    if (bonbon_areas.sub_combine_lights === false) {
-      bonbon_areas.sub_buttons = false;
-    }
-  }
-
-  const bonbon_environment = config.views.bonbon_area.sections.bonbon_environment;
-  if (bonbon_environment.show_temperature === false) {
-    bonbon_environment.cards = bonbon_environment.cards.filter((c) => c != 'area.temperature_entity_id');
-  }
-  if (bonbon_environment.show_humidity === false) {
-    bonbon_environment.cards = bonbon_environment.cards.filter((c) => c != 'area.humidity_entity_id');
-  }
-  if (bonbon_environment.show_co2 === false) {
-    bonbon_environment.cards = bonbon_environment.cards.filter(
-      (c) => c != 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]',
-    );
-  }
-  const bonbon_lights = config.views.bonbon_area.sections.bonbon_lights;
-  if (bonbon_lights.show_area_lights_toggle !== undefined) {
-    bonbon_lights.separator_combine_lights = bonbon_lights.show_area_lights_toggle;
-
-    if (bonbon_lights.separator_combine_lights === false) {
-      bonbon_lights.separator_buttons = false;
-    }
-  }
-
   return config;
+  // const bonbon_weather = config.views.bonbon_home.sections.bonbon_weather;
+  // if (bonbon_weather.show_weather_card === false) {
+  //   bonbon_weather.show_if_empty = true;
+  //   bonbon_weather.separator_buttons =
+  //     bonbon_weather.weather_entity_id == 'auto' ? 'weather.*' : bonbon_weather.weather_entity_id;
+  //   bonbon_weather.name = 'auto';
+  //   bonbon_weather.icon = 'auto';
+  // } else {
+  //   bonbon_weather.cards =
+  //     bonbon_weather.weather_entity_id == 'auto'
+  //       ? 'weather.*'
+  //       : bonbon_weather.weather_entity_id || bonbon_weather.cards;
+  //   bonbon_weather.show_forecast = bonbon_weather.show_weather_card || bonbon_weather.show_forecast;
+  // }
+
+  // const bonbon_areas = config.views.bonbon_home.sections.bonbon_areas;
+  // if (bonbon_areas.show_temperature === false) {
+  //   bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter((c) => c != 'area.temperature_entity_id');
+  // }
+  // if (bonbon_areas.show_humidity === false) {
+  //   bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter((c) => c != 'area.humidity_entity_id');
+  // }
+  // if (bonbon_areas.show_co2 === false) {
+  //   bonbon_areas.inline_buttons = bonbon_areas.inline_buttons.filter(
+  //     (c) => c != 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]',
+  //   );
+  // }
+  // if (bonbon_areas.show_floor_lights_toggle !== undefined) {
+  //   bonbon_areas.separator_combine_lights = bonbon_areas.show_floor_lights_toggle;
+  //   if (bonbon_areas.separator_combine_lights === false) {
+  //     bonbon_areas.separator_buttons = false;
+  //   }
+  // }
+  // if (bonbon_areas.show_area_lights_toggle !== undefined) {
+  //   bonbon_areas.sub_combine_lights = bonbon_areas.show_area_lights_toggle;
+  //   if (bonbon_areas.sub_combine_lights === false) {
+  //     bonbon_areas.sub_buttons = false;
+  //   }
+  // }
+
+  // const bonbon_environment = config.views.bonbon_area.sections.bonbon_environment;
+  // if (bonbon_environment.show_temperature === false) {
+  //   bonbon_environment.cards = bonbon_environment.cards.filter((c) => c != 'area.temperature_entity_id');
+  // }
+  // if (bonbon_environment.show_humidity === false) {
+  //   bonbon_environment.cards = bonbon_environment.cards.filter((c) => c != 'area.humidity_entity_id');
+  // }
+  // if (bonbon_environment.show_co2 === false) {
+  //   bonbon_environment.cards = bonbon_environment.cards.filter(
+  //     (c) => c != 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]',
+  //   );
+  // }
+  // const bonbon_lights = config.views.bonbon_area.sections.bonbon_lights;
+  // if (bonbon_lights.show_area_lights_toggle !== undefined) {
+  //   bonbon_lights.separator_combine_lights = bonbon_lights.show_area_lights_toggle;
+
+  //   if (bonbon_lights.separator_combine_lights === false) {
+  //     bonbon_lights.separator_buttons = false;
+  //   }
+  // }
+
+  // return config;
 }
