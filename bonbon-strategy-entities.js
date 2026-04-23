@@ -165,8 +165,8 @@ export function createEntityApi(ctx = {}) {
       objects: groups[devId],
     }));
     groupEntries.sort((a, b) => {
-      const firstA = a.objects && a.objects.length ? a.objects[0]?.entity?.name : '';
-      const firstB = b.objects && b.objects.length ? b.objects[0]?.entity?.name : '';
+      const firstA = (a.objects && a.objects.length ? a.objects[0]?.entity?.name : '') || '';
+      const firstB = (b.objects && b.objects.length ? b.objects[0]?.entity?.name : '') || '';
       return firstA.localeCompare(firstB);
     });
     const groupedObjects = groupEntries.flatMap((g) => g.objects);
