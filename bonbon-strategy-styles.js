@@ -9,7 +9,9 @@ export function createStylesApi(panelUrl, config) {
     const observer = new MutationObserver(() => {
       callback(isDark());
     });
-    observer.observe(metaScheme, { attributes: true });
+    if (metaScheme) {
+      observer.observe(metaScheme, { attributes: true });
+    }
     callback(isDark());
   };
   const cssVariable = (suffix) => `--bonbon-${panelUrl}-${suffix}`;
