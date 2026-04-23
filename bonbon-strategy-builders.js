@@ -142,6 +142,7 @@ export function createBuildersApi(panelUrl, config) {
       const isScript = c.entity.entity_id.startsWith('script.');
       const isScene = c.entity.entity_id.startsWith('scene.');
       const isPerson = c.entity.entity_id.startsWith('person.');
+      const isSelect = c.entity.entity_id.startsWith('select.') || c.entity.entity_id.startsWith('input_select.');
       const isToggle = isTogglableEntity(c);
       const isBinary = hasBinaryState(c) || (options?.card_type && options?.card_type != 'button');
 
@@ -185,6 +186,10 @@ export function createBuildersApi(panelUrl, config) {
       }
       if (isScript || isScene) {
         base.show_state = false;
+      }
+
+      if (isSelect) {
+        base.card_type = 'select';
       }
 
       if (isClimate) {
