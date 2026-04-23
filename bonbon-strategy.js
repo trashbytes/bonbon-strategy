@@ -142,10 +142,10 @@ export class BonbonStrategy {
           const subButtons = resolveEntities(
             withAreaScope(
               (Array.isArray(sectionConfig.sub_buttons) ? sectionConfig.sub_buttons : [sectionConfig.sub_buttons])
-                .filter(Boolean)
                 .map((c) => {
                   return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
-                }),
+                })
+                .filter(Boolean),
               area.area_id,
             ),
             sectionConfig,
@@ -178,10 +178,10 @@ export class BonbonStrategy {
                 ? sectionConfig.inline_buttons
                 : [sectionConfig.inline_buttons]
               )
-                .filter(Boolean)
                 .map((c) => {
                   return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
-                }),
+                })
+                .filter(Boolean),
               area.area_id,
             ),
             sectionConfig,
@@ -221,7 +221,7 @@ export class BonbonStrategy {
               ],
               bottom_layout: 'inline',
             },
-            rows: inlineButtons.length ? 1.4 : 1,
+            rows: sectionConfig.inline_buttons.length ? 1.4 : 1,
             styles: css`
               :host {
                 --area-light-color: var(--area-${area.area_id}-light-color);
@@ -273,10 +273,10 @@ export class BonbonStrategy {
             sectionConfig.key = key;
 
             const areaCards = (Array.isArray(sectionConfig.cards) ? sectionConfig.cards : [sectionConfig.cards])
-              .filter(Boolean)
               .map((c) => {
                 return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
-              });
+              })
+              .filter(Boolean);
             if (
               areaCards &&
               areaCards.length &&
