@@ -212,6 +212,12 @@ export function createBuildersApi(panelUrl, config) {
       }
     }
     const merged = { ...base, ...(options || {}) };
+    if (c?.object && c?.bonbon_card) {
+      return {
+        ...merged,
+        ...c.object,
+      };
+    }
     return merged;
   };
 

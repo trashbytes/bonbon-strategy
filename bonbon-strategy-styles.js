@@ -216,6 +216,7 @@ export function createStylesApi(panelUrl, config) {
           ha-ripple {
             display: none !important;
           }
+          .bubble-select-container,
           .bubble-climate-container,
           .bubble-cover-container,
           .bubble-media-player-container,
@@ -238,6 +239,7 @@ export function createStylesApi(panelUrl, config) {
           }
           .bubble-sub-buttons-container .bubble-sub-button,
           .bubble-button-container:not(.bubble-buttons-container),
+          .bubble-select-container,
           .bubble-climate-container,
           .bubble-cover-container,
           .bubble-media-player-container {
@@ -245,6 +247,7 @@ export function createStylesApi(panelUrl, config) {
           }
           .bubble-sub-buttons-container .bubble-sub-button:after,
           .bubble-button-container:not(.bubble-buttons-container):after,
+          .bubble-select-container:after,
           .bubble-climate-container:after,
           .bubble-cover-container:after,
           .bubble-media-player-container:after {
@@ -252,6 +255,7 @@ export function createStylesApi(panelUrl, config) {
           }
           .bubble-sub-buttons-container .bubble-sub-button:hover:after,
           .bubble-button-container:not(.bubble-buttons-container):hover:after,
+          .bubble-select-container:hover:after,
           .bubble-climate-container:hover:after,
           .bubble-cover-container:hover:after,
           .bubble-media-player-container:hover:after {

@@ -271,38 +271,37 @@ export class BonbonStrategy {
           .forEach((key) => {
             const sectionConfig = { ...areaViewConfig.sections[key] };
             sectionConfig.key = key;
-
-            const areaCards = (Array.isArray(sectionConfig.cards) ? sectionConfig.cards : [sectionConfig.cards])
-              .map((c) => {
-                return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
-              })
-              .filter(Boolean);
             if (
-              areaCards &&
-              areaCards.length &&
-              (!sectionConfig.area_id ||
-                (Array.isArray(sectionConfig.area_id)
-                  ? sectionConfig.area_id.includes(area.area_id)
-                  : sectionConfig.area_id == area.area_id))
+              !sectionConfig.area_id ||
+              (Array.isArray(sectionConfig.area_id)
+                ? sectionConfig.area_id.includes(area.area_id)
+                : sectionConfig.area_id == area.area_id)
             ) {
-              sectionConfig.cards = resolveEntities(
-                withAreaScope(areaCards, area.area_id),
-                sectionConfig,
-                area.area_id,
-              ).filter(
-                (c) =>
-                  (hasScopeFilter(c.selector, ['area_id']) || cardMatchesAreaScope(c, area, sectionConfig)) &&
-                  ((key != 'bonbon_miscellaneous' && area.categorizedEntityIds.push(c?.entity?.entity_id)) ||
-                    !area.categorizedEntityIds.includes(c?.entity?.entity_id)),
-              );
+              const areaCards = (Array.isArray(sectionConfig.cards) ? sectionConfig.cards : [sectionConfig.cards])
+                .map((c) => {
+                  return typeof c === 'string' ? (c.startsWith('area.') ? area[c?.split('.')[1]] || '' : c) : c;
+                })
+                .filter(Boolean);
+              if (areaCards && areaCards.length) {
+                sectionConfig.cards = resolveEntities(
+                  withAreaScope(areaCards, area.area_id),
+                  sectionConfig,
+                  area.area_id,
+                ).filter(
+                  (c) =>
+                    (hasScopeFilter(c.selector, ['area_id']) || cardMatchesAreaScope(c, area, sectionConfig)) &&
+                    ((key != 'bonbon_miscellaneous' && area.categorizedEntityIds.push(c?.entity?.entity_id)) ||
+                      !area.categorizedEntityIds.includes(c?.entity?.entity_id)),
+                );
 
-              sectionConfig.separator_buttons = resolveEntities(
-                withAreaScope(sectionConfig.separator_buttons, area.area_id),
-                sectionConfig,
-                area.area_id,
-              );
+                sectionConfig.separator_buttons = resolveEntities(
+                  withAreaScope(sectionConfig.separator_buttons, area.area_id),
+                  sectionConfig,
+                  area.area_id,
+                );
+              }
+              viewConfig.sections[key] = sectionConfig;
             }
-            viewConfig.sections[key] = sectionConfig;
           });
         expandedViews[viewKey] = viewConfig;
       });
