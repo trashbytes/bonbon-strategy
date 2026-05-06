@@ -453,7 +453,6 @@ export function createEntityApi(ctx = {}) {
               }
             } else if (!c?.selector && (c.entity_id || c.entity)) {
               elements.push({
-                bubble_card: c?.type == 'custom:bubble-card',
                 entity: context.entities[c.entity_id] || context.entities[c.entity],
                 object: c,
               });

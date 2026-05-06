@@ -212,7 +212,7 @@ export function createBuildersApi(panelUrl, config) {
       }
     }
     const merged = { ...base, ...(options || {}) };
-    if (c?.object && c?.bubble_card) {
+    if (c?.object && c?.object?.type == 'custom:bubble-card') {
       return {
         ...merged,
         ...c.object,
