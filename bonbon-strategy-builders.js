@@ -213,11 +213,6 @@ export function createBuildersApi(panelUrl, config) {
     }
     const merged = { ...base, ...(options || {}) };
     if (c?.object && c?.bubble_card) {
-      console.log('yo');
-      console.log({
-        ...merged,
-        ...c.object,
-      });
       return {
         ...merged,
         ...c.object,
