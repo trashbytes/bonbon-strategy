@@ -451,13 +451,13 @@ export function createEntityApi(ctx = {}) {
                   });
                 }
               }
-            } else if ((c.entity_id || c.entity) && (context.entities[c.entity_id] || context.entities[c.entity])) {
+            } else if (!c?.selector && (c.entity_id || c.entity)) {
               elements.push({
-                bonbon_card: true,
+                bubble_card: c?.type == 'custom:bubble-card',
                 entity: context.entities[c.entity_id] || context.entities[c.entity],
                 object: c,
               });
-            } else if (c.entity && c.selector) {
+            } else if (c?.entity && c?.selector) {
               elements.push(c);
             } else {
               elements.push({ object: c });

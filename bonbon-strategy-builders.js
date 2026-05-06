@@ -54,7 +54,7 @@ export function createBuildersApi(panelUrl, config) {
   };
 
   const createButtonCard = (c, sectionConfig = {}, options = {}) => {
-    if (c?.object && !c?.bonbon_card) {
+    if (c?.object && !c?.bubble_card) {
       return c.object;
     }
     if (c?.entity?.entity_id?.startsWith('weather.') && sectionConfig.key == 'bonbon_weather') {
@@ -212,7 +212,12 @@ export function createBuildersApi(panelUrl, config) {
       }
     }
     const merged = { ...base, ...(options || {}) };
-    if (c?.object && c?.bonbon_card) {
+    if (c?.object && c?.bubble_card) {
+      console.log('yo');
+      console.log({
+        ...merged,
+        ...c.object,
+      });
       return {
         ...merged,
         ...c.object,
