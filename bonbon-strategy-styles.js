@@ -209,9 +209,14 @@ export function createStylesApi(panelUrl, config) {
           .is-off .bubble-main-icon {
             opacity: 1;
           }
+          .bubble-dropdown-arrow,
           .bubble-icon-container {
             --icon-primary-color: ${cssValue('icon-color-off')};
             background-color: ${cssValue('icon-background-off')};
+          }
+          .bubble-dropdown-arrow[style*='rotate(180deg)'] {
+            --icon-primary-color: ${cssValue('icon-color-off')} !important;
+            background-color: ${cssValue('icon-background-off')} !important;
           }
           ha-ripple {
             display: none !important;
