@@ -451,6 +451,10 @@ export function createEntityApi(ctx = {}) {
                   });
                 }
               }
+            } else if (c.object && c.object.type) {
+              elements.push({
+                object: c.object,
+              });
             } else if (!c?.selector && (c.entity_id || c.entity)) {
               elements.push({
                 entity: context.entities[c.entity_id] || context.entities[c.entity],

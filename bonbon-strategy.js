@@ -340,7 +340,7 @@ export class BonbonStrategy {
                 style: css`
                   :host {
                     display: var(${sectionConfig.display_var}, block) !important;
-                    margin-top: var(${sectionConfig.margin_var}, 0) !important;
+                    ${viewConfig.max_columns == 1 ? `margin-top: var(${sectionConfig.margin_var}, 0) !important;` : ''}
                   }
                 `,
               },
