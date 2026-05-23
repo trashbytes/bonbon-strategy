@@ -18,6 +18,9 @@ export function createStylesApi(panelUrl, config) {
   const cssValue = (suffix) => `var(${cssVariable(suffix)})`;
 
   const getVariables = () => ({
+    global: {
+      [cssVariable('row-gap')]: '24px',
+    },
     light: {
       [cssVariable('background-image')]: config?.styles?.background_image_light
         ? 'top / cover no-repeat fixed url("' + config?.styles?.background_image_light + '")'
@@ -96,6 +99,8 @@ export function createStylesApi(panelUrl, config) {
       *:before,
       *:after,
       :host {
+        --row-gap: ${cssValue('row-gap')};
+        --ha-view-sections-row-gap: ${cssValue('row-gap')};
         --primary-text-color: ${cssValue('primary-text-color')};
         --bubble-line-background-color: rgba(0, 0, 0, 0.05);
         --ha-card-background: ${cssValue('card-background')};
@@ -455,9 +460,9 @@ export function createStylesApi(panelUrl, config) {
           left: 0 !important;
           padding: 0 !important;
           height: 100% !important;
-          justify-content: center !important;
+          justify-content: start !important;
           align-items: center !important;
-          width: 56px !important;
+          width: 100% !important;
           z-index: 1;
         }
         .icon {
@@ -468,18 +473,23 @@ export function createStylesApi(panelUrl, config) {
           ) !important;
           background-color: ${cssValue('icon-background-off')};
           padding: 9px !important;
+          top: 7px;
+          left: 8px;
+          position: absolute;
         }
         .name {
           padding: 0 !important;
           position: absolute !important;
-          bottom: 50%;
+          bottom: 50% !important;
           left: 60px !important;
+          width: calc(100% - 60px - 8px);
         }
         .states {
           padding: 0 !important;
           position: absolute !important;
           top: 50% !important;
           left: 60px !important;
+          width: calc(100% - 60px - 8px);
         }
         .name .ellipsis,
         .state span {

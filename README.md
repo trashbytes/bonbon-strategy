@@ -29,13 +29,17 @@ These features and domains are included by default and will "just work".
 - Favorites (add the label `favorite` to an entity)
 - Floors
 - Areas (add the label `hidden` to hide an area, or `color_XXXXXX` to set a custom color)
+- Vacuums and Lawn Mowers
+- Locks
 - Temperature, Humidity and CO2
+- Scenes and Scripts
 - Lights
-- Switches
+- Switches and Buttons
 - Media Players
-- Climate (HVAC)
+- Climate (HVAC), Fans and Humidifiers
 - Covers (Shutters & Shades)
 - Openings (Doors & Windows)
+- Valves and Water Heaters
 - Miscellaneous (almost everything that isn't part of the above)
 - Custom views, sections and cards (see configuration)
 
@@ -185,14 +189,20 @@ strategy:
             name: 'Favoriten'
           bonbon_areas:
             name: 'Bereiche'
+          bonbon_robots:
+            name: 'Roboter'
+          bonbon_security:
+            name: 'Sicherheit'
       bonbon_area:
         sections:
           bonbon_environment:
             name: 'Raumklima'
+          bonbon_scenes:
+            name: 'Szenen & Skripte'
           bonbon_lights:
             name: 'Beleuchtung'
           bonbon_switches:
-            name: 'Schalter'
+            name: 'Schalter & Taster'
           bonbon_media:
             name: 'Media Player'
           bonbon_climate:
@@ -201,6 +211,10 @@ strategy:
             name: 'Rollläden & Beschattung'
           bonbon_openings:
             name: 'Fenster & Türen'
+          bonbon_valves:
+            name: 'Wasser'
+          bonbon_miscellaneous:
+            name: 'Sonstiges'
 ```
 
 ### Cards and Entities

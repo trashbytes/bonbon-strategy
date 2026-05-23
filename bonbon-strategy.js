@@ -91,6 +91,7 @@ export class BonbonStrategy {
           return;
         }
 
+        const globalVars = cssVars.global;
         const activeVars = isDarkMode ? cssVars.dark : cssVars.light;
         const inactiveVars = isDarkMode ? cssVars.light : cssVars.dark;
 
@@ -98,7 +99,7 @@ export class BonbonStrategy {
           rootElement.style.removeProperty(variableName);
         });
 
-        Object.entries(activeVars || {}).forEach(([variableName, variableValue]) => {
+        Object.entries({ ...globalVars, ...activeVars }).forEach(([variableName, variableValue]) => {
           if (variableValue === undefined || variableValue === null || variableValue === '') {
             rootElement.style.removeProperty(variableName);
             return;
@@ -271,6 +272,7 @@ export class BonbonStrategy {
           .forEach((key) => {
             const sectionConfig = { ...areaViewConfig.sections[key] };
             sectionConfig.key = key;
+            sectionConfig.view = viewKey;
             if (
               !sectionConfig.area_id ||
               (Array.isArray(sectionConfig.area_id)
@@ -321,12 +323,27 @@ export class BonbonStrategy {
             const orderB = viewConfig.sections[bKey].order ?? Number.MAX_SAFE_INTEGER;
             return orderA - orderB;
           })
-          .map((key) => {
+          .map((key, i, arr) => {
             const sectionConfig = viewConfig.sections[key];
+            const nextKey = arr[i + 1] || '';
+            const prevKey = arr[i - 1] || '';
             sectionConfig.key = key;
+            sectionConfig.view = viewKey;
+            sectionConfig.display_var = '--' + panelUrl + '_' + viewKey + '_' + key + '_display';
+            sectionConfig.margin_var = '--' + panelUrl + '_' + viewKey + '_' + key + '_margin';
+            sectionConfig.prev_margin_var = '--' + panelUrl + '_' + viewKey + '_' + prevKey + '_margin';
+            sectionConfig.next_margin_var = '--' + panelUrl + '_' + viewKey + '_' + nextKey + '_margin';
             const section = {
               cards: [],
               bonbon_column: normalizeSectionColumn(sectionConfig.column),
+              card_mod: {
+                style: css`
+                  :host {
+                    display: var(${sectionConfig.display_var}, block) !important;
+                    ${viewConfig.max_columns == 1 ? `margin-top: var(${sectionConfig.margin_var}, 0) !important;` : ''}
+                  }
+                `,
+              },
             };
             const cards = resolveEntities(sectionConfig.cards, sectionConfig, viewKey).map(function (c) {
               return createButtonCard(c, sectionConfig, {
@@ -386,14 +403,7 @@ export class BonbonStrategy {
                   sectionConfig.name = separatorSubEntities?.[0]?.entity?.name || 'Weather';
                 }
               }
-              section.cards.push(
-                createSeparatorCard(
-                  sectionConfig.name || 'Custom Section',
-                  sectionConfig.icon || 'mdi:view-dashboard-edit',
-                  [separatorSubButtons],
-                  separatorStyles,
-                ),
-              );
+              section.cards.push(createSeparatorCard(sectionConfig, [separatorSubButtons], separatorStyles));
             }
             if (cards.length) {
               section.cards.push(createGrid(cards, sectionConfig));
@@ -464,16 +474,17 @@ export class BonbonStrategy {
               (allBonbonStyles?.map((s) => styles[s] || '').join('\n') || '') +
               (newStruct.styles ? '\n' + newStruct.styles : '');
           }
-          if (newStruct.type && window.cardMod_patch_state) {
-            newStruct.card_mod = {
-              style:
+          if (window.cardMod_patch_state) {
+            if (newStruct.type) {
+              newStruct.card_mod = newStruct.card_mod || {};
+              newStruct.card_mod.style =
                 styles.cardmodGlobal +
                 (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
                 (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
-                (newStruct.card_mod?.style || ''),
-            };
-            if (newStruct.type == 'custom:mini-graph-card') {
-              newStruct.line_color = cssValue('primary-accent-color');
+                (newStruct.card_mod?.style || '');
+              if (newStruct.type == 'custom:mini-graph-card') {
+                newStruct.line_color = cssValue('primary-accent-color');
+              }
             }
           }
           if (newStruct.elements && Array.isArray(newStruct.elements)) {

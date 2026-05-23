@@ -133,7 +133,20 @@ export function createBuildersApi(panelUrl, config) {
           base.entity +
           '": hass.entities["' +
           base.entity +
-          '"]}, hass.states, hass.devices, hass.floors, hass.areas)}).filter(Boolean).length ? this.parentElement.style.display = "none" : this.parentElement.style.display = "block" : ""}';
+          '"]}, hass.states, hass.devices, hass.floors, hass.areas)}).filter(Boolean).length ? this.parentElement.style.display = "none" : this.parentElement.style.display = "block" : ""}' +
+          (!sectionConfig.show_if_empty
+            ? '${Array.from(this?.parentElement?.parentElement?.querySelectorAll(":scope > :not([style*=\'display: none\'])")||[]).length || 0 > 0 ? (document.documentElement.style.setProperty("' +
+              sectionConfig.display_var +
+              '", "block") + document.documentElement.style.setProperty("' +
+              sectionConfig.next_margin_var +
+              '", "0")) : (document.documentElement.style.setProperty("' +
+              sectionConfig.display_var +
+              '", "none") + document.documentElement.style.setProperty("' +
+              sectionConfig.next_margin_var +
+              '", "calc(var(--bonbon-' +
+              panelUrl +
+              '-row-gap) * -1)"))}'
+            : '');
       }
 
       const isClimate = c.entity.entity_id.startsWith('climate.');
@@ -221,7 +234,9 @@ export function createBuildersApi(panelUrl, config) {
     return merged;
   };
 
-  const createSeparatorCard = (name, icon, groups = [], styles = []) => {
+  const createSeparatorCard = (sectionConfig, groups = [], styles = []) => {
+    const name = sectionConfig.name || 'Custom Section';
+    const icon = sectionConfig.icon || 'mdi:view-dashboard-edit';
     const card = {
       type: 'custom:bubble-card',
       card_type: 'separator',
