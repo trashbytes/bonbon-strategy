@@ -67,6 +67,8 @@ Please check the respective repositories on how to install them and do that, bef
 
 ## Installation
 
+Bonbon Strategy can be installed manually or by using HACS. If you choose to use HACS you can instally any updates with a single click! It's the recommended way to use Bonbon Strategy.
+
 ### With HACS (recommended):
 
 1. Make sure Bubble Card is installed!
@@ -80,9 +82,9 @@ Please check the respective repositories on how to install them and do that, bef
 ### Without HACS:
 
 1. Make sure Bubble Card is installed!
-2. Download `bonbon-strategy.js`
-3. Place `bonbon-strategy.js` in `<config>/www/bonbon-strategy.js` (restart HA if `/www` didn't exist!)
-4. Go to `Settings` > `Dashboards` > `⋮` > `Resources` > `Add resource` and enter `/local/bonbon-strategy.js` then add
+2. Download `bonbon-strategy.js`, `bonbon-strategy-builders.js`, `bonbon-strategy-config.js`, `bonbon-strategy-entities.js`, `bonbon-strategy-styles.js`, `bonbon-strategy-utils.js`,
+3. Place them in `<config>/www/` (restart HA if `/www` didn't exist!)
+4. Go to `Settings` > `Dashboards` > `⋮` > `Resources` > `Add resource` and enter `/local/bonbon-strategy.js` (the other files will be loaded automatically)
 5. Go to `Settings` > `Dashboards` > `Add dashboard` > `New empty dashboard` then create
 6. Go to the new `Dashboard` > `✎` > `Raw configuration`, paste the configuration from below, then save
 7. Clear your frontend cache!
@@ -221,17 +223,9 @@ strategy:
 
 In the `cards` arrays, you can specify cards and entities in two ways:
 
-**1. Classic YAML structure** - Use Home Assistant's built-in cards or custom cards you installed:
+#### 1. Entity selectors
 
-**Example:**
-
-```yaml
-cards:
-  - type: weather-forecast
-    entity: weather.home
-```
-
-**2. Entity selectors** - Use strings or an array of strings with wildcards and filters to automatically match entities:
+Use strings or an array of strings with wildcards and filters to automatically match entities:
 
 Entity selectors use wildcards and CSS-like attribute filters to match entities precisely. You'll use this syntax throughout your configuration in `cards`, `separator_buttons`, `sub_buttons`, `inline_buttons`.
 
@@ -291,9 +285,27 @@ cards:
   - <device_id> # all entities of a specific device
 ```
 
+#### 2. Classic YAML structure
+
+Use Home Assistant's built-in cards or custom cards you installed:
+
+**Example:**
+
+```yaml
+cards:
+  - type: weather-forecast
+    entity: weather.home
+```
+
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
 
-**Important note:** `:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long. Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard, which means that the separator will also always be there (if enabled), even if no buttons are currently visible in that section. The `hide()` pseudo function also only works in `cards` and with standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
+**Important note:**
+
+`:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long.
+
+Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard. If you use more than one column then the section with its separator (if enabled) and spacing will always be there, even if no buttons are currently visible in that section.
+
+The `hide()` pseudo function also only works in `cards` and will always generate standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
 
 ### Styling and Colors
 
@@ -359,6 +371,8 @@ The main dashboard view with a fixed layout showing your home overview.
 - `bonbon_persons` - Person entities, minified look by default, see example below on how to enable the separator
 - `bonbon_favorites` - Entities with the `favorite` label, can be changed and expanded by changing `cards` to include other entities or even things like currently open doors or turned on lights, etc.
 - `bonbon_areas` - Area cards for navigation to individual areas, this is a dynamic section, that will be replaced with a section for each floor containing cards for each area on that floor. Areas that are not on a floor will be grouped in a separate section with name and icon from `bonbon_areas`
+- `bonbon_robots` - Robot mowers and vacuums, for easy access and to keep an eye on them.
+- `bonbon_security` - Locks. Simple as that. Because every household works differently I didn't include more than that by default, but you can easily extend it with things like `binary_sensor.*contact[device_class=door|window]:not([label=indoors]):hide([state=off])`, just to give you an idea.
 
 **Basic example:**
 
@@ -385,12 +399,14 @@ Automatically created sub-views for each area in your Home Assistant setup. Each
 **Built-in sections:**
 
 - `bonbon_environment` - Temperature, humidity, CO2 sensors
+- `bonbon_scenes` - Scenes and scripts
 - `bonbon_lights` - Light switches
-- `bonbon_switches` - Other switches and automations
+- `bonbon_switches` - Switches, buttons, selects and so on.
 - `bonbon_media` - Media player devices
-- `bonbon_climate` - Thermostats and climate entities
+- `bonbon_climate` - Thermostats and climate entities as well as fans and humidifiers
 - `bonbon_covers` - Blinds, shutters and shades
 - `bonbon_openings` - Door and window sensors
+- `bonbon_valves` - Water systems like valves and water heaters
 - `bonbon_miscellaneous` - Everything else
 
 ### Section Properties
