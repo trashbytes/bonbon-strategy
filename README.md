@@ -370,8 +370,8 @@ The main dashboard view with a fixed layout showing your home overview.
 - `bonbon_weather` - Weather information, minified look by default, see example below on how to display a card (with forecast?) instead
 - `bonbon_persons` - Person entities, minified look by default, see example below on how to enable the separator
 - `bonbon_favorites` - Entities with the `favorite` label, can be changed and expanded by changing `cards` to include other entities or even things like currently open doors or turned on lights, etc.
-- `bonbon_areas` - Area cards for navigation to individual areas, this is a dynamic section, that will be replaced with a section for each floor containing cards for each area on that floor. Areas that are not on a floor will be grouped in a separate section with name and icon from `bonbon_areas`
-- `bonbon_robots` - Robot mowers and vacuums. If you have robots dedicated to specific areas, think about disabling this section and adding a custom section to `bonbon_area` instead.
+- `bonbon_areas` - Area cards for navigation to individual areas. This is a dynamic section, that will be replaced with a section for each floor containing cards for each area on that floor. Areas that are not on a floor will be grouped in a separate section with name and icon from `bonbon_areas`
+- `bonbon_robots` - Robot mowers and vacuums. If you have robots dedicated to specific areas, think about disabling this section and adding custom sections to `bonbon_area` instead.
 - `bonbon_security` - Just Locks. Because every household works differently and classifies different things as being part of "Security", I didn't include more than that by default, but you can easily extend it with things like `binary_sensor.*contact[device_class=door|window]:not([label=indoors]):hide([state=off])`, just to give you an idea.
 
 **Basic example:**
