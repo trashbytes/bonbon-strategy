@@ -221,9 +221,9 @@ strategy:
 
 ### Cards and Entities
 
-In the `cards` arrays, you can specify cards and entities in two ways:
+In the `cards` arrays, you can specify cards and entities in two ways: You can use entity selectors as well as YAML cards and even mix and match both options.
 
-#### 1. Entity selectors
+### 1. Entity selectors
 
 Use strings or an array of strings with wildcards and filters to automatically match entities:
 
@@ -285,7 +285,15 @@ cards:
   - <device_id> # all entities of a specific device
 ```
 
-#### 2. Classic YAML structure
+**Important note:**
+
+`:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long.
+
+Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard. If you use more than one column then the section with its separator (if enabled) and spacing will always be there, even if no buttons are currently visible in that section.
+
+The `hide()` pseudo function also only works in `cards` and will always generate standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
+
+### 2. Classic YAML structure
 
 Use Home Assistant's built-in cards or custom cards you installed:
 
@@ -298,14 +306,6 @@ cards:
 ```
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
-
-**Important note:**
-
-`:not()` will exclude entities matching the selector inside entirely and `:hide()` will include them, but hide them dynamically instead. While you can also use things like `[state=on]` directly in the selector, everything not inside `:hide()` will be evaluated only once and will not respond to changes without reloading the dashboard. It is more performant, however, and may be a sensible choice for entities which don't change their state often or if you never leave your dashboard open for long.
-
-Keep in mind, that entities hidden by `:hide()` are technically always on the dashboard. If you use more than one column then the section with its separator (if enabled) and spacing will always be there, even if no buttons are currently visible in that section.
-
-The `hide()` pseudo function also only works in `cards` and will always generate standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
 
 ### Styling and Colors
 
