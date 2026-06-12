@@ -97,16 +97,65 @@ Add this to your dashboard configuration. The strategy uses sensible defaults, s
 
 ### Minimum Config
 
-Minimum required configuration - everything else uses defaults:
+Minimum required configuration - everything else uses defaults.
+Use this as a starting point:
 
 ```yaml
 strategy:
   type: custom:bonbon-strategy
 ```
 
+### Translations
+
+Use this if you just want to translate the sections into your language of choice:
+
+```yaml
+strategy:
+  type: custom:bonbon-strategy
+  options:
+    views:
+      bonbon_home:
+        sections:
+          bonbon_weather:
+            name: 'Wetter'
+          bonbon_persons:
+            name: 'Personen'
+          bonbon_favorites:
+            name: 'Favoriten'
+          bonbon_areas:
+            name: 'Bereiche'
+          bonbon_robots:
+            name: 'Roboter'
+          bonbon_security:
+            name: 'Sicherheit'
+      bonbon_area:
+        sections:
+          bonbon_environment:
+            name: 'Raumklima'
+          bonbon_scenes:
+            name: 'Szenen & Skripte'
+          bonbon_lights:
+            name: 'Beleuchtung'
+          bonbon_switches:
+            name: 'Schalter & Taster'
+          bonbon_media:
+            name: 'Media Player'
+          bonbon_climate:
+            name: 'Heizung & Klima'
+          bonbon_covers:
+            name: 'Rollläden & Beschattung'
+          bonbon_openings:
+            name: 'Fenster & Türen'
+          bonbon_valves:
+            name: 'Wasser'
+          bonbon_miscellaneous:
+            name: 'Sonstiges'
+```
+
 ### Configuration Structure
 
-The configuration is organized as follows:
+Here is how it works. Do not use this as your config, it's generic example code.
+Pick the parts you need, understand how they work and then selectively add it to your config. Make sure to properly indent everything!
 
 ```yaml
 strategy:
@@ -170,53 +219,6 @@ strategy:
           bonbon_lights:
             separator_buttons: light.*:not([label=nightlight]) # lights to be included on separator, area_id is implied if missing
             separator_combine_lights: 'always' # smartly combine lights into a single toggle on separator ('when-on' | 'always' | false), will discard all entities that aren't lights
-```
-
-### Translations
-
-Override default English section names:
-
-```yaml
-strategy:
-  type: custom:bonbon-strategy
-  options:
-    views:
-      bonbon_home:
-        sections:
-          bonbon_weather:
-            name: 'Wetter'
-          bonbon_persons:
-            name: 'Personen'
-          bonbon_favorites:
-            name: 'Favoriten'
-          bonbon_areas:
-            name: 'Bereiche'
-          bonbon_robots:
-            name: 'Roboter'
-          bonbon_security:
-            name: 'Sicherheit'
-      bonbon_area:
-        sections:
-          bonbon_environment:
-            name: 'Raumklima'
-          bonbon_scenes:
-            name: 'Szenen & Skripte'
-          bonbon_lights:
-            name: 'Beleuchtung'
-          bonbon_switches:
-            name: 'Schalter & Taster'
-          bonbon_media:
-            name: 'Media Player'
-          bonbon_climate:
-            name: 'Heizung & Klima'
-          bonbon_covers:
-            name: 'Rollläden & Beschattung'
-          bonbon_openings:
-            name: 'Fenster & Türen'
-          bonbon_valves:
-            name: 'Wasser'
-          bonbon_miscellaneous:
-            name: 'Sonstiges'
 ```
 
 ### Entities and Cards
