@@ -95,19 +95,18 @@ Done!
 
 Add this to your dashboard configuration. The strategy uses sensible defaults, so you only need to override the settings you want to change.
 
-### Minimum Config
+### Minimum Default Config
 
-Minimum required configuration - everything else uses defaults.
-Use this as a starting point:
+Minimum required configuration - everything uses sensible defaults. Use this if you just want to get it up and running:
 
 ```yaml
 strategy:
   type: custom:bonbon-strategy
 ```
 
-### Translations
+### Translations and further customization
 
-Use this if you just want to translate the sections into your language of choice:
+Use this if you just want to translate the sections into your language of choice and have a great starting point to start customizing, as all built-in views and sections are already here and can be changed/expanded.
 
 ```yaml
 strategy:
@@ -154,8 +153,7 @@ strategy:
 
 ### Configuration Structure
 
-Here is how it works. Do not use this as your config, it's generic example code.
-Pick the parts you need, understand how they work and then selectively add it to your config. Make sure to properly indent everything!
+Now let's get into how it works, but do not use this as your config, as it's generic example code. Pick the parts you need, understand how they work, change them to suit your needs and then selectively add them to your config. Make sure to properly indent everything!
 
 ```yaml
 strategy:
