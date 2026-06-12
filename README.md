@@ -97,7 +97,7 @@ Add this to your dashboard configuration. The strategy uses sensible defaults, s
 
 ### Minimum default config
 
-Minimum required configuration - everything uses sensible defaults. Use this if you just want to get it up and running:
+Use this if you just want to get it up and running. Everything uses sensible defaults.
 
 ```yaml
 strategy:
