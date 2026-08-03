@@ -260,6 +260,7 @@ export class BonbonStrategy {
           const viewConfig = {
             title: area.name,
             icon: area.icon,
+            subview: !!areaViewConfig.subview,
             path: viewKey,
             max_columns: areaViewConfig.max_columns || 1,
             sections: {},
