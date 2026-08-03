@@ -98,6 +98,7 @@ export const defaultConfig = {
     },
     bonbon_area: {
       max_columns: 1,
+      subview: true,
       sections: {
         bonbon_environment: {
           name: 'Environment',
