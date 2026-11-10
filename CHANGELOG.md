@@ -11,16 +11,17 @@ definitions, including `type`, so weather forecasts, Mini Graph cards and Bubble
 - New top-level config key `card_templates`: an ordered map of `entity selector -> card definition`. The **last
   matching template wins**, so generic templates come first and more specific variants follow; the `*` catch-all
   is only used when nothing else matched.
-- New section key `sections.<key>.card_templates`: the same shape, matched after the global map, so a
-  section-scoped template always wins over a global one. The built-in environment section ships its graph
-  templates this way instead of setting `show_graphs`.
+- Template selectors support context filters `[view=...]` and `[section=...]`, matched against the view and
+  section a card is rendered in instead of the entity. This replaces per-section template maps: the shipped
+  environment graph templates and the weather card scoping are regular entries in the global map
+  (`sensor.*[section=bonbon_environment]`, `weather.*[section=bonbon_weather]`).
 - Template string values support placeholders, resolved per matched entity: `entity.entity_id`, `entity.name`,
   `entity.area`, `entity.area_id`, `entity.floor`, `entity.floor_id`, `entity.device`, `entity.device_id`,
   `entity.labels`, any `entity.attributes.<attribute>` and `area.<attribute>`.
 - Templates using a custom card that is not installed are skipped, so the next matching template applies.
-- `show_graphs` and `show_forecast` are **deprecated**. They keep working (applied after your own section
-  templates) but are no longer part of the shipped defaults and will be removed in a future version. Use
-  `sections.<key>.card_templates` instead.
+- `show_graphs` and `show_forecast` are **deprecated**. They keep working (applied as `[section=...]` templates
+  in the global map, which a template you wrote for that section overrides) but are no longer part of the
+  shipped defaults and will be removed in a future version.
 
 The shipped defaults reproduce the previous appearance: dimmable lights as brightness sliders, all other lights
 and togglable domains as switches, climate, media player, cover and select cards, persons and binary sensors as

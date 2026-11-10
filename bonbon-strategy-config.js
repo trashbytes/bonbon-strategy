@@ -12,7 +12,7 @@ export const defaultConfig = {
   // Card templates matched per entity: later keys win, so generic selectors come first and
   // label/attribute-specific variants follow their generic key. `*` stays last as the fallback.
   card_templates: {
-    'weather.*': {
+    'weather.*[section=bonbon_weather]': {
       type: 'weather-forecast',
       entity: 'entity.entity_id',
       show_current: true,
@@ -60,6 +60,13 @@ export const defaultConfig = {
       show: { points: false, labels: false, labels_secondary: false },
       name: 'entity.name',
     },
+    'sensor.*[section=bonbon_environment]': {
+      type: 'custom:mini-graph-card',
+      height: 56,
+      entities: [{ entity: 'entity.entity_id', show_line: false }],
+      show: { points: false, labels: false, labels_secondary: false },
+      name: 'entity.name',
+    },
     'binary_sensor.*': {
       type: 'custom:bubble-card',
       card_type: 'button',
@@ -73,6 +80,13 @@ export const defaultConfig = {
       name: 'entity.name',
     },
     'binary_sensor.*[label=graph|graphs]': {
+      type: 'custom:mini-graph-card',
+      height: 56,
+      entities: [{ entity: 'entity.entity_id', show_line: false }],
+      show: { points: false, labels: false, labels_secondary: false },
+      name: 'entity.name',
+    },
+    'binary_sensor.*[section=bonbon_environment]': {
       type: 'custom:mini-graph-card',
       height: 56,
       entities: [{ entity: 'entity.entity_id', show_line: false }],
@@ -455,22 +469,6 @@ export const defaultConfig = {
           hide_separator: false,
           min_columns: 1,
           max_columns: 3,
-          card_templates: {
-            'sensor.*': {
-              type: 'custom:mini-graph-card',
-              height: 56,
-              entities: [{ entity: 'entity.entity_id', show_line: false }],
-              show: { points: false, labels: false, labels_secondary: false },
-              name: 'entity.name',
-            },
-            'binary_sensor.*': {
-              type: 'custom:mini-graph-card',
-              height: 56,
-              entities: [{ entity: 'entity.entity_id', show_line: false }],
-              show: { points: false, labels: false, labels_secondary: false },
-              name: 'entity.name',
-            },
-          },
           cards: [
             'area.temperature_entity_id',
             'area.humidity_entity_id',

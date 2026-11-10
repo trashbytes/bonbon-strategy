@@ -204,8 +204,8 @@ strategy:
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
             separator_buttons: null # buttons to add to a separator
-            show_graphs: false # deprecated, use `card_templates` instead
-            show_forecast: false # deprecated, use `card_templates` instead
+            show_graphs: false # deprecated, use a `[section=...]` template instead
+            show_forecast: false # deprecated, use a `[section=...]` template instead
             prefix: false # name prefix, useful for "Ceiling light" etc., which you may have tons of ('area' | 'floor' | 'device' | false)
             cards: # cards and entities
               - entity_id
@@ -308,7 +308,7 @@ The `hide()` pseudo function also only works in `cards` and will always generate
 
 Every card that Bonbon generates for a single entity comes from a **card template**. A template is a complete card definition (including `type`) that is matched to an entity by an entity selector. This replaces the built-in, hard-coded card construction: weather forecasts, graphs and Bubble Cards are all templates now.
 
-`card_templates` (top level of `options`) is an ordered map of `entity selector -> card definition`. The same key is available per section via `sections.<key>.card_templates`.
+`card_templates` (top level of `options`) is an ordered map of `entity selector -> card definition`. There is exactly one map: templates that should only apply in one view or section say so in the selector with `[view=...]` or `[section=...]`.
 
 ```yaml
 card_templates:
@@ -327,24 +327,21 @@ card_templates:
     entity: entity.entity_id
     name: entity.name
 
-views:
-  bonbon_area:
-    sections:
-      bonbon_environment:
-        card_templates: # only applies to this section
-          'sensor.*':
-            type: custom:mini-graph-card
-            height: 56
-            entities:
-              - entity: entity.entity_id
-                show_line: false
-            name: entity.name
+  # ... and the environment section of every area renders plain sensors as graphs
+  'sensor.*[section=bonbon_environment]':
+    type: custom:mini-graph-card
+    height: 56
+    entities:
+      - entity: entity.entity_id
+        show_line: false
+    name: entity.name
 ```
 
-**Matching order:**
+**Context filters.** `[view=...]` and `[section=...]` are not entity attributes — they are matched against the view and section a card is rendered in, and are removed from the selector before the entities are looked up. They accept `|` for alternatives (`[view=bonbon_area|bonbon_home]`) and are combined with entity filters in any order (`light.*[section=lights][brightness=*]`). Per-area views also answer to `[view=bonbon_area]`, custom views to the key they were configured under.
 
-1. `card_templates` (global templates), in the order you define them.
-2. `sections.<key>.card_templates`, matched after the global map, so a section-scoped template always wins over a global one.
+The weather forecast card is scoped that way: the default is `weather.*[section=bonbon_weather]`, so a weather entity in any other section renders from the generic `*` template (a plain state button). Add your own `weather.*` template if you want forecast cards elsewhere.
+
+**Matching order:** the map in the order you define it, with context filters narrowing a template down to one view or section. Because the last match wins, put a context-filtered template *after* the generic one it should override — which is what happens automatically when you add a new key.
 
 **Last match wins.** For every entity the *last* matching template in that order is used, which means a generic key must come before its label/attribute-specific variants: `light.*` and `binary_sensor.*` first, then `light.*[supported_color_modes*=...]` and `binary_sensor.*[label=graph|graphs]`. Broad fallbacks belong at the end of the map. The catch-all selector `*` is only used when no other template matched. A template whose `type` starts with `custom:` is skipped when that custom card is not loaded (only Bubble Card is assumed to be installed; optional cards such as Mini Graph Card must be present for the graph templates to apply), so the next matching template applies.
 
@@ -365,7 +362,7 @@ A user template with the same selector key as a default is deep-merged over it (
 
 A value that is exactly one placeholder keeps the type of the resolved value (numbers stay numbers, arrays stay arrays); a placeholder inside a longer string is interpolated as a string. Unresolvable placeholders resolve to `undefined` and the key is dropped from the card, so optional keys like `state_content` never ship an empty value.
 
-**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied after your own templates, but they are deprecated in favour of `sections.<key>.card_templates` and will be removed in a future version. They are no longer part of the shipped defaults — the built-in environment section now carries its graph templates explicitly, and a weather card gets its forecast from the `forecast*` labels or from your own template.
+**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied as `[section=...]` templates in the global map (a template you wrote for that section wins), but they are deprecated and will be removed in a future version. They are no longer part of the shipped defaults — the environment section's graph templates and the weather card's section scoping are shipped as regular templates.
 
 ```yaml
 # deprecated
@@ -377,19 +374,14 @@ views:
         show_graphs: true
 
 # equivalent, and the supported way
-views:
-  bonbon_area:
-    sections:
-      my_sensor_section:
-        cards: 'sensor.*'
-        card_templates:
-          'sensor.*':
-            type: custom:mini-graph-card
-            height: 56
-            entities:
-              - entity: entity.entity_id
-                show_line: false
-            name: entity.name
+card_templates:
+  'sensor.*[section=my_sensor_section]':
+    type: custom:mini-graph-card
+    height: 56
+    entities:
+      - entity: entity.entity_id
+        show_line: false
+    name: entity.name
 ```
 
 The labels `graph`/`graphs`, `forecast`, `forecast_daily` and `forecast_hourly` keep working through the selectors of the default templates.
@@ -649,14 +641,6 @@ views:
           - sensor.*cpu*
           - sensor.*memory*
           - sensor.*disk*
-        card_templates:
-          'sensor.*':
-            type: custom:mini-graph-card
-            height: 56
-            entities:
-              - entity: entity.entity_id
-                show_line: false
-            name: entity.name
 
       battery_status:
         name: Batteries

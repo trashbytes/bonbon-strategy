@@ -1,18 +1,21 @@
 // Card templates: an ordered map of entity selector -> full card definition.
-// For every entity the last matching template wins, except for the `*` fallback which is always matched last.
-// String values inside a template may contain placeholders, resolved per matched entity.
+// For every entity the last matching template wins, except for the `*` catch-all, which only applies when nothing
+// else matched. A selector may carry `[view=...]` and `[section=...]` context filters, matched against the section
+// a card is rendered in instead of against the entity. String values inside a template may contain placeholders,
+// resolved per matched entity.
 
 import { mergeDeep } from './bonbon-strategy-utils.js';
 
 // Only Bubble Card may be assumed installed, every other custom card is optional.
 const BUILT_IN_CUSTOM_CARDS = ['bubble-card'];
 
-// Sections without their own templates share one frozen object, so the template-map cache can key on it.
-const EMPTY_TEMPLATES = Object.freeze({});
-
 const PLACEHOLDER_PATTERN = /\bentity\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*|\barea\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*/g;
 
 const EXACT_PLACEHOLDER_PATTERN = /^(entity|area)\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/;
+
+// `[view=...]` and `[section=...]` are context filters, not entity attributes: they are stripped from the
+// selector before it is resolved and matched against the rendering section.
+const CONTEXT_FILTER_PATTERN = /\[(view|section)\s*=\s*([^\]]+)\]/gi;
 
 function isPlainObject(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -134,6 +137,45 @@ export function isCustomCardInstalled(type) {
   });
 }
 
+// Splits a template selector into its entity part and its context filters, e.g.
+// `sensor.*[section=bonbon_environment]` -> { base: 'sensor.*', filters: [{ key: 'section', values: [...] }] }.
+export function parseTemplateSelector(selector) {
+  const filters = [];
+  const base = String(selector ?? '')
+    .replace(CONTEXT_FILTER_PATTERN, (match, key, value) => {
+      const values = value
+        .split('|')
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean);
+      if (values.length) {
+        filters.push({ key: key.toLowerCase(), values });
+      }
+      return '';
+    })
+    .trim();
+  return { base: base || '*', filters };
+}
+
+// A `[section=...]` filter matches the section key, a `[view=...]` filter the rendered view key. Per-area views
+// also answer to `bonbon_area`, custom views to the key they were configured under.
+export function matchesSectionContext(filters = [], sectionConfig = {}) {
+  return filters.every((filter) => {
+    const raw = filter.key === 'section' ? sectionConfig?.key : sectionConfig?.view;
+    if (!raw) {
+      return false;
+    }
+    const context = String(raw).toLowerCase();
+    const candidates = new Set([context]);
+    if (context.startsWith('bonbon_area_')) {
+      candidates.add('bonbon_area');
+    }
+    if (context.startsWith('custom_')) {
+      candidates.add(context.slice('custom_'.length));
+    }
+    return filter.values.some((value) => candidates.has(value));
+  });
+}
+
 // Card templates are merged by selector key in two steps:
 // 1. a user template deep-merges over the shipped default with the identical key, so overriding a single key
 //    (e.g. only `button_type` of `light.*`) keeps the rest of the default card (arrays are replaced, not merged);
@@ -151,51 +193,21 @@ export function mergeCardTemplates(defaultTemplates = {}, userTemplates = {}) {
 }
 
 export function createTemplateApi(config = {}, states = {}, resolveEntityFn = null) {
-
-  // Selector -> Set(entity_id). Built once per selector per generate run, so matching a card does not re-resolve
-  // the whole registry for every template.
+  // Selector -> Set(entity_id) and selector -> parsed selector. Built once per selector per generate run, so
+  // matching a card never re-resolves the whole registry and never re-parses the same selector.
   const matchCache = new Map();
-  // Template map cache, section templates are identified by their own `card_templates` object.
-  const templateMapCache = new Map();
+  const parsedCache = new Map();
 
-  const getSectionTemplates = (sectionConfig) =>
-    isPlainObject(sectionConfig?.card_templates) ? sectionConfig.card_templates : EMPTY_TEMPLATES;
+  const getTemplates = () => (isPlainObject(config?.card_templates) ? config.card_templates : {});
 
-  // Global templates first, section templates after them so a section-scoped template always wins.
-  // Insertion order is kept as authored: the last matching template wins.
-  const getTemplateMap = (sectionConfig) => {
-    const sectionTemplates = getSectionTemplates(sectionConfig);
-    const cached = templateMapCache.get(sectionTemplates);
-    if (cached) {
-      return cached;
+  const parseSelector = (selector) => {
+    if (!parsedCache.has(selector)) {
+      parsedCache.set(selector, parseTemplateSelector(selector));
     }
-    const globalTemplates = isPlainObject(config?.card_templates) ? config.card_templates : {};
-    const merged = {};
-    // A section key replaces the global template with the identical key, but moves to the end so it also
-    // beats more specific global selectors (e.g. a section `light.*` must win over the dimmable `light.*[...]`).
-    Object.keys(globalTemplates).forEach((key) => {
-      if (!isPlainObject(globalTemplates[key])) {
-        return;
-      }
-      if (isPlainObject(sectionTemplates) && Object.prototype.hasOwnProperty.call(sectionTemplates, key)) {
-        return;
-      }
-      merged[key] = globalTemplates[key];
-    });
-    Object.keys(sectionTemplates).forEach((key) => {
-      if (!isPlainObject(sectionTemplates[key])) {
-        return;
-      }
-      // Same key as a global template: deep-merge so a section only overrides the keys it names.
-      merged[key] = isPlainObject(globalTemplates[key])
-        ? mergeDeep(globalTemplates[key], sectionTemplates[key])
-        : sectionTemplates[key];
-    });
-    templateMapCache.set(sectionTemplates, merged);
-    return merged;
+    return parsedCache.get(selector);
   };
 
-  // Resolves a selector against the full registry, independent of the section's hidden/entity_category
+  // Resolves an entity selector against the full registry, independent of the section's hidden/entity_category
   // filtering. The second argument is a section config, not an entity.
   const getSelectorEntityIds = (selector) => {
     if (matchCache.has(selector)) {
@@ -214,29 +226,33 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
     return entityIds;
   };
 
-  const matchesTemplate = (selector, entity) =>
-    !!entity?.entity_id && getSelectorEntityIds(selector).has(entity.entity_id);
-
-  // Returns the selector of the last template matching the entity, or `*` as the fallback, or null.
-  // The `*` catch-all always matches every entity, so it is only used when nothing else matched.
+  // Returns the selector of the last template matching the entity and the current section, or the last matching
+  // `*` catch-all when nothing else matched, or null.
   const findTemplate = (entity, sectionConfig) => {
     if (!entity?.entity_id) {
       return null;
     }
-    const templateMap = getTemplateMap(sectionConfig);
+    const templates = getTemplates();
     let matchedKey = null;
-    Object.keys(templateMap).forEach((key) => {
-      if (key === '*' || !isCustomCardInstalled(templateMap[key]?.type)) {
+    let catchAllKey = null;
+    Object.keys(templates).forEach((key) => {
+      const template = templates[key];
+      if (!isPlainObject(template) || !isCustomCardInstalled(template.type)) {
         return;
       }
-      if (matchesTemplate(key, entity)) {
+      const { base, filters } = parseSelector(key);
+      if (!matchesSectionContext(filters, sectionConfig)) {
+        return;
+      }
+      if (base === '*') {
+        catchAllKey = key;
+        return;
+      }
+      if (getSelectorEntityIds(base).has(entity.entity_id)) {
         matchedKey = key;
       }
     });
-    if (matchedKey === null && templateMap['*'] && isCustomCardInstalled(templateMap['*']?.type)) {
-      matchedKey = '*';
-    }
-    return matchedKey;
+    return matchedKey ?? catchAllKey;
   };
 
   // `area` is the area the card is rendered in, used to resolve `area.*` placeholders.
@@ -245,13 +261,12 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
     if (key === null) {
       return undefined;
     }
-    return resolvePlaceholders(getTemplateMap(sectionConfig)[key], c.entity, states, area);
+    return resolvePlaceholders(getTemplates()[key], c.entity, states, area);
   };
 
   return {
     findTemplate,
     getCardTemplate,
-    getTemplateMap,
-    getSectionTemplates,
+    getTemplates,
   };
 }

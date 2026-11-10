@@ -73,19 +73,22 @@ const applySectionSugars = (config) => {
       if (!section) {
         return;
       }
-      const nextTemplates = {};
+      // The deprecated options become section-scoped templates in the global map. A template the user already
+      // wrote for the same section wins, so migrating is a no-op.
+      const addTemplate = (selector, template) => {
+        const key = `${selector}[section=${sectionKey}]`;
+        if (!config.card_templates[key]) {
+          config.card_templates[key] = template;
+        }
+      };
       if (section.show_graphs) {
         // Entities resolved through `area.<attribute>` carry no labels, so the generic selectors come last.
-        nextTemplates['sensor.*'] = { ...graphTemplate };
-        nextTemplates['binary_sensor.*'] = { ...graphTemplate };
+        addTemplate('sensor.*', { ...graphTemplate });
+        addTemplate('binary_sensor.*', { ...graphTemplate });
       }
       if (section.show_forecast) {
-        Object.assign(nextTemplates, getForecastTemplates(section.show_forecast));
-      }
-      if (Object.keys(nextTemplates).length) {
-        // Explicit section templates win over the sugar: a user who both sets `card_templates` and a
-        // deprecated section option keeps their own template.
-        section.card_templates = { ...nextTemplates, ...(section.card_templates || {}) };
+        const forecastTemplates = getForecastTemplates(section.show_forecast);
+        Object.keys(forecastTemplates).forEach((selector) => addTemplate(selector, forecastTemplates[selector]));
       }
     });
   });
