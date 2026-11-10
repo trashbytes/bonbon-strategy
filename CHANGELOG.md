@@ -19,6 +19,10 @@ definitions, including `type`, so weather forecasts, Mini Graph cards and Bubble
   `entity.area`, `entity.area_id`, `entity.floor`, `entity.floor_id`, `entity.device`, `entity.device_id`,
   `entity.labels`, any `entity.attributes.<attribute>` and `area.<attribute>`.
 - Templates using a custom card that is not installed are skipped, so the next matching template applies.
+- The `forecast_daily`, `forecast_hourly` and `forecast` labels keep working: they ship as label-scoped default
+  templates and win over a section's `show_forecast`.
+- Precedence: shipped defaults < deprecated section options (`show_graphs`, `show_forecast`) < your own
+  templates.
 - `show_graphs` and `show_forecast` are **deprecated**. They keep working (applied as `[section=...]` templates
   in the global map, which a template you wrote for that section overrides) but are no longer part of the
   shipped defaults and will be removed in a future version.

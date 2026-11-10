@@ -89,7 +89,9 @@ export function createBuildersApi(panelUrl, config, states = {}, templateApi = n
   };
 
   const applyConfiguredActions = (card, c) => {
-    if (card?.type !== 'custom:bubble-card' || card?.card_type !== 'button') {
+    // Applies to every generated Bubble Card (button, slider, cover, climate, media-player, select), not only
+    // to `card_type: button` - that is what the option did before card templates existed.
+    if (card?.type !== 'custom:bubble-card') {
       return card;
     }
     const actions = getConfiguredActions(c);
@@ -100,20 +102,21 @@ export function createBuildersApi(panelUrl, config, states = {}, templateApi = n
     const fallback = isToggle ? 'toggle' : 'more-info';
     const resolve = (value) => (value === 'auto' ? fallback : value);
 
-    const tapAction = resolve(actions.icon);
-    const buttonAction = resolve(actions.button);
+    // Missing keys behave like the old shipped defaults (`icon: none`, `button: auto`), and an unset or
+    // explicitly `none` icon falls back to the button action - that is what this option did before.
+    const tapAction = resolve(actions.icon ?? 'none');
+    const buttonAction = resolve(actions.button ?? 'auto');
 
-    if (tapAction) {
-      card.tap_action = { action: tapAction };
-    }
     if (buttonAction) {
       card.button_action = {
         ...(card.button_action || {}),
         tap_action: { action: buttonAction },
       };
     }
-    if (card.tap_action?.action == 'none') {
-      card.tap_action.action = card.button_action?.tap_action?.action || card.tap_action.action;
+    if (tapAction && tapAction !== 'none') {
+      card.tap_action = { action: tapAction };
+    } else {
+      card.tap_action = { action: card.button_action?.tap_action?.action || card.tap_action?.action || 'none' };
     }
     return card;
   };

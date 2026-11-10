@@ -1,3 +1,12 @@
+// The Mini Graph card used for labelled and section-scoped sensor cards.
+export const miniGraphCardTemplate = {
+  type: 'custom:mini-graph-card',
+  height: 56,
+  entities: [{ entity: 'entity.entity_id', show_line: false }],
+  show: { points: false, labels: false, labels_secondary: false },
+  name: 'entity.name',
+};
+
 export const defaultConfig = {
   styles: {
     use_bonbon_colors: true,
@@ -17,6 +26,27 @@ export const defaultConfig = {
       entity: 'entity.entity_id',
       show_current: true,
       show_forecast: false,
+    },
+    // Labels win over the section's `show_forecast`, so they come after the generic weather template.
+    'weather.*[section=bonbon_weather][label=forecast_daily]': {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: true,
+      forecast_type: 'daily',
+    },
+    'weather.*[section=bonbon_weather][label=forecast_hourly]': {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: true,
+      forecast_type: 'hourly',
+    },
+    'weather.*[section=bonbon_weather][label=forecast]': {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: true,
     },
     'light.*': {
       type: 'custom:bubble-card',
@@ -53,20 +83,8 @@ export const defaultConfig = {
       entity: 'entity.entity_id',
       name: 'entity.name',
     },
-    'sensor.*[label=graph|graphs]': {
-      type: 'custom:mini-graph-card',
-      height: 56,
-      entities: [{ entity: 'entity.entity_id', show_line: false }],
-      show: { points: false, labels: false, labels_secondary: false },
-      name: 'entity.name',
-    },
-    'sensor.*[section=bonbon_environment]': {
-      type: 'custom:mini-graph-card',
-      height: 56,
-      entities: [{ entity: 'entity.entity_id', show_line: false }],
-      show: { points: false, labels: false, labels_secondary: false },
-      name: 'entity.name',
-    },
+    'sensor.*[label=graph|graphs]': miniGraphCardTemplate,
+    'sensor.*[section=bonbon_environment]': miniGraphCardTemplate,
     'binary_sensor.*': {
       type: 'custom:bubble-card',
       card_type: 'button',
@@ -79,20 +97,8 @@ export const defaultConfig = {
       entity: 'entity.entity_id',
       name: 'entity.name',
     },
-    'binary_sensor.*[label=graph|graphs]': {
-      type: 'custom:mini-graph-card',
-      height: 56,
-      entities: [{ entity: 'entity.entity_id', show_line: false }],
-      show: { points: false, labels: false, labels_secondary: false },
-      name: 'entity.name',
-    },
-    'binary_sensor.*[section=bonbon_environment]': {
-      type: 'custom:mini-graph-card',
-      height: 56,
-      entities: [{ entity: 'entity.entity_id', show_line: false }],
-      show: { points: false, labels: false, labels_secondary: false },
-      name: 'entity.name',
-    },
+    'binary_sensor.*[label=graph|graphs]': miniGraphCardTemplate,
+    'binary_sensor.*[section=bonbon_environment]': miniGraphCardTemplate,
     'switch.*': {
       type: 'custom:bubble-card',
       card_type: 'button',

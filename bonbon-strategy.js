@@ -2,7 +2,9 @@ window.bonbon = window.bonbon || {};
 
 const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
-const { defaultConfig } = await import(`./bonbon-strategy-config.js?hacstag=${hacstag}`);
+const { defaultConfig, miniGraphCardTemplate } = await import(
+  `./bonbon-strategy-config.js?hacstag=${hacstag}`,
+);
 const {
   getWeatherIcon,
   mergeDeep,
@@ -18,17 +20,12 @@ const { createTemplateApi, mergeCardTemplates } = await import(`./bonbon-strateg
 const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
 
+const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+
 // Turns the legacy section options `show_graphs` and `show_forecast` into
 // section-scoped card templates, so the builders no longer branch on them.
 // Section templates are matched after the global map, so they always win.
-const applySectionSugars = (config) => {
-  const graphTemplate = {
-    type: 'custom:mini-graph-card',
-    height: 56,
-    entities: [{ entity: 'entity.entity_id', show_line: false }],
-    show: { points: false, labels: false, labels_secondary: false },
-    name: 'entity.name',
-  };
+const applySectionSugars = (config, userTemplates = {}) => {
   const getForecastTemplates = (forecastType) => {
     const templates = {
       'weather.*[label=forecast_daily]': {
@@ -75,16 +72,18 @@ const applySectionSugars = (config) => {
       }
       // The deprecated options become section-scoped templates in the global map. A template the user already
       // wrote for the same section wins, so migrating is a no-op.
+      // A template the user wrote for the same key wins; a shipped default may be overridden by the option.
       const addTemplate = (selector, template) => {
         const key = `${selector}[section=${sectionKey}]`;
-        if (!config.card_templates[key]) {
-          config.card_templates[key] = template;
+        if (isPlainObject(userTemplates) && isPlainObject(userTemplates[key])) {
+          return;
         }
+        config.card_templates[key] = template;
       };
       if (section.show_graphs) {
         // Entities resolved through `area.<attribute>` carry no labels, so the generic selectors come last.
-        addTemplate('sensor.*', { ...graphTemplate });
-        addTemplate('binary_sensor.*', { ...graphTemplate });
+        addTemplate('sensor.*', { ...miniGraphCardTemplate });
+        addTemplate('binary_sensor.*', { ...miniGraphCardTemplate });
       }
       if (section.show_forecast) {
         const forecastTemplates = getForecastTemplates(section.show_forecast);
@@ -124,15 +123,13 @@ export class BonbonStrategy {
 
     try {
       const views = [];
-      const globalCardTemplates = mergeCardTemplates(defaultConfig.card_templates, userConfig?.card_templates);
-      // Card templates are merged by selector key instead of deep-merging the selector strings,
-      // otherwise a user override of `light.*` would also override the dimmable `light.*[...]` default.
-      const mergedConfig = mergeDeep(defaultConfig, {
-        ...(userConfig || {}),
-        card_templates: globalCardTemplates,
-      });
-      const config = upgradeConfig(mergedConfig);
-      applySectionSugars(config);
+      // Card templates are merged by selector key instead of deep-merging the selector strings, otherwise a
+      // user override of `light.*` would also override the dimmable `light.*[...]` default. Precedence is
+      // shipped defaults < deprecated section options < user templates.
+      const { card_templates: userCardTemplates, ...userConfigRest } = userConfig || {};
+      const config = upgradeConfig(mergeDeep(defaultConfig, userConfigRest));
+      applySectionSugars(config, userCardTemplates);
+      config.card_templates = mergeCardTemplates(config.card_templates, userCardTemplates);
 
       const dashboardName =
         Object.values(hass?.panels).find((p) => p?.url_path === panelUrl)?.title ||
