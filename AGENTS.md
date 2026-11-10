@@ -19,7 +19,7 @@ All modules are plain ES modules loaded in the browser. There is **no build step
 | `bonbon-strategy.js` | `BonbonStrategy.generate()` — orchestrates everything. Uses top-level `await` and `import.meta.url`. |
 | `bonbon-strategy-config.js` | Exports `defaultConfig` (the `views → sections → cards` tree). |
 | `bonbon-strategy-utils.js` | Color math (`getColorsFromColor`, `getAreaColors`, `getWeatherIcon`), `mergeDeep`, `normalizeSectionColumn`, `applySectionColumns`, `upgradeConfig`. |
-| `bonbon-strategy-builders.js` | `createBuildersApi(panelUrl, config)` → `createButtonCard`, `createSeparatorCard`, `createSubButton`, `createGrid`, `isTogglableEntity`, `hasBinaryState`. |
+| `bonbon-strategy-builders.js` | `createBuildersApi(panelUrl, config, states)` → `createButtonCard`, `createSeparatorCard`, `createSubButton`, `createGrid`, `isTogglableEntity`, `hasBinaryState`. |
 | `bonbon-strategy-styles.js` | `createStylesApi(panelUrl, config)` → `css`, `observeDarkMode`, `cssVariable`, `cssValue`, `getVariables`, `getStyles`. |
 | `bonbon-strategy-entities.js` | `createEntityApi(ctx)` → entity prep, selector resolution, sorting, area/floor scoping. |
 | `README.md` | User-facing documentation. **Source of truth for config options** — update it whenever you add or change a user-facing option. |
@@ -40,6 +40,8 @@ Local-only / gitignored (do not assume they ship): `bonbon-strategy-loader.js` (
 8. `applyGlobalStyles` recursively injects Bubble Card / card-mod styling, then returns `{ views }`. Errors are caught and returned as a Markdown "Error" view.
 
 Note: `console.log(dashboard)` runs at the end of `generate` — useful in the browser console when debugging.
+
+Generated Bubble Cards for `light.*` entities use `states[entity_id].attributes.supported_color_modes` (from `hass.states`, passed into `createBuildersApi`) to pick `button_type: slider` when any mode other than `onoff`/`unknown` is supported, `switch` otherwise. Explicit YAML card config still wins, because object cards are merged over the generated card last.
 
 ## Config model
 

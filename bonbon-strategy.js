@@ -63,7 +63,7 @@ export class BonbonStrategy {
 
       const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl, config);
       const { createButtonCard, createSeparatorCard, createGrid, createSubButton, isTogglableEntity, hasBinaryState } =
-        createBuildersApi(panelUrl, config);
+        createBuildersApi(panelUrl, config, hass.states);
 
       const styles = getStyles();
       const cssVars = getVariables();

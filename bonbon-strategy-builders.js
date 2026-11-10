@@ -1,4 +1,4 @@
-export function createBuildersApi(panelUrl, config) {
+export function createBuildersApi(panelUrl, config, states = {}) {
   const isTogglableEntity = (c) => {
     return (
       c.entity?.entity_id?.startsWith('light.') ||
@@ -38,6 +38,14 @@ export function createBuildersApi(panelUrl, config) {
       c.entity?.entity_id?.startsWith('sun.') ||
       c.entity?.entity_id?.startsWith('update.')
     );
+  };
+
+  const isDimmableLight = (entityId) => {
+    if (!entityId?.startsWith('light.')) {
+      return false;
+    }
+    const colorModes = states?.[entityId]?.attributes?.supported_color_modes || [];
+    return colorModes.some((mode) => mode !== 'onoff' && mode !== 'unknown');
   };
 
   const getActions = (c) => {
@@ -162,7 +170,7 @@ export function createBuildersApi(panelUrl, config) {
       const actions = getActions(c);
 
       if (isToggle) {
-        base.button_type = 'switch';
+        base.button_type = isDimmableLight(base.entity) ? 'slider' : 'switch';
         if (actions.button == 'auto') {
           base.button_action.tap_action.action = 'toggle';
         } else {
