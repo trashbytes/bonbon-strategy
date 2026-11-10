@@ -11,7 +11,7 @@ export const defaultConfig = {
   },
   // Card templates matched per entity: later keys win, so generic selectors come first and
   // label/attribute-specific variants follow their generic key. `*` stays last as the fallback.
-  cards: {
+  card_templates: {
     'weather.*': {
       type: 'weather-forecast',
       entity: 'entity.entity_id',
@@ -376,7 +376,6 @@ export const defaultConfig = {
           disabled: false,
           show_if_empty: true,
           separator_buttons: 'weather.*',
-          show_forecast: false,
         },
         bonbon_persons: {
           name: 'Persons',
@@ -456,7 +455,22 @@ export const defaultConfig = {
           hide_separator: false,
           min_columns: 1,
           max_columns: 3,
-          show_graphs: true,
+          card_templates: {
+            'sensor.*': {
+              type: 'custom:mini-graph-card',
+              height: 56,
+              entities: [{ entity: 'entity.entity_id', show_line: false }],
+              show: { points: false, labels: false, labels_secondary: false },
+              name: 'entity.name',
+            },
+            'binary_sensor.*': {
+              type: 'custom:mini-graph-card',
+              height: 56,
+              entities: [{ entity: 'entity.entity_id', show_line: false }],
+              show: { points: false, labels: false, labels_secondary: false },
+              name: 'entity.name',
+            },
+          },
           cards: [
             'area.temperature_entity_id',
             'area.humidity_entity_id',

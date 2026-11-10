@@ -13,7 +13,7 @@ const {
   upgradeConfig,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
-const { createTemplateApi, mergeCards } = await import(`./bonbon-strategy-templates.js?hacstag=${hacstag}`);
+const { createTemplateApi, mergeCardTemplates } = await import(`./bonbon-strategy-templates.js?hacstag=${hacstag}`);
 
 const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
@@ -83,7 +83,9 @@ const applySectionSugars = (config) => {
         Object.assign(nextTemplates, getForecastTemplates(section.show_forecast));
       }
       if (Object.keys(nextTemplates).length) {
-        section.card_templates = { ...(section.card_templates || {}), ...nextTemplates };
+        // Explicit section templates win over the sugar: a user who both sets `card_templates` and a
+        // deprecated section option keeps their own template.
+        section.card_templates = { ...nextTemplates, ...(section.card_templates || {}) };
       }
     });
   });
@@ -119,10 +121,13 @@ export class BonbonStrategy {
 
     try {
       const views = [];
-      const globalCardTemplates = mergeCards(defaultConfig.cards, userConfig?.cards);
+      const globalCardTemplates = mergeCardTemplates(defaultConfig.card_templates, userConfig?.card_templates);
       // Card templates are merged by selector key instead of deep-merging the selector strings,
       // otherwise a user override of `light.*` would also override the dimmable `light.*[...]` default.
-      const mergedConfig = mergeDeep(defaultConfig, { ...(userConfig || {}), cards: globalCardTemplates });
+      const mergedConfig = mergeDeep(defaultConfig, {
+        ...(userConfig || {}),
+        card_templates: globalCardTemplates,
+      });
       const config = upgradeConfig(mergedConfig);
       applySectionSugars(config);
 
@@ -142,7 +147,7 @@ export class BonbonStrategy {
       const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl, config);
       // Template matching resolves selectors against the full registry once per selector and then matches by
       // `entity_id`, so one card's template does not depend on the registry being filtered down to it.
-      const templateApi = createTemplateApi({ cards: config.cards }, hass.states, (selector, sectionConfig) =>
+      const templateApi = createTemplateApi({ card_templates: config.card_templates }, hass.states, (selector, sectionConfig) =>
         createEntityApi({
           entities: hass.entities,
           devices: hass.devices,

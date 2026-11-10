@@ -173,7 +173,7 @@ strategy:
       background_image_dark: null # background image for dark mode (null | path/to/image)
 
     # Card templates (see "Card templates" below for details)
-    cards:
+    card_templates:
       'light.*': # entity selector -> full card definition
         type: custom:bubble-card
         card_type: button
@@ -181,7 +181,7 @@ strategy:
         entity: entity.entity_id
         name: entity.name
 
-    # Button actions (deprecated, use `cards` instead)
+    # Button actions (deprecated, use `card_templates` instead)
     actions:
       default: # the default config all domains, you can add overrides per domain (note: only applies to default Bubble Cards, doesn't apply to Graphs, Weather-Forecasts or custom cards)
         icon: none # action on icon tap ('auto' | 'toggle' | 'more-info' | 'none')
@@ -204,8 +204,8 @@ strategy:
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
             separator_buttons: null # buttons to add to a separator
-            show_graphs: false # render `sensor` and `binary_sensor` cards as graphs, can be done with the label `graph` individually as well
-            show_forecast: false # render `weather` cards with forecast ('daily' | 'hourly' | false), can be done with the labels `forecast_daily` or `forecast_hourly` individually as well
+            show_graphs: false # deprecated, use `card_templates` instead
+            show_forecast: false # deprecated, use `card_templates` instead
             prefix: false # name prefix, useful for "Ceiling light" etc., which you may have tons of ('area' | 'floor' | 'device' | false)
             cards: # cards and entities
               - entity_id
@@ -308,10 +308,10 @@ The `hide()` pseudo function also only works in `cards` and will always generate
 
 Every card that Bonbon generates for a single entity comes from a **card template**. A template is a complete card definition (including `type`) that is matched to an entity by an entity selector. This replaces the built-in, hard-coded card construction: weather forecasts, graphs and Bubble Cards are all templates now.
 
-`cards` is an ordered map of `entity selector -> card definition`. Templates are also available per section via `sections.<key>.card_templates`.
+`card_templates` (top level of `options`) is an ordered map of `entity selector -> card definition`. The same key is available per section via `sections.<key>.card_templates`.
 
 ```yaml
-cards:
+card_templates:
   # all lights render as simple toggles ...
   'light.*':
     type: custom:bubble-card
@@ -343,7 +343,7 @@ views:
 
 **Matching order:**
 
-1. `cards` (global templates), in the order you define them.
+1. `card_templates` (global templates), in the order you define them.
 2. `sections.<key>.card_templates`, matched after the global map, so a section-scoped template always wins over a global one.
 
 **Last match wins.** For every entity the *last* matching template in that order is used, which means a generic key must come before its label/attribute-specific variants: `light.*` and `binary_sensor.*` first, then `light.*[supported_color_modes*=...]` and `binary_sensor.*[label=graph|graphs]`. Broad fallbacks belong at the end of the map. The catch-all selector `*` is only used when no other template matched. A template whose `type` starts with `custom:` is skipped when that custom card is not loaded (only Bubble Card is assumed to be installed; optional cards such as Mini Graph Card must be present for the graph templates to apply), so the next matching template applies.
@@ -365,10 +365,32 @@ A user template with the same selector key as a default is deep-merged over it (
 
 A value that is exactly one placeholder keeps the type of the resolved value (numbers stay numbers, arrays stay arrays); a placeholder inside a longer string is interpolated as a string. Unresolvable placeholders resolve to `undefined` and the key is dropped from the card, so optional keys like `state_content` never ship an empty value.
 
-**Section sugar.** The section options `show_graphs` and `show_forecast` still work and are now implemented as section-scoped templates:
+**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied after your own templates, but they are deprecated in favour of `sections.<key>.card_templates` and will be removed in a future version. They are no longer part of the shipped defaults — the built-in environment section now carries its graph templates explicitly, and a weather card gets its forecast from the `forecast*` labels or from your own template.
 
-- `show_graphs: true` renders plain `sensor` and `binary_sensor` cards with Mini Graph Card.
-- `show_forecast: 'daily' | 'hourly'` renders `weather` cards with a forecast of that type.
+```yaml
+# deprecated
+views:
+  bonbon_area:
+    sections:
+      my_sensor_section:
+        cards: 'sensor.*'
+        show_graphs: true
+
+# equivalent, and the supported way
+views:
+  bonbon_area:
+    sections:
+      my_sensor_section:
+        cards: 'sensor.*'
+        card_templates:
+          'sensor.*':
+            type: custom:mini-graph-card
+            height: 56
+            entities:
+              - entity: entity.entity_id
+                show_line: false
+            name: entity.name
+```
 
 The labels `graph`/`graphs`, `forecast`, `forecast_daily` and `forecast_hourly` keep working through the selectors of the default templates.
 
@@ -390,7 +412,7 @@ You can also mix and match Home Assistant's built-in cards, installed custom car
 
 The `actions` option is deprecated in favour of card templates and will be removed in a future version. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before and is applied as the last layer to Bubble buttons (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else).
 
-To migrate, move the block into `cards`. The old config:
+To migrate, move the block into `card_templates`. The old config:
 
 ```yaml
 actions:
@@ -404,7 +426,7 @@ actions:
 becomes the equivalent template, which also gives you access to every other card option:
 
 ```yaml
-cards:
+card_templates:
   'cover.*':
     type: custom:bubble-card
     card_type: cover
@@ -497,7 +519,7 @@ views:
         name: 'Weather'
         separator_buttons: false
         cards: 'weather.*'
-        show_forecast: 'daily' # ('daily' | 'hourly' | false)
+        show_forecast: 'daily' # deprecated, prefer a `card_templates` entry
       bonbon_persons:
         hide_separator: false
 ```
@@ -623,11 +645,18 @@ views:
       desktop_pc:
         name: Desktop PC
         icon: mdi:desktop-classic
-        show_graphs: true
         cards:
           - sensor.*cpu*
           - sensor.*memory*
           - sensor.*disk*
+        card_templates:
+          'sensor.*':
+            type: custom:mini-graph-card
+            height: 56
+            entities:
+              - entity: entity.entity_id
+                show_line: false
+            name: entity.name
 
       battery_status:
         name: Batteries

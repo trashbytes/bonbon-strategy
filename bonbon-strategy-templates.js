@@ -7,6 +7,9 @@ import { mergeDeep } from './bonbon-strategy-utils.js';
 // Only Bubble Card may be assumed installed, every other custom card is optional.
 const BUILT_IN_CUSTOM_CARDS = ['bubble-card'];
 
+// Sections without their own templates share one frozen object, so the template-map cache can key on it.
+const EMPTY_TEMPLATES = Object.freeze({});
+
 const PLACEHOLDER_PATTERN = /\bentity\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*|\barea\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*/g;
 
 const EXACT_PLACEHOLDER_PATTERN = /^(entity|area)\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/;
@@ -135,10 +138,10 @@ export function isCustomCardInstalled(type) {
 // 1. a user template deep-merges over the shipped default with the identical key, so overriding a single key
 //    (e.g. only `button_type` of `light.*`) keeps the rest of the default card (arrays are replaced, not merged);
 // 2. a user selector key that no default uses is appended at the end, where it wins over every default.
-export function mergeCards(defaultCards = {}, userCards = {}) {
-  const merged = { ...(isPlainObject(defaultCards) ? defaultCards : {}) };
-  Object.keys(isPlainObject(userCards) ? userCards : {}).forEach((key) => {
-    const userTemplate = userCards[key];
+export function mergeCardTemplates(defaultTemplates = {}, userTemplates = {}) {
+  const merged = { ...(isPlainObject(defaultTemplates) ? defaultTemplates : {}) };
+  Object.keys(isPlainObject(userTemplates) ? userTemplates : {}).forEach((key) => {
+    const userTemplate = userTemplates[key];
     if (!isPlainObject(userTemplate)) {
       return;
     }
@@ -148,6 +151,7 @@ export function mergeCards(defaultCards = {}, userCards = {}) {
 }
 
 export function createTemplateApi(config = {}, states = {}, resolveEntityFn = null) {
+
   // Selector -> Set(entity_id). Built once per selector per generate run, so matching a card does not re-resolve
   // the whole registry for every template.
   const matchCache = new Map();
@@ -155,7 +159,7 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
   const templateMapCache = new Map();
 
   const getSectionTemplates = (sectionConfig) =>
-    isPlainObject(sectionConfig?.card_templates) ? sectionConfig.card_templates : {};
+    isPlainObject(sectionConfig?.card_templates) ? sectionConfig.card_templates : EMPTY_TEMPLATES;
 
   // Global templates first, section templates after them so a section-scoped template always wins.
   // Insertion order is kept as authored: the last matching template wins.
@@ -165,7 +169,7 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
     if (cached) {
       return cached;
     }
-    const globalTemplates = isPlainObject(config?.cards) ? config.cards : {};
+    const globalTemplates = isPlainObject(config?.card_templates) ? config.card_templates : {};
     const merged = {};
     // A section key replaces the global template with the identical key, but moves to the end so it also
     // beats more specific global selectors (e.g. a section `light.*` must win over the dimmable `light.*[...]`).
