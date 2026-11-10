@@ -1,5 +1,7 @@
 .history/
 
+.scratch/
+
 ftp*
 
 assets/

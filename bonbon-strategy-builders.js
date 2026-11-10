@@ -1,4 +1,4 @@
-export function createBuildersApi(panelUrl, config, states = {}) {
+export function createBuildersApi(panelUrl, config, states = {}, templateApi = null) {
   const isTogglableEntity = (c) => {
     return (
       c.entity?.entity_id?.startsWith('light.') ||
@@ -40,200 +40,146 @@ export function createBuildersApi(panelUrl, config, states = {}) {
     );
   };
 
-  const isDimmableLight = (entityId) => {
-    if (!entityId?.startsWith('light.')) {
-      return false;
-    }
-    const colorModes = states?.[entityId]?.attributes?.supported_color_modes || [];
-    return colorModes.some((mode) => mode !== 'onoff' && mode !== 'unknown');
-  };
-
-  const getActions = (c) => {
-    const actions = {
-      icon: 'none',
-      button: 'auto',
-    };
-    if (c?.entity?.entity_id) {
-      const domain = c.entity.entity_id.split('.')[0];
-      actions.icon = config?.actions?.[domain]?.icon || config?.actions?.['default']?.icon || actions.icon;
-      actions.button = config?.actions?.[domain]?.button || config?.actions?.['default']?.button || actions.button;
-    }
-    return actions;
-  };
-
-  const createButtonCard = (c, sectionConfig = {}, options = {}) => {
-    if (c?.object && !c?.bubble_card) {
-      return c.object;
-    }
-    if (c?.entity?.entity_id?.startsWith('weather.') && sectionConfig.key == 'bonbon_weather') {
-      return {
-        type: 'weather-forecast',
-        entity: c.entity.entity_id,
-        show_current: true,
-        show_forecast:
-          c.entity.hasLabel('forecast_daily') ||
-          c.entity.hasLabel('forecast_hourly') ||
-          c.entity.hasLabel('forecast') ||
-          options.show_forecast,
-        forecast_type: c.entity.hasLabel('forecast_daily')
-          ? 'daily'
-          : c.entity.hasLabel('forecast_hourly')
-            ? 'hourly'
-            : options.show_forecast,
-      };
-    }
-    if (
-      (c?.entity?.entity_id.startsWith('sensor.') || c?.entity?.entity_id.startsWith('binary_sensor.')) &&
-      (c?.entity?.hasLabel('graph') || c?.entity?.hasLabel('graphs') || options.show_graph) &&
-      window.customCards?.map((cc) => cc.type).includes('mini-graph-card')
-    ) {
-      const graph = {
-        type: 'custom:mini-graph-card',
-        height: 56,
-        entities: [
-          {
-            entity: c.entity?.entity_id,
-            show_line: false,
-          },
-        ],
-        show: {
-          points: false,
-          labels: false,
-          labels_secondary: false,
-        },
-      };
-      if (c?.entity) {
-        graph.name = c.entity?.name;
-        if (sectionConfig?.prefix && c.entity[sectionConfig?.prefix]) {
-          graph.name = c.entity[sectionConfig?.prefix] + ' ' + graph.name;
-        }
-      }
-      return graph;
-    }
+  // Card used when no template matches an entity, e.g. when the strategy is used without the template API.
+  // Entity-less cards (area cards) keep the passive shape of the old hard-coded construction.
+  const getFallbackCard = (c) => {
     const base = {
       type: 'custom:bubble-card',
       card_type: 'button',
-      button_type: 'name',
+      button_type: 'state',
       show_state: true,
       use_accent_color: true,
-      tap_action: { action: 'none' },
-      button_action: {
-        tap_action: { action: 'none' },
-      },
+      tap_action: { action: 'more-info' },
+      button_action: { tap_action: { action: 'more-info' } },
     };
     if (c?.entity) {
-      base.name = c.entity?.name;
-      if (sectionConfig?.prefix && c.entity[sectionConfig?.prefix]) {
-        base.name = c.entity[sectionConfig?.prefix] + ' ' + base.name;
-      }
-      base.entity = c.entity?.entity_id;
-      if (base.entity && c?.hide) {
-        base.styles =
-          '${hass.entities["' +
-          base.entity +
-          '"] && this.parentElement ? "' +
-          c?.hide +
-          '".split("&&").map((s) => {return window.bonbon["' +
-          panelUrl +
-          '"].resolveEntity("' +
-          base.entity +
-          '" + s, null, null, {"' +
-          base.entity +
-          '": hass.entities["' +
-          base.entity +
-          '"]}, hass.states, hass.devices, hass.floors, hass.areas)}).filter(Boolean).length ? this.parentElement.style.display = "none" : this.parentElement.style.display = "block" : ""}' +
-          (!sectionConfig.show_if_empty
-            ? '${Array.from(this?.parentElement?.parentElement?.querySelectorAll(":scope > :not([style*=\'display: none\'])")||[]).length || 0 > 0 ? (document.documentElement.style.setProperty("' +
-              sectionConfig.display_var +
-              '", "block") + document.documentElement.style.setProperty("' +
-              sectionConfig.next_margin_var +
-              '", "0")) : (document.documentElement.style.setProperty("' +
-              sectionConfig.display_var +
-              '", "none") + document.documentElement.style.setProperty("' +
-              sectionConfig.next_margin_var +
-              '", "calc(var(--bonbon-' +
-              panelUrl +
-              '-row-gap) * -1)"))}'
-            : '');
-      }
-
-      const isClimate = c.entity.entity_id.startsWith('climate.');
-      const isMedia = c.entity.entity_id.startsWith('media_player.');
-      const isCover = c.entity.entity_id.startsWith('cover.');
-      const isScript = c.entity.entity_id.startsWith('script.');
-      const isScene = c.entity.entity_id.startsWith('scene.');
-      const isPerson = c.entity.entity_id.startsWith('person.');
-      const isSelect = c.entity.entity_id.startsWith('select.') || c.entity.entity_id.startsWith('input_select.');
-      const isToggle = isTogglableEntity(c);
-      const isBinary = hasBinaryState(c) || (options?.card_type && options?.card_type != 'button');
-
-      const actions = getActions(c);
-
-      if (isToggle) {
-        base.button_type = isDimmableLight(base.entity) ? 'slider' : 'switch';
-        if (actions.button == 'auto') {
-          base.button_action.tap_action.action = 'toggle';
-        } else {
-          base.button_action.tap_action.action = actions.button;
-        }
-        if (actions.icon == 'auto') {
-          base.tap_action.action = 'toggle';
-        } else {
-          base.tap_action.action = actions.icon;
-        }
-      } else {
-        base.button_type = 'state';
-        if (actions.button == 'auto') {
-          base.button_action.tap_action.action = 'more-info';
-        } else {
-          base.button_action.tap_action.action = actions.button;
-        }
-        if (actions.icon == 'auto') {
-          base.tap_action.action = 'more-info';
-        } else {
-          base.tap_action.action = actions.icon;
-        }
-      }
-
-      if (base.tap_action.action == 'none') {
-        base.tap_action.action = base.button_action.tap_action.action;
-      }
-
-      if (isToggle || isBinary) {
-        base.show_last_changed = true;
-      }
-      if (isPerson) {
-        base.show_last_changed = false;
-      }
-      if (isScript || isScene) {
-        base.show_state = false;
-      }
-
-      if (isSelect) {
-        base.card_type = 'select';
-      }
-
-      if (isClimate) {
-        base.card_type = 'climate';
-        base.sub_button = [
-          {
-            select_attribute: 'hvac_modes',
-            show_arrow: false,
-            state_background: false,
-          },
-        ];
-      }
-
-      if (isMedia) {
-        base.card_type = 'media-player';
-      }
-
-      if (isCover) {
-        base.card_type = 'cover';
-      }
+      base.name = c.entity.name;
+      base.entity = c.entity.entity_id;
+    } else {
+      base.button_type = 'name';
+      base.tap_action = { action: 'none' };
+      base.button_action = { tap_action: { action: 'none' } };
     }
+    return base;
+  };
+
+  // Deprecated: `actions` is only applied when the user configured it.
+  const getConfiguredActions = (c) => {
+    const configuredActions = config?.actions;
+    if (!configuredActions || !c?.entity?.entity_id) {
+      return null;
+    }
+    const domain = c.entity.entity_id.split('.')[0];
+    const domainActions = configuredActions?.[domain];
+    if (domainActions === false) {
+      return null;
+    }
+    const domainConfig = typeof domainActions === 'object' && domainActions ? domainActions : null;
+    const defaultConfig = typeof configuredActions?.['default'] === 'object' ? configuredActions['default'] : null;
+    const actions = {};
+    Object.keys(domainConfig || {}).forEach((key) => {
+      actions[key] = domainConfig[key];
+    });
+    Object.keys(defaultConfig || {}).forEach((key) => {
+      if (actions[key] === undefined) {
+        actions[key] = defaultConfig[key];
+      }
+    });
+    return Object.keys(actions).length ? actions : null;
+  };
+
+  const applyConfiguredActions = (card, c) => {
+    if (card?.type !== 'custom:bubble-card' || card?.card_type !== 'button') {
+      return card;
+    }
+    const actions = getConfiguredActions(c);
+    if (!actions) {
+      return card;
+    }
+    const isToggle = isTogglableEntity(c);
+    const fallback = isToggle ? 'toggle' : 'more-info';
+    const resolve = (value) => (value === 'auto' ? fallback : value);
+
+    const tapAction = resolve(actions.icon);
+    const buttonAction = resolve(actions.button);
+
+    if (tapAction) {
+      card.tap_action = { action: tapAction };
+    }
+    if (buttonAction) {
+      card.button_action = {
+        ...(card.button_action || {}),
+        tap_action: { action: buttonAction },
+      };
+    }
+    if (card.tap_action?.action == 'none') {
+      card.tap_action.action = card.button_action?.tap_action?.action || card.tap_action.action;
+    }
+    return card;
+  };
+
+  const getHideStyles = (card, c, sectionConfig) => {
+    const entityId = typeof card?.entity === 'string' ? card.entity : card?.entity?.entity_id;
+    if (!entityId || !c?.hide) {
+      return '';
+    }
+    return (
+      '${hass.entities["' +
+      entityId +
+      '"] && this.parentElement ? "' +
+      c?.hide +
+      '".split("&&").map((s) => {return window.bonbon["' +
+      panelUrl +
+      '"].resolveEntity("' +
+      entityId +
+      '" + s, null, null, {"' +
+      entityId +
+      '": hass.entities["' +
+      entityId +
+      '"]}, hass.states, hass.devices, hass.floors, hass.areas)}).filter(Boolean).length ? this.parentElement.style.display = "none" : this.parentElement.style.display = "block" : ""}' +
+      (!sectionConfig?.show_if_empty
+        ? '${Array.from(this?.parentElement?.parentElement?.querySelectorAll(":scope > :not([style*=\'display: none\'])")||[]).length || 0 > 0 ? (document.documentElement.style.setProperty("' +
+          sectionConfig?.display_var +
+          '", "block") + document.documentElement.style.setProperty("' +
+          sectionConfig?.next_margin_var +
+          '", "0")) : (document.documentElement.style.setProperty("' +
+          sectionConfig?.display_var +
+          '", "none") + document.documentElement.style.setProperty("' +
+          sectionConfig?.next_margin_var +
+          '", "calc(var(--bonbon-' +
+          panelUrl +
+          '-row-gap) * -1)"))}'
+        : '')
+    );
+  };
+
+  const createButtonCard = (c, sectionConfig = {}, options = {}, area = undefined) => {
+    if (c?.object && !c?.bubble_card) {
+      return c.object;
+    }
+
+    const card = templateApi?.getCardTemplate?.(c, sectionConfig, area);
+    const base = card || getFallbackCard(c);
+
+    // Code-only extras: name prefix, unchanged apply to template names as well.
+    if (base?.name && c?.entity && sectionConfig?.prefix && c?.entity[sectionConfig?.prefix]) {
+      base.name = c.entity[sectionConfig.prefix] + ' ' + base.name;
+    } else if (!base?.name && c?.entity) {
+      base.name =
+        sectionConfig?.prefix && c.entity[sectionConfig.prefix]
+          ? c.entity[sectionConfig.prefix] + ' ' + c.entity.name
+          : c.entity.name;
+    }
+
+    const hideStyles = getHideStyles(base, c, sectionConfig);
+    if (hideStyles) {
+      base.styles = base.styles ? hideStyles + '\n' + base.styles : hideStyles;
+    }
+
+    applyConfiguredActions(base, c);
+
     const merged = { ...base, ...(options || {}) };
-    if (c?.object && c?.object?.type == 'custom:bubble-card') {
+    if (c?.object) {
       return {
         ...merged,
         ...c.object,

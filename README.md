@@ -172,7 +172,16 @@ strategy:
       background_image_light: null # background image for light mode (null | path/to/image)
       background_image_dark: null # background image for dark mode (null | path/to/image)
 
-    # Button actions
+    # Card templates (see "Card templates" below for details)
+    cards:
+      'light.*': # entity selector -> full card definition
+        type: custom:bubble-card
+        card_type: button
+        button_type: switch
+        entity: entity.entity_id
+        name: entity.name
+
+    # Button actions (deprecated, use `cards` instead)
     actions:
       default: # the default config all domains, you can add overrides per domain (note: only applies to default Bubble Cards, doesn't apply to Graphs, Weather-Forecasts or custom cards)
         icon: none # action on icon tap ('auto' | 'toggle' | 'more-info' | 'none')
@@ -295,6 +304,74 @@ Keep in mind, that entities hidden by `:hide()` are technically always on the da
 
 The `hide()` pseudo function also only works in `cards` and will always generate standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
 
+### Card templates
+
+Every card that Bonbon generates for a single entity comes from a **card template**. A template is a complete card definition (including `type`) that is matched to an entity by an entity selector. This replaces the built-in, hard-coded card construction: weather forecasts, graphs and Bubble Cards are all templates now.
+
+`cards` is an ordered map of `entity selector -> card definition`. Templates are also available per section via `sections.<key>.card_templates`.
+
+```yaml
+cards:
+  # all lights render as simple toggles ...
+  'light.*':
+    type: custom:bubble-card
+    card_type: button
+    button_type: switch
+    entity: entity.entity_id
+    name: entity.name
+  # ... and dimmable lights render as brightness sliders
+  'light.*[supported_color_modes*=brightness|color_temp|hs|xy|rgb|rgbw|rgbww|white]':
+    type: custom:bubble-card
+    card_type: button
+    button_type: slider
+    entity: entity.entity_id
+    name: entity.name
+
+views:
+  bonbon_area:
+    sections:
+      bonbon_environment:
+        card_templates: # only applies to this section
+          'sensor.*':
+            type: custom:mini-graph-card
+            height: 56
+            entities:
+              - entity: entity.entity_id
+                show_line: false
+            name: entity.name
+```
+
+**Matching order:**
+
+1. `cards` (global templates), in the order you define them.
+2. `sections.<key>.card_templates`, matched after the global map, so a section-scoped template always wins over a global one.
+
+**Last match wins.** For every entity the *last* matching template in that order is used, which means a generic key must come before its label/attribute-specific variants: `light.*` and `binary_sensor.*` first, then `light.*[supported_color_modes*=...]` and `binary_sensor.*[label=graph|graphs]`. Broad fallbacks belong at the end of the map. The catch-all selector `*` is only used when no other template matched. A template whose `type` starts with `custom:` is skipped when that custom card is not loaded (only Bubble Card is assumed to be installed; optional cards such as Mini Graph Card must be present for the graph templates to apply), so the next matching template applies.
+
+A user template with the same selector key as a default is deep-merged over it (arrays are replaced, not merged), so you can override a single key, e.g. `{ 'light.*': { button_type: slider } }` keeps the rest of the default `light.*` card. User templates with a new selector key are appended at the end, where they win over the defaults.
+
+**Placeholders** are resolved for every matched entity, recursively through nested objects and arrays:
+
+| Placeholder | Resolves to |
+| --- | --- |
+| `entity.entity_id` | the entity ID |
+| `entity.name` | the friendly name |
+| `entity.area`, `entity.area_id` | the area name and ID |
+| `entity.floor`, `entity.floor_id` | the floor name and ID |
+| `entity.device`, `entity.device_id` | the device name and ID |
+| `entity.labels` | the entity and device labels |
+| `entity.attributes.<attribute>` | any attribute of the current state, e.g. `entity.attributes.brightness` (resolves to `null` when the entity does not report it) |
+| `area.<attribute>` | the attribute of the area the card is rendered in, e.g. `area.temperature_entity_id`. It is read from the current area, never from the entity. In a view without an area (e.g. `bonbon_home`) it resolves to `undefined`, so the key is dropped |
+
+A value that is exactly one placeholder keeps the type of the resolved value (numbers stay numbers, arrays stay arrays); a placeholder inside a longer string is interpolated as a string. Unresolvable placeholders resolve to `undefined` and the key is dropped from the card, so optional keys like `state_content` never ship an empty value.
+
+**Section sugar.** The section options `show_graphs` and `show_forecast` still work and are now implemented as section-scoped templates:
+
+- `show_graphs: true` renders plain `sensor` and `binary_sensor` cards with Mini Graph Card.
+- `show_forecast: 'daily' | 'hourly'` renders `weather` cards with a forecast of that type.
+
+The labels `graph`/`graphs`, `forecast`, `forecast_daily` and `forecast_hourly` keep working through the selectors of the default templates.
+
 ### Classic YAML cards
 
 Use Home Assistant's built-in cards or custom cards you installed:
@@ -308,6 +385,37 @@ cards:
 ```
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
+
+### Deprecated: button actions
+
+The `actions` option is deprecated in favour of card templates and will be removed in a future version. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before and is applied as the last layer to Bubble buttons (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else).
+
+To migrate, move the block into `cards`. The old config:
+
+```yaml
+actions:
+  default:
+    icon: none
+    button: auto
+  cover:
+    button: toggle
+```
+
+becomes the equivalent template, which also gives you access to every other card option:
+
+```yaml
+cards:
+  'cover.*':
+    type: custom:bubble-card
+    card_type: cover
+    entity: entity.entity_id
+    name: entity.name
+    tap_action:
+      action: more-info # this is what `icon: none` used to become on non-togglable entities
+    button_action:
+      tap_action:
+        action: toggle # this is what `button: toggle` means for covers
+```
 
 ### Styling and Colors
 
