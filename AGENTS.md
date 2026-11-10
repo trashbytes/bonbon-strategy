@@ -87,6 +87,10 @@ Parsed in `resolveEntities` (`bonbon-strategy-entities.js`):
 - `defaultConfig` is cloned, not mutated, but `upgradeConfig` and later code mutate the merged config in place — be deliberate about mutating shared objects.
 - Runtime `:hide()` builds a JS string (in `createButtonCard`) that Bubble Card evaluates and that calls back into `window.bonbon[panelUrl]`. It is string-assembly-fragile: changing `resolveEntity` signatures or the `window.bonbon` namespace will break hiding.
 
+## Commits
+
+Commits are authored as `trashbytes <10084665+trashbytes@users.noreply.github.com>` (configured repo-wide, keep it that way — never commit under a different identity). Messages are English, lowercase, single-line, and describe the behavior change (`render dimmable lights as brightness sliders instead of toggles`). No conventional-commit prefixes and no issue references in the subject.
+
 ## Testing / validating changes
 
 There is no test suite. Validate by:
