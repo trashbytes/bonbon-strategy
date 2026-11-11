@@ -23,9 +23,9 @@ definitions, including `type`, so weather forecasts, Mini Graph cards and Bubble
   templates and win over a section's `show_forecast`.
 - Precedence: shipped defaults < deprecated section options (`show_graphs`, `show_forecast`) < your own
   templates.
-- `show_graphs` and `show_forecast` are **deprecated**. They keep working (applied as `[section=...]` templates
-  in the global map, which a template you wrote for that section overrides) but are no longer part of the
-  shipped defaults and will be removed in a future version.
+- `show_graphs` and `show_forecast` are **deprecated** and will be **removed in v4.0.0**. They keep working
+  (applied as `[section=...]` templates in the global map, which a template you wrote for that section
+  overrides) but are no longer part of the shipped defaults.
 
 The shipped defaults reproduce the previous appearance: dimmable lights as brightness sliders, all other lights
 and togglable domains as switches, climate, media player, cover and select cards, persons and binary sensors as

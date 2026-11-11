@@ -358,8 +358,6 @@ export function applySectionColumns(sections, maxColumns) {
 }
 
 export function upgradeConfig(config) {
-  console.log('pre-upgrade');
-  console.log(config);
   const bonbon_weather = config.views.bonbon_home.sections.bonbon_weather;
   if (bonbon_weather.show_weather_card) {
     bonbon_weather.cards = bonbon_weather.weather_entity_id
@@ -424,7 +422,5 @@ export function upgradeConfig(config) {
       bonbon_lights.separator_buttons = false;
     }
   }
-  console.log('post-upgrade');
-  console.log(config);
   return config;
 }

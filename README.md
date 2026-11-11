@@ -362,7 +362,7 @@ A user template with the same selector key as a default is deep-merged over it (
 
 A value that is exactly one placeholder keeps the type of the resolved value (numbers stay numbers, arrays stay arrays); a placeholder inside a longer string is interpolated as a string. Unresolvable placeholders resolve to `undefined` and the key is dropped from the card, so optional keys like `state_content` never ship an empty value.
 
-**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied as `[section=...]` templates in the global map (a template you wrote for that section wins), but they are deprecated and will be removed in a future version. They are no longer part of the shipped defaults — the environment section's graph templates and the weather card's section scoping are shipped as regular templates.
+**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied as `[section=...]` templates in the global map (a template you wrote for that section wins), but they are deprecated and will be removed in v4.0.0. They are no longer part of the shipped defaults — the environment section's graph templates and the weather card's section scoping are shipped as regular templates.
 
 ```yaml
 # deprecated
@@ -402,7 +402,7 @@ You can also mix and match Home Assistant's built-in cards, installed custom car
 
 ### Deprecated: button actions
 
-The `actions` option is deprecated in favour of card templates and will be removed in a future version. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before and is applied as the last layer to Bubble buttons (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else).
+The `actions` option is deprecated in favour of card templates and will be removed in v4.0.0. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before and is applied as the last layer to Bubble buttons (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else).
 
 To migrate, move the block into `card_templates`. The old config:
 

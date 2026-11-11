@@ -610,8 +610,6 @@ export class BonbonStrategy {
         views: applyGlobalStyles(views),
       };
 
-      console.log(dashboard);
-
       return dashboard;
     } catch (e) {
       console.error(e);
