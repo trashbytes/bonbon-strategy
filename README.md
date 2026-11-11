@@ -172,16 +172,33 @@ strategy:
       background_image_light: null # background image for light mode (null | path/to/image)
       background_image_dark: null # background image for dark mode (null | path/to/image)
 
-    # Card templates (see "Card templates" below for details)
-    card_templates:
-      'light.*': # entity selector -> full card definition
-        type: custom:bubble-card
-        card_type: button
-        button_type: switch
-        entity: entity.entity_id
-        name: entity.name
+    # The shared skeleton of every generated Bubble Card (see "Card variants" below for details)
+    card_defaults:
+      type: custom:bubble-card
+      card_type: button
+      button_type: state
+      show_state: true
+      use_accent_color: true
+      tap_action:
+        action: more-info
+      button_action:
+        tap_action:
+          action: more-info
+      entity: entity.entity_id
+      name: entity.name
 
-    # Button actions (deprecated, use `card_templates` instead)
+    # Card variants: entity selector -> what differs from `card_defaults`
+    card_variants:
+      'light.*':
+        button_type: switch
+        tap_action:
+          action: toggle
+        button_action:
+          tap_action:
+            action: toggle
+        show_last_changed: true
+
+    # Button actions (deprecated, use `card_variants` instead)
     actions:
       default: # the default config all domains, you can add overrides per domain (note: only applies to default Bubble Cards, doesn't apply to Graphs, Weather-Forecasts or custom cards)
         icon: none # action on icon tap ('auto' | 'toggle' | 'more-info' | 'none')
@@ -204,8 +221,8 @@ strategy:
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
             separator_buttons: null # buttons to add to a separator
-            show_graphs: false # deprecated, use a `[section=...]` template instead
-            show_forecast: false # deprecated, use a `[section=...]` template instead
+            show_graphs: false # deprecated, use a `[section=...]` variant instead
+            show_forecast: false # deprecated, use a `[section=...]` variant instead
             prefix: false # name prefix, useful for "Ceiling light" etc., which you may have tons of ('area' | 'floor' | 'device' | false)
             cards: # cards and entities
               - entity_id
@@ -304,30 +321,57 @@ Keep in mind, that entities hidden by `:hide()` are technically always on the da
 
 The `hide()` pseudo function also only works in `cards` and will always generate standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
 
-### Card templates
+### Card variants
 
-Every card that Bonbon generates for a single entity comes from a **card template**. A template is a complete card definition (including `type`) that is matched to an entity by an entity selector. This replaces the built-in, hard-coded card construction: weather forecasts, graphs and Bubble Cards are all templates now.
+Every card that Bonbon generates for a single entity comes from a **card variant**. A variant is matched to an
+entity by an entity selector, and `card_defaults` is the shared skeleton it is merged over. This replaces the
+built-in, hard-coded card construction: weather forecasts, graphs and Bubble Cards all come from here.
 
-`card_templates` (top level of `options`) is an ordered map of `entity selector -> card definition`. There is exactly one map: templates that should only apply in one view or section say so in the selector with `[view=...]` or `[section=...]`.
+`card_variants` (top level of `options`) is an ordered map of `entity selector -> card definition`. There is
+exactly one map: variants that should only apply in one view or section say so in the selector with `[view=...]`
+or `[section=...]`.
+
+`card_defaults` holds what every Bubble Card shares — `type`, `card_type`, `button_type`, `entity`, `name` and
+the default `more-info` actions — so a variant only lists what differs from it:
 
 ```yaml
-card_templates:
-  # all lights render as simple toggles ...
-  'light.*':
-    type: custom:bubble-card
-    card_type: button
-    button_type: switch
-    entity: entity.entity_id
-    name: entity.name
-  # ... and dimmable lights render as brightness sliders
-  'light.*[supported_color_modes*=brightness|color_temp|hs|xy|rgb|rgbw|rgbww|white]':
-    type: custom:bubble-card
-    card_type: button
-    button_type: slider
-    entity: entity.entity_id
-    name: entity.name
+card_defaults:
+  type: custom:bubble-card
+  card_type: button
+  button_type: state
+  show_state: true
+  use_accent_color: true
+  tap_action:
+    action: more-info
+  button_action:
+    tap_action:
+      action: more-info
+  entity: entity.entity_id
+  name: entity.name
 
-  # ... and the environment section of every area renders plain sensors as graphs
+card_variants:
+  # lights only differ in the button type and the toggle action ...
+  'light.*':
+    button_type: switch
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+    show_last_changed: true
+  # ... dimmable lights are brightness sliders
+  'light.*[supported_color_modes*=brightness|color_temp|hs|xy|rgb|rgbw|rgbww|white]':
+    button_type: slider
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+    show_last_changed: true
+  # an empty variant is a plain card_defaults card
+  'sensor.*': {}
+
+  # cards that are not Bubble Cards keep their own shape and inherit nothing
   'sensor.*[section=bonbon_environment]':
     type: custom:mini-graph-card
     height: 56
@@ -337,15 +381,27 @@ card_templates:
     name: entity.name
 ```
 
+**How the layers stack.** Only Bubble Cards inherit `card_defaults` — a variant with another `type` (weather
+forecast, Mini Graph, your own custom card) is used exactly as written, so no Bubble options leak into it.
+`inherit: false` opts a single variant out, which is what you want for a card that only shares the selector
+mechanism:
+
+```yaml
+card_variants:
+  'sensor.*inverter':
+    inherit: false
+    type: custom:my-inverter-card
+```
+
 **Context filters.** `[view=...]` and `[section=...]` are not entity attributes — they are matched against the view and section a card is rendered in, and are removed from the selector before the entities are looked up. They accept `|` for alternatives (`[view=bonbon_area|bonbon_home]`) and are combined with entity filters in any order (`light.*[section=lights][brightness=*]`). Per-area views also answer to `[view=bonbon_area]`, custom views to the key they were configured under.
 
-The weather forecast card is scoped that way: the default is `weather.*[section=bonbon_weather]`, so a weather entity in any other section renders from the generic `*` template (a plain state button). Add your own `weather.*` template if you want forecast cards elsewhere.
+The weather forecast card is scoped that way: the default is `weather.*[section=bonbon_weather]`, so a weather entity in any other section renders from the generic `*` variant (a plain state button). Add your own `weather.*` variant if you want forecast cards elsewhere.
 
-**Matching order:** the map in the order you define it, with context filters narrowing a template down to one view or section. Because the last match wins, put a context-filtered template *after* the generic one it should override — which is what happens automatically when you add a new key.
+**Matching order:** the map in the order you define it, with context filters narrowing a variant down to one view or section. Because the last match wins, put a context-filtered variant *after* the generic one it should override — which is what happens automatically when you add a new key.
 
-**Last match wins.** For every entity the *last* matching template in that order is used, which means a generic key must come before its label/attribute-specific variants: `light.*` and `binary_sensor.*` first, then `light.*[supported_color_modes*=...]` and `binary_sensor.*[label=graph|graphs]`. Broad fallbacks belong at the end of the map. The catch-all selector `*` is only used when no other template matched. A template whose `type` starts with `custom:` is skipped when that custom card is not loaded (only Bubble Card is assumed to be installed; optional cards such as Mini Graph Card must be present for the graph templates to apply), so the next matching template applies.
+**Last match wins.** For every entity the *last* matching variant in that order is used, which means a generic key must come before its label/attribute-specific variants: `light.*` and `binary_sensor.*` first, then `light.*[supported_color_modes*=...]` and `binary_sensor.*[label=graph|graphs]`. Broad fallbacks belong at the end of the map. The catch-all selector `*` is only used when no other variant matched. A variant whose `type` starts with `custom:` is skipped when that custom card is not loaded (only Bubble Card is assumed to be installed; optional cards such as Mini Graph Card must be present for the graph variants to apply), so the next matching variant applies.
 
-A user template with the same selector key as a default is deep-merged over it (arrays are replaced, not merged), so you can override a single key, e.g. `{ 'light.*': { button_type: slider } }` keeps the rest of the default `light.*` card. User templates with a new selector key are appended at the end, where they win over the defaults.
+A user variant with the same selector key as a shipped one is deep-merged over it (arrays are replaced, not merged), so you can override a single key, e.g. `{ 'light.*': { button_type: slider } }` keeps the rest of the shipped `light.*` variant and everything from `card_defaults`. User variants with a new selector key are appended at the end, where they win over the shipped ones. The full precedence is `card_defaults` < shipped variant < deprecated section option (`show_graphs`, `show_forecast`) < your variant.
 
 **Placeholders** are resolved for every matched entity, recursively through nested objects and arrays:
 
@@ -362,7 +418,7 @@ A user template with the same selector key as a default is deep-merged over it (
 
 A value that is exactly one placeholder keeps the type of the resolved value (numbers stay numbers, arrays stay arrays); a placeholder inside a longer string is interpolated as a string. Unresolvable placeholders resolve to `undefined` and the key is dropped from the card, so optional keys like `state_content` never ship an empty value.
 
-**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied as `[section=...]` templates in the global map (a template you wrote for that section wins), but they are deprecated and will be removed in v4.0.0. They are no longer part of the shipped defaults — the environment section's graph templates and the weather card's section scoping are shipped as regular templates.
+**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied as `[section=...]` variants in the global map (a variant you wrote for that section wins), but they are deprecated and will be removed in v4.0.0. They are no longer part of the shipped defaults — the environment section's graph variants and the weather card's section scoping ship as regular variants.
 
 ```yaml
 # deprecated
@@ -374,7 +430,7 @@ views:
         show_graphs: true
 
 # equivalent, and the supported way
-card_templates:
+card_variants:
   'sensor.*[section=my_sensor_section]':
     type: custom:mini-graph-card
     height: 56
@@ -384,7 +440,7 @@ card_templates:
     name: entity.name
 ```
 
-The labels `graph`/`graphs`, `forecast`, `forecast_daily` and `forecast_hourly` keep working through the selectors of the default templates.
+The labels `graph`/`graphs`, `forecast`, `forecast_daily` and `forecast_hourly` keep working through the selectors of the shipped variants.
 
 ### Classic YAML cards
 
@@ -402,9 +458,9 @@ You can also mix and match Home Assistant's built-in cards, installed custom car
 
 ### Deprecated: button actions
 
-The `actions` option is deprecated in favour of card templates and will be removed in v4.0.0. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before: it is applied on top of the generated Bubble card (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else), while an explicit YAML card in `cards` still wins over it.
+The `actions` option is deprecated in favour of card variants and will be removed in v4.0.0. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before: it is applied on top of the generated Bubble card (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else), while an explicit YAML card in `cards` still wins over it.
 
-To migrate, move the block into `card_templates`. The old config:
+To migrate, move the block into `card_variants`. The old config:
 
 ```yaml
 actions:
@@ -415,10 +471,10 @@ actions:
     button: toggle
 ```
 
-becomes the equivalent template, which also gives you access to every other card option:
+becomes the equivalent variant, which also gives you access to every other card option:
 
 ```yaml
-card_templates:
+card_variants:
   'cover.*':
     type: custom:bubble-card
     card_type: cover
@@ -511,7 +567,7 @@ views:
         name: 'Weather'
         separator_buttons: false
         cards: 'weather.*'
-        show_forecast: 'daily' # deprecated, prefer a `card_templates` entry
+        show_forecast: 'daily' # deprecated, prefer a `card_variants` entry
       bonbon_persons:
         hide_separator: false
 ```

@@ -181,20 +181,43 @@ export function matchesSectionContext(filters = [], sectionConfig = {}) {
   });
 }
 
-// Card templates are merged by selector key in two steps:
-// 1. a user template deep-merges over the shipped default with the identical key, so overriding a single key
-//    (e.g. only `button_type` of `light.*`) keeps the rest of the default card (arrays are replaced, not merged);
+// Card variants are merged by selector key in two steps:
+// 1. a user variant deep-merges over the shipped default with the identical key, so overriding a single key
+//    (e.g. only `button_type` of `light.*`) keeps the rest of the default variant (arrays are replaced, not merged);
 // 2. a user selector key that no default uses is appended at the end, where it wins over every default.
-export function mergeCardTemplates(defaultTemplates = {}, userTemplates = {}) {
-  const merged = { ...(isPlainObject(defaultTemplates) ? defaultTemplates : {}) };
-  Object.keys(isPlainObject(userTemplates) ? userTemplates : {}).forEach((key) => {
-    const userTemplate = userTemplates[key];
-    if (!isPlainObject(userTemplate)) {
+export function mergeCardVariants(defaultVariants = {}, userVariants = {}) {
+  const merged = { ...(isPlainObject(defaultVariants) ? defaultVariants : {}) };
+  Object.keys(isPlainObject(userVariants) ? userVariants : {}).forEach((key) => {
+    const userVariant = userVariants[key];
+    if (!isPlainObject(userVariant)) {
       return;
     }
-    merged[key] = isPlainObject(merged[key]) ? mergeDeep(merged[key], userTemplate) : { ...userTemplate };
+    merged[key] = isPlainObject(merged[key]) ? mergeDeep(merged[key], userVariant) : { ...userVariant };
   });
   return merged;
+}
+
+// `card_defaults` is the skeleton every generated Bubble Card starts from: a variant is deep-merged over it, so a
+// variant only lists what differs. Cards that are not Bubble Cards (weather forecast, Mini Graph, custom cards)
+// keep their own shape, and `inherit: false` opts a variant out of the defaults entirely.
+export function applyCardDefaults(variant, defaults) {
+  if (!isPlainObject(variant)) {
+    return variant;
+  }
+  if (variant.inherit === false) {
+    const { inherit, ...card } = variant;
+    return card;
+  }
+  if (!isPlainObject(defaults)) {
+    return variant;
+  }
+  const isBubbleCard = (value) => String(value || '').startsWith('custom:bubble-card');
+  const type = variant.type || defaults.type;
+  if (!isBubbleCard(type) || !isBubbleCard(defaults.type || type)) {
+    return variant;
+  }
+  const { inherit, ...card } = mergeDeep(defaults, variant);
+  return card;
 }
 
 export function createTemplateApi(config = {}, states = {}, resolveEntityFn = null) {
@@ -203,7 +226,8 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
   const matchCache = new Map();
   const parsedCache = new Map();
 
-  const getTemplates = () => (isPlainObject(config?.card_templates) ? config.card_templates : {});
+  const getVariants = () => (isPlainObject(config?.card_variants) ? config.card_variants : {});
+  const getDefaults = () => (isPlainObject(config?.card_defaults) ? config.card_defaults : {});
 
   const parseSelector = (selector) => {
     if (!parsedCache.has(selector)) {
@@ -237,12 +261,13 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
     if (!entity?.entity_id) {
       return null;
     }
-    const templates = getTemplates();
+    const templates = getVariants();
+    const defaults = getDefaults();
     let matchedKey = null;
     let catchAllKey = null;
     Object.keys(templates).forEach((key) => {
       const template = templates[key];
-      if (!isPlainObject(template) || !isCustomCardInstalled(template.type)) {
+      if (!isPlainObject(template) || !isCustomCardInstalled(template.type || defaults.type)) {
         return;
       }
       const { base, filters } = parseSelector(key);
@@ -266,12 +291,13 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
     if (key === null) {
       return undefined;
     }
-    return resolvePlaceholders(getTemplates()[key], c.entity, states, area);
+    const card = applyCardDefaults(getVariants()[key], getDefaults());
+    return resolvePlaceholders(card, c.entity, states, area);
   };
 
   return {
     findTemplate,
     getCardTemplate,
-    getTemplates,
+    getVariants,
   };
 }

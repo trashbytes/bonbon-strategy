@@ -2,40 +2,46 @@
 
 ## Unreleased
 
-### Card templates
+### Card variants
 
-Every card that Bonbon generates for an entity is now coming from a **card template** instead of being built by
-hard-coded, domain-specific logic. Templates are matched to entities by an entity selector and are complete card
-definitions, including `type`, so weather forecasts, Mini Graph cards and Bubble Cards are all handled the same way.
+Every card that Bonbon generates for an entity is now coming from a **card variant** instead of being built by
+hard-coded, domain-specific logic. Variants are matched to entities by an entity selector and are merged over the
+shared `card_defaults` skeleton, so weather forecasts, Mini Graph cards and Bubble Cards are all handled the same way.
 
-- New top-level config key `card_templates`: an ordered map of `entity selector -> card definition`. The **last
-  matching template wins**, so generic templates come first and more specific variants follow; the `*` catch-all
+- New top-level config key `card_variants`: an ordered map of `entity selector -> card definition`. The **last
+  matching variant wins**, so generic variants come first and more specific ones follow; the `*` catch-all
   is only used when nothing else matched.
-- Template selectors support context filters `[view=...]` and `[section=...]`, matched against the view and
-  section a card is rendered in instead of the entity. This replaces per-section template maps: the shipped
-  environment graph templates and the weather card scoping are regular entries in the global map
+- New top-level config key `card_defaults`: the skeleton every Bubble Card variant is deep-merged over (`type`,
+  `card_type`, `button_type`, `entity`, `name`, the default `more-info` actions). A variant only lists what differs
+  from it; non-Bubble variants (weather forecast, Mini Graph, custom cards) inherit nothing, and `inherit: false`
+  opts a variant out.
+- Variant selectors support context filters `[view=...]` and `[section=...]`, matched against the view and
+  section a card is rendered in instead of the entity. This replaces per-section variant maps: the shipped
+  environment graph variants and the weather card scoping are regular entries in the global map
   (`sensor.*[section=bonbon_environment]`, `weather.*[section=bonbon_weather]`).
-- Template string values support placeholders, resolved per matched entity: `entity.entity_id`, `entity.name`,
+- Variant string values support placeholders, resolved per matched entity: `entity.entity_id`, `entity.name`,
   `entity.area`, `entity.area_id`, `entity.floor`, `entity.floor_id`, `entity.device`, `entity.device_id`,
   `entity.labels`, any `entity.attributes.<attribute>` and `area.<attribute>`.
-- Templates using a custom card that is not installed are skipped, so the next matching template applies.
-- The `forecast_daily`, `forecast_hourly` and `forecast` labels keep working: they ship as label-scoped default
-  templates and win over a section's `show_forecast`.
-- Precedence: shipped defaults < deprecated section options (`show_graphs`, `show_forecast`) < your own
-  templates.
+- Variants using a custom card that is not installed are skipped, so the next matching variant applies.
+- The `forecast_daily`, `forecast_hourly` and `forecast` labels keep working: they ship as label-scoped variants
+  and win over a section's `show_forecast`.
+- Precedence: `card_defaults` < shipped variant < deprecated section options (`show_graphs`, `show_forecast`) <
+  your own variants.
 - `show_graphs` and `show_forecast` are **deprecated** and will be **removed in v4.0.0**. They keep working
-  (applied as `[section=...]` templates in the global map, which a template you wrote for that section
+  (applied as `[section=...]` variants in the global map, which a variant you wrote for that section
   overrides) but are no longer part of the shipped defaults.
 
-The shipped defaults reproduce the previous appearance: dimmable lights as brightness sliders, all other lights
+The shipped variants reproduce the previous appearance: dimmable lights as brightness sliders, all other lights
 and togglable domains as switches, climate, media player, cover and select cards, persons and binary sensors as
-state cards, and a fallback state card for everything else.
+state cards, and a fallback state card for everything else. `button.*` and `input_button.*` press the entity
+instead of toggling it, which never did anything on those domains.
 
 ### Deprecated: `actions`
 
-The `actions` option is deprecated in favour of card templates and no longer has a default. If you continue to
-configure it, it is still applied as the last layer to Bubble buttons, exactly as before. **Please migrate your
-`actions` block to card templates:** copy the domain you customized into `card_templates` and set
+The `actions` option is deprecated in favour of card variants and no longer has a default. If you continue to
+configure it, it is still applied on top of the generated Bubble card, exactly as before — an explicit YAML card
+in `cards` still wins over it. **Please migrate your `actions` block to card variants:** copy the domain you
+customized into `card_variants` and set
 `tap_action`/`button_action.tap_action` explicitly, as shown in the README ("Deprecated: button actions").
 
 ### Fixed

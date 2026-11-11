@@ -15,7 +15,7 @@ const {
   upgradeConfig,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
-const { createTemplateApi, mergeCardTemplates } = await import(`./bonbon-strategy-templates.js?hacstag=${hacstag}`);
+const { createTemplateApi, mergeCardVariants } = await import(`./bonbon-strategy-templates.js?hacstag=${hacstag}`);
 
 const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
@@ -23,9 +23,9 @@ const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=
 const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
 
 // Turns the legacy section options `show_graphs` and `show_forecast` into
-// section-scoped card templates, so the builders no longer branch on them.
-// Section templates are matched after the global map, so they always win.
-const applySectionSugars = (config, userTemplates = {}) => {
+// section-scoped card variants, so the builders no longer branch on them.
+// Section-scoped variants are matched after the global ones, so they always win.
+const applySectionSugars = (config, userVariants = {}) => {
   const getForecastTemplates = (forecastType) => {
     const templates = {
       'weather.*[label=forecast_daily]': {
@@ -70,15 +70,14 @@ const applySectionSugars = (config, userTemplates = {}) => {
       if (!section) {
         return;
       }
-      // The deprecated options become section-scoped templates in the global map. A template the user already
-      // wrote for the same section wins, so migrating is a no-op.
-      // A template the user wrote for the same key wins; a shipped default may be overridden by the option.
+      // The deprecated options become section-scoped variants in the global map. A variant the user already
+      // wrote for the same section wins, so migrating is a no-op; a shipped default may be overridden by the option.
       const addTemplate = (selector, template) => {
         const key = `${selector}[section=${sectionKey}]`;
-        if (isPlainObject(userTemplates) && isPlainObject(userTemplates[key])) {
+        if (isPlainObject(userVariants) && isPlainObject(userVariants[key])) {
           return;
         }
-        config.card_templates[key] = template;
+        config.card_variants[key] = template;
       };
       if (section.show_graphs) {
         // Entities resolved through `area.<attribute>` carry no labels, so the generic selectors come last.
@@ -123,13 +122,13 @@ export class BonbonStrategy {
 
     try {
       const views = [];
-      // Card templates are merged by selector key instead of deep-merging the selector strings, otherwise a
+      // Card variants are merged by selector key instead of deep-merging the selector strings, otherwise a
       // user override of `light.*` would also override the dimmable `light.*[...]` default. Precedence is
-      // shipped defaults < deprecated section options < user templates.
-      const { card_templates: userCardTemplates, ...userConfigRest } = userConfig || {};
+      // shipped defaults < deprecated section options < user variants.
+      const { card_variants: userCardVariants, ...userConfigRest } = userConfig || {};
       const config = upgradeConfig(mergeDeep(defaultConfig, userConfigRest));
-      applySectionSugars(config, userCardTemplates);
-      config.card_templates = mergeCardTemplates(config.card_templates, userCardTemplates);
+      applySectionSugars(config, userCardVariants);
+      config.card_variants = mergeCardVariants(config.card_variants, userCardVariants);
 
       const dashboardName =
         Object.values(hass?.panels).find((p) => p?.url_path === panelUrl)?.title ||
@@ -147,14 +146,17 @@ export class BonbonStrategy {
       const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl, config);
       // Template matching resolves selectors against the full registry once per selector and then matches by
       // `entity_id`, so one card's template does not depend on the registry being filtered down to it.
-      const templateApi = createTemplateApi({ card_templates: config.card_templates }, hass.states, (selector, sectionConfig) =>
-        createEntityApi({
-          entities: hass.entities,
-          devices: hass.devices,
-          states: hass.states,
-          floors: hass.floors,
-          areas: hass.areas,
-        }).resolveEntities(selector, sectionConfig || {}, ''),
+      const templateApi = createTemplateApi(
+        { card_variants: config.card_variants, card_defaults: config.card_defaults },
+        hass.states,
+        (selector, sectionConfig) =>
+          createEntityApi({
+            entities: hass.entities,
+            devices: hass.devices,
+            states: hass.states,
+            floors: hass.floors,
+            areas: hass.areas,
+          }).resolveEntities(selector, sectionConfig || {}, ''),
       );
       const { createButtonCard, createSeparatorCard, createGrid, createSubButton, isTogglableEntity, hasBinaryState } =
         createBuildersApi(panelUrl, config, hass.states, templateApi);
