@@ -184,12 +184,10 @@ export function getColorsFromColor(color, isDark) {
 }
 
 export function getAreaColors(area, index, areas, isDark, styles) {
-  if (area.floor_id == null) {
-    area.floor_id = '_areas';
-  }
   const step = isDark ? 8 : 3;
 
-  for (const label of area.labels) {
+  // `labels` is optional in the area registry, so an area without labels must not throw here.
+  for (const label of area.labels || []) {
     const hexMatch = label.match(/^(bonbon_)?color_([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
     if (hexMatch) {
       const hexCode = `#${hexMatch[2]}`;
@@ -347,8 +345,16 @@ export function applySectionColumns(sections, maxColumns) {
     .map(Number)
     .sort((a, b) => a - b)
     .map((column) => {
+      const columnSections = groupedByColumn[column];
+      // Sections that share a fixed column are emitted as one section, so their generated card-mod styles (the
+      // `display` and `margin` variables used by `:hide()` and the row gap) have to survive the merge.
+      const cardModStyle = columnSections
+        .map((section) => section.card_mod?.style)
+        .filter((style) => typeof style === 'string' && style)
+        .join('\n');
       return {
-        cards: groupedByColumn[column].flatMap((section) => section.cards),
+        cards: columnSections.flatMap((section) => section.cards),
+        ...(cardModStyle ? { card_mod: { style: cardModStyle } } : {}),
       };
     });
 
@@ -366,15 +372,11 @@ export function upgradeConfig(config) {
         : bonbon_weather.weather_entity_id || bonbon_weather.cards
       : 'weather.*';
     bonbon_weather.show_forecast = bonbon_weather.show_weather_card || bonbon_weather.show_forecast;
-  } else {
-    bonbon_weather.show_if_empty = true;
-    bonbon_weather.separator_buttons = bonbon_weather.weather_entity_id
-      ? bonbon_weather.weather_entity_id == 'auto'
-        ? 'weather.*'
-        : bonbon_weather.weather_entity_id
-      : 'weather.*';
-    bonbon_weather.name = 'auto';
-    bonbon_weather.icon = 'auto';
+  } else if (bonbon_weather.weather_entity_id) {
+    // `weather_entity_id` used to pick the entity of the minified weather separator. The section's name, icon and
+    // `show_if_empty` are defaults in `defaultConfig` now — mapping them here again would override user config.
+    bonbon_weather.separator_buttons =
+      bonbon_weather.weather_entity_id == 'auto' ? 'weather.*' : bonbon_weather.weather_entity_id;
   }
 
   const bonbon_areas = config.views.bonbon_home.sections.bonbon_areas;

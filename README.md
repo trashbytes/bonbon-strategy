@@ -49,7 +49,7 @@ All entities are ordered alphabetically by default but are grouped by device, if
 
 You can override the order of entities by adding labels like `order_<number>`. They will be sorted in ascending order.
 
-To sort entities in several different views and/or sections independently and differently from each other, you can add more specific labels like `order_home_<number>`, `order_<area_id>_<number>`, `order_<view_key>_<number>`, `order_home_<section_key>_<number>`, `order_<area_id>_<section_key>_<number>` or `order_<view_key>_<section_key>_<number>` etc. A greater specificity gives it a higher priority and will thus override lower priority labels.
+To sort entities in several different views and/or sections independently and differently from each other, you can add more specific labels like `order_bonbon_home_<number>`, `order_<area_id>_<number>`, `order_<view_key>_<number>`, `order_bonbon_home_<section_key>_<number>`, `order_<area_id>_<section_key>_<number>` or `order_<view_key>_<section_key>_<number>` etc. A greater specificity gives it a higher priority and will thus override lower priority labels. `<view_key>` is the key a view is configured under: `bonbon_home` for the built-in home view and the plain key (e.g. `diagnostics`) for a custom view — area views answer to the area id.
 
 You can add the label `nightlight` to lights to exclude them from area and floor toggles.
 
@@ -84,7 +84,7 @@ Bonbon Strategy can be installed manually or by using HACS. If you choose to use
 ### Without HACS:
 
 1. Make sure Bubble Card is installed!
-2. Download `bonbon-strategy.js`, `bonbon-strategy-builders.js`, `bonbon-strategy-config.js`, `bonbon-strategy-entities.js`, `bonbon-strategy-styles.js`, `bonbon-strategy-utils.js`,
+2. Download `bonbon-strategy.js`, `bonbon-strategy-builders.js`, `bonbon-strategy-config.js`, `bonbon-strategy-entities.js`, `bonbon-strategy-styles.js`, `bonbon-strategy-templates.js`, `bonbon-strategy-utils.js`,
 3. Place them in `<config>/www/` (restart HA if `/www` didn't exist!)
 4. Go to `Settings` > `Dashboards` > `⋮` > `Resources` > `Add resource` and enter `/local/bonbon-strategy.js` (the other files will be loaded automatically)
 5. Go to `Settings` > `Dashboards` > `Add dashboard` > `New empty dashboard` then create
@@ -402,7 +402,7 @@ You can also mix and match Home Assistant's built-in cards, installed custom car
 
 ### Deprecated: button actions
 
-The `actions` option is deprecated in favour of card templates and will be removed in v4.0.0. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before and is applied as the last layer to Bubble buttons (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else).
+The `actions` option is deprecated in favour of card templates and will be removed in v4.0.0. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before: it is applied on top of the generated Bubble card (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else), while an explicit YAML card in `cards` still wins over it.
 
 To migrate, move the block into `card_templates`. The old config:
 
@@ -657,19 +657,25 @@ Home Assistant default cards will receive some light styling automatically, cust
 
 #### Available CSS Variables
 
+All variables are prefixed with the dashboard's `panelUrl`, so two dashboards can never overwrite each other's colors. For the default dashboard (`/lovelace/`) the prefix is `--bonbon-lovelace-`, for a dashboard with the URL path `home` it is `--bonbon-home-`.
+
 If you are attempting this you probably already know what you're doing.
-Here are some useful variables you can use to style custom cards with `card-mod`:
+Here are some useful variables you can use to style custom cards with `card-mod` (`<panel>` stands for the dashboard's `panelUrl`):
 
 **Card Styling:**
 
-- `--bonbon-box-shadow` - Standard shadow effect used throughout
-- `--bonbon-border-radius` - Border radius for buttons and card elements
+- `--bonbon-<panel>-box-shadow` - Standard shadow effect used throughout
+- `--bonbon-<panel>-border-radius` - Border radius for buttons and card elements
 
 **Colors:**
 
-- `--bonbon-card-background` - Card background color
-- `--bonbon-primary-text-color` - Primary text color
-- `--bonbon-primary-accent-color` - Default accent color for active states (purple: #9373c9)
+- `--bonbon-<panel>-card-background` - Card background color
+- `--bonbon-<panel>-primary-text-color` - Primary text color
+- `--bonbon-<panel>-primary-accent-color` - Default accent color for active states (the resolved `primary_accent_color`)
+
+**Area Colors:**
+
+- `--area-<area_id>-light-color`, `--area-<area_id>-medium-color`, `--area-<area_id>-shade-color` - the color triple of one area, used by the area cards
 
 #### Example Custom Card with Styling
 
@@ -685,8 +691,10 @@ views:
             card_mod:
               style:
                 ha-card: |
-                  border-radius: var(--bonbon-border-radius);
-                  box-shadow: var(--bonbon-box-shadow);
-                  background: var(--bonbon-card-background);
+                  border-radius: var(--bonbon-lovelace-border-radius);
+                  box-shadow: var(--bonbon-lovelace-box-shadow);
+                  background: var(--bonbon-lovelace-card-background);
                   border: none;
 ```
+
+`card_mod` also accepts an object instead of a string (`style: { 'ha-card': … }`). Such a card_mod block is passed through unchanged; only the string form gets the global Bonbon styles prepended.

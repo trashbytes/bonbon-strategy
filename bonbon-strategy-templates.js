@@ -4,7 +4,12 @@
 // a card is rendered in instead of against the entity. String values inside a template may contain placeholders,
 // resolved per matched entity.
 
-import { mergeDeep } from './bonbon-strategy-utils.js';
+// Same cache-busting contract as `bonbon-strategy.js`: the sibling module is imported with the `hacstag` of the
+// strategy resource. A plain `import` would load `bonbon-strategy-utils.js` a second time (un-tagged) and could
+// be served from cache with stale code.
+const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
+
+const { mergeDeep } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 
 // Only Bubble Card may be assumed installed, every other custom card is optional.
 const BUILT_IN_CUSTOM_CARDS = ['bubble-card'];

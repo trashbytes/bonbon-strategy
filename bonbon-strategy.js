@@ -219,13 +219,16 @@ export class BonbonStrategy {
           area.categorizedEntityIds = [];
           return area;
         });
+      const _floorIds = new Set(Object.keys(hass.floors || {}));
 
       if (!expandedViews.bonbon_home.disabled) {
         delete expandedViews.bonbon_home.sections.bonbon_areas;
 
         _floors.forEach((floor, index, floors) => {
           const viewKey = 'bonbon_home';
-          const floorAreas = _areas.filter((area) => area.floor_id == floor.floor_id);
+          const floorAreas = _areas.filter(
+            (area) => (_floorIds.has(area.floor_id) ? area.floor_id : '_areas') == floor.floor_id,
+          );
           const sectionConfig = { ...areaSectionConfig };
           sectionConfig.name = floor.name;
           sectionConfig.icon = floor.icon || 'mdi:home-floor-' + String(floor.level).replace('-', 'negative-');
@@ -293,6 +296,10 @@ export class BonbonStrategy {
               })
               .filter(Boolean);
 
+            const hasInlineButtons = Array.isArray(sectionConfig.inline_buttons)
+              ? sectionConfig.inline_buttons.length > 0
+              : !!sectionConfig.inline_buttons;
+
             const areaCard = createButtonCard(null, sectionConfig, {
               icon: area.icon,
               show_state: false,
@@ -315,7 +322,7 @@ export class BonbonStrategy {
                 ],
                 bottom_layout: 'inline',
               },
-              rows: sectionConfig.inline_buttons.length ? 1.4 : 1,
+              rows: hasInlineButtons ? 1.4 : 1,
               styles: css`
                 :host {
                   --area-light-color: var(--area-${area.area_id}-light-color);
@@ -374,6 +381,9 @@ export class BonbonStrategy {
               const sectionConfig = { ...areaViewConfig.sections[key] };
               sectionConfig.key = key;
               sectionConfig.view = viewKey;
+              // Cards are resolved a second time in the view transform below, where `viewScope` is the view key.
+              // Keeping the area id here lets `order_<area_id>_<n>` labels survive that pass.
+              sectionConfig.order_scopes = [area.area_id, viewKey];
               if (
                 !sectionConfig.area_id ||
                 (Array.isArray(sectionConfig.area_id)
@@ -451,12 +461,20 @@ export class BonbonStrategy {
                   `,
                 },
               };
-              const cards = resolveEntities(sectionConfig.cards, sectionConfig, viewKey).map(function (c) {
+              const cards = resolveEntities(
+                sectionConfig.cards,
+                sectionConfig,
+                sectionConfig.order_scopes || viewKey,
+              ).map(function (c) {
                 return createButtonCard(c, sectionConfig, {}, areaViewAreas[viewKey]);
               });
 
               if (!sectionConfig.hide_separator && (cards.length || sectionConfig.show_if_empty)) {
-                const separatorSubEntities = resolveEntities(sectionConfig.separator_buttons, sectionConfig, viewKey);
+                const separatorSubEntities = resolveEntities(
+                  sectionConfig.separator_buttons,
+                  sectionConfig,
+                  sectionConfig.order_scopes || viewKey,
+                );
 
                 const separatorSubButtons = separatorSubEntities
                   .map((c, index, filtered) => {
@@ -498,9 +516,9 @@ export class BonbonStrategy {
                   : [];
                 if (key == 'bonbon_weather') {
                   if (sectionConfig.icon == 'auto') {
-                    sectionConfig.icon =
-                      getWeatherIcon(hass.states[separatorSubEntities?.[0]?.entity?.entity_id]?.state) ||
-                      'mdi:cloud-question';
+                    sectionConfig.icon = getWeatherIcon(
+                      hass.states[separatorSubEntities?.[0]?.entity?.entity_id]?.state,
+                    );
                   }
                   if (sectionConfig.name == 'auto') {
                     sectionConfig.name = separatorSubEntities?.[0]?.entity?.name || 'Weather';
@@ -581,15 +599,20 @@ export class BonbonStrategy {
           if (window.cardMod_patch_state) {
             if (newStruct.type) {
               newStruct.card_mod = newStruct.card_mod || {};
-              newStruct.card_mod.style =
-                styles.cardmodGlobal +
-                (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
-                (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
-                (newStruct.card_mod?.style || '');
-              if (newStruct.type == 'custom:mini-graph-card') {
-                newStruct.line_color = cssValue('primary-accent-color');
+              // card-mod accepts a string or an object (`{ 'ha-card': '…' }`). Only the string form is prepended to
+              // the global styles — concatenating an object would turn it into `[object Object]`.
+              const cardModStyle = newStruct.card_mod.style;
+              if (typeof cardModStyle !== 'object' || cardModStyle === null) {
+                newStruct.card_mod.style =
+                  styles.cardmodGlobal +
+                  (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
+                  (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
+                  (cardModStyle || '');
               }
             }
+          }
+          if (newStruct.type == 'custom:mini-graph-card') {
+            newStruct.line_color = cssValue('primary-accent-color');
           }
           if (newStruct.elements && Array.isArray(newStruct.elements)) {
             newStruct.elements = applyGlobalStyles(newStruct.elements);

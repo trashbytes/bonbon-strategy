@@ -428,7 +428,6 @@ export const defaultConfig = {
           min_columns: 2,
           max_columns: 2,
           disabled: false,
-          bonbon_colors: true,
           separator_buttons: 'light.*:not([label=nightlight])',
           separator_combine_lights: 'when-on',
           sub_buttons: 'light.*:not([label=nightlight])',

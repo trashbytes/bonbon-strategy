@@ -37,3 +37,21 @@ The `actions` option is deprecated in favour of card templates and no longer has
 configure it, it is still applied as the last layer to Bubble buttons, exactly as before. **Please migrate your
 `actions` block to card templates:** copy the domain you customized into `card_templates` and set
 `tap_action`/`button_action.tap_action` explicitly, as shown in the README ("Deprecated: button actions").
+
+### Fixed
+
+- The weather section keeps its configured `name`, `icon` and `separator_buttons` again. `upgradeConfig` mapped
+  `show_weather_card` / `weather_entity_id` by forcing the section to `auto` on every run, which overrode user
+  config and made the documented translation example impossible.
+- A `card_mod` block in object form (`style: { 'ha-card': … }`) is passed through unchanged instead of being
+  string-concatenated into `[object Object]`.
+- `order_<area_id>_<number>` labels survive the second resolution pass in area views, where cards used to be
+  re-sorted alphabetically.
+- Sections that share a fixed column keep their generated card-mod styles (`display` / row-gap variables), so
+  `:hide()`-based empty-section hiding works in multi-column views.
+- Areas pointing at a floor that no longer exists are shown in the "Areas" section instead of disappearing, and an
+  area without a `labels` array no longer throws.
+- `inline_buttons: null` no longer breaks the area card, and Mini Graph cards get their `line_color` even when
+  card-mod is not installed.
+- Documentation: the manual install list names `bonbon-strategy-templates.js`, the CSS variables use their real
+  per-dashboard names (`--bonbon-<panelUrl>-…`), and the `order_<view_key>_…` examples use the actual view key.
