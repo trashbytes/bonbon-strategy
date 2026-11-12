@@ -118,6 +118,14 @@ There is no test suite. Validate by:
 2. Checking the browser console — thrown errors surface as an "Error" view.
 3. CI only checks HACS metadata via `.github/workflows/validate.yaml`; keep `hacs.json` valid.
 
+## Dev deploy (standing rule)
+
+The user tests on his live dev instance, so a change that plausibly works is deployed to it right away and then reported — do not wait to be asked, but always say that it is deployed (and which files) so he can test immediately.
+
+1. Copy the changed `bonbon-strategy-*.js` modules into `<config>/www` (write route, credentials and traps: `home-assistant-config` skill, `references/config-file-access.md` — the Advanced SSH add-on is started and stopped around the copy).
+2. Verify over HTTP that `/local/<file>` serves the new bytes (`md5sum` against the local file), not from the SSH shell.
+3. Tell the user it is live; the dev loader appends a fresh `hacstag`, so a dashboard reload is enough.
+
 ## When you change something
 
 - User-facing option → update `README.md` and `defaultConfig` (and `upgradeConfig` if it replaces an old option).
