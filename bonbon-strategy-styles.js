@@ -1,6 +1,6 @@
 export function createStylesApi(panelUrl, config) {
   const metaScheme = document.querySelector('meta[name="color-scheme"]');
-  const css = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] || ''), '');
+  const css = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] ?? ''), '');
   const isDark = () => {
     return metaScheme?.getAttribute('content') === 'dark';
   };
@@ -16,6 +16,25 @@ export function createStylesApi(panelUrl, config) {
   };
   const cssVariable = (suffix) => `--bonbon-${panelUrl}-${suffix}`;
   const cssValue = (suffix) => `var(${cssVariable(suffix)})`;
+
+  // Selector parts shared by several rules in `bubbleGlobal`.
+  const containers = [
+    '.bubble-sub-buttons-container .bubble-sub-button',
+    '.bubble-button-container:not(.bubble-buttons-container)',
+    '.bubble-select-container',
+    '.bubble-climate-container',
+    '.bubble-cover-container',
+    '.bubble-media-player-container',
+  ];
+  const backgrounds = [
+    '.bubble-select-container',
+    '.bubble-climate-container',
+    '.bubble-cover-container',
+    '.bubble-media-player-container',
+    '.bubble-button-background',
+  ];
+  // One selector list, optionally one pseudo-element per part.
+  const group = (parts, suffix = '') => parts.map((part) => part + suffix).join(',\n          ');
 
   const getVariables = () => ({
     global: {
@@ -199,6 +218,13 @@ export function createStylesApi(panelUrl, config) {
         box-shadow: 0 2px 6px rgba(0, 0, 0, ${cssValue('sub-button-shadow-opacity')});
       }
     `;
+    // Hover rule shared by `bubbleAreaSubButtonDefault` and `bubbleAreaSubButtonAlways`.
+    const areaSubButtonHover = css`
+      .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
+      .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
+        background: var(--area-shade-color) !important;
+      }
+    `;
     const styles = {
       cardmodGlobal: globalStyles,
       bubbleGlobal:
@@ -227,11 +253,7 @@ export function createStylesApi(panelUrl, config) {
           ha-ripple {
             display: none !important;
           }
-          .bubble-select-container,
-          .bubble-climate-container,
-          .bubble-cover-container,
-          .bubble-media-player-container,
-          .bubble-button-background {
+          ${group(backgrounds)} {
             background-color: ${cssValue('card-background')} !important;
             opacity: 1 !important;
           }
@@ -248,31 +270,15 @@ export function createStylesApi(panelUrl, config) {
           .bubble-button-container {
             overflow: visible;
           }
-          .bubble-sub-buttons-container .bubble-sub-button,
-          .bubble-button-container:not(.bubble-buttons-container),
-          .bubble-select-container,
-          .bubble-climate-container,
-          .bubble-cover-container,
-          .bubble-media-player-container {
+          ${group(containers)} {
             border-radius: var(--bubble-button-border-radius);
           }
-          .bubble-sub-buttons-container .bubble-sub-button:after,
-          .bubble-button-container:not(.bubble-buttons-container):after,
-          .bubble-select-container:after,
-          .bubble-climate-container:after,
-          .bubble-cover-container:after,
-          .bubble-media-player-container:after {
+          ${group(containers, ':after')} {
             ${shadowOverlay}
           }
-          .bubble-sub-buttons-container .bubble-sub-button:hover:after,
-          .bubble-button-container:not(.bubble-buttons-container):hover:after,
-          .bubble-select-container:hover:after,
-          .bubble-climate-container:hover:after,
-          .bubble-cover-container:hover:after,
-          .bubble-media-player-container:hover:after {
+          ${group(containers, ':hover:after')} {
             background: ${cssValue('hover-overlay-background')};
           }
-          mwc-list-item[selected],
           mwc-list-item[selected],
           .is-on .bubble-name-container {
             --icon-primary-color: #fff;
@@ -391,7 +397,7 @@ export function createStylesApi(panelUrl, config) {
             display: none !important;
           }
         `,
-      bubbleAreaBase: bubbleAreaBase,
+      bubbleAreaBase,
       bubbleAreaSubButtonDefault: css`
         .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
           color: var(--primary-text-color) !important;
@@ -399,10 +405,7 @@ export function createStylesApi(panelUrl, config) {
         .bubble-sub-button-container.fixed-top .bubble-sub-button {
           background: var(--area-medium-color) !important;
         }
-        .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-        .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-          background: var(--area-shade-color) !important;
-        }
+        ${areaSubButtonHover}
         .bubble-sub-button-container.fixed-top .background-on {
           background: var(--area-medium-color) !important;
         }
@@ -419,10 +422,7 @@ export function createStylesApi(panelUrl, config) {
         .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
           background: var(--area-medium-color) !important;
         }
-        .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-        .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-          background: var(--area-shade-color) !important;
-        }
+        ${areaSubButtonHover}
         .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button,
         .bubble-container:hover .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
           background: var(--bubble-default-color) !important;
@@ -527,9 +527,7 @@ export function createStylesApi(panelUrl, config) {
           }
         }
       `,
-      haCardBase: css`
-        ${haCardBase}
-      `,
+      haCardBase,
     };
     return styles;
   };

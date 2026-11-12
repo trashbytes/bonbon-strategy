@@ -26,6 +26,7 @@ All modules are plain ES modules loaded in the browser. There is **no build step
 | `README.md` | User-facing documentation. **Source of truth for config options** — update it whenever you add or change a user-facing option. |
 | `hacs.json` | HACS metadata (`filename: bonbon-strategy.js`). |
 | `.github/workflows/validate.yaml` | CI: `hacs/action` validation (daily + manual). No tests, no lint, no typecheck. |
+| `scripts/css-equivalence.mjs` | Dev gate for the style fragments: renders two versions of the styles module headlessly and compares the emitted CSS rule by rule (see "Testing / validating changes"). |
 
 Local-only / gitignored (do not assume they ship): `bonbon-strategy-loader.js` (dev cache-busting loader that appends `?hacstag=<timestamp>`), `workspace.js` (commented-out scratch), `assets/`, `ftp*`, `.history/`.
 
@@ -82,6 +83,7 @@ Order and hidden labels are matched against the scopes `''`, `<viewScope>`, `<se
 - `createStylesApi` namespaces every CSS variable per dashboard: `--bonbon-<panelUrl>-<suffix>` (`cssVariable` / `cssValue`).
 - Dark mode is detected from `meta[name="color-scheme"]` via a `MutationObserver` (`observeDarkMode`), not from a `getStyles(isDark)` argument.
 - `getStyles()` returns named fragments concatenated onto generated cards: `cardmodGlobal`, `bubbleGlobal`, `bubbleAreaBase`, `bubbleButtonNonBinary`, `bubbleSeparatorSubButtonBase`, `bubbleSeparatorLightsSubButtonAlways`, `bubbleSeparatorLightsSubButtonDefault`, `bubbleAreaSubButtonDefault`, `bubbleAreaSubButtonAlways`, `graphCard`, `haCardBase`. Cards opt in via `bonbon_styles: [...]`.
+- Selector lists shared by several rules are defined once as the `containers` / `backgrounds` arrays plus `group(parts, suffix)` in `createStylesApi`, and the `:after` / `:hover:after` variants are derived with the suffix argument. Add a new repeated list there instead of writing the selectors out inline again; a second hand-written list is what drifts first.
 - Public CSS variables exposed to users for `card-mod` are all namespaced, e.g. `--bonbon-<panelUrl>-box-shadow`, `--bonbon-<panelUrl>-border-radius`, `--bonbon-<panelUrl>-card-background`, `--bonbon-<panelUrl>-primary-text-color`, `--bonbon-<panelUrl>-primary-accent-color`. Area colors are the exception: `--area-<area_id>-{light,medium,shade}-color`.
 
 ## Cache-busting (important)
@@ -111,6 +113,7 @@ Commits are authored as `trashbytes <10084665+trashbytes@users.noreply.github.co
 
 There is no test suite. Validate by:
 
+0. For a change to `bonbon-strategy-styles.js`, prove the emitted CSS did not move: copy the file first (`cp bonbon-strategy-styles.js /tmp/styles-baseline.js`), edit, then `node scripts/css-equivalence.mjs /tmp/styles-baseline.js bonbon-strategy-styles.js`. It renders `getVariables()` and every `getStyles()` fragment for a light and a styled config and exits 0 only when the rule sets are equal. CSS whitespace is insignificant, so rebuilding a selector list from an array passes, while a changed value, a dropped `!important`, a dropped selector part or a reordered rule fails. This gate covers the styles module only — the card/template behavior still needs step 1.
 1. Loading the strategy in a real Home Assistant instance (HACS install, or copy the `bonbon-strategy-*.js` files to `<config>/www/` and add `/local/bonbon-strategy.js` as a resource, then clear the frontend cache). The local dev instance registers `/local/bonbon-strategy-loader.js`, which imports the modules with a fresh `hacstag` on every page load, so writing the modules into its `/config/www` is all a deploy needs — no HA restart.
 2. Checking the browser console — thrown errors surface as an "Error" view.
 3. CI only checks HACS metadata via `.github/workflows/validate.yaml`; keep `hacs.json` valid.
