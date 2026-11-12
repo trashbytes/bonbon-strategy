@@ -157,6 +157,8 @@ strategy:
 
 Now let's get into how it works, but do not use this as your config, as it's generic example code. Pick the parts you need, understand how they work, change them to suit your needs and then selectively add them to your config. Make sure to properly indent everything!
 
+Anything you leave out — or leave empty, like a bare `bonbon_persons:` — keeps the shipped default.
+
 ```yaml
 strategy:
   type: custom:bonbon-strategy
@@ -395,7 +397,7 @@ card_variants:
 
 **Context filters.** `[view=...]` and `[section=...]` are not entity attributes — they are matched against the view and section a card is rendered in, and are removed from the selector before the entities are looked up. They accept `|` for alternatives (`[view=bonbon_area|bonbon_home]`) and are combined with entity filters in any order (`light.*[section=lights][brightness=*]`). Per-area views also answer to `[view=bonbon_area]`, custom views to the key they were configured under.
 
-The weather forecast card is scoped that way: the default is `weather.*[section=bonbon_weather]`, so a weather entity in any other section renders from the generic `*` variant (a plain state button). Add your own `weather.*` variant if you want forecast cards elsewhere.
+The weather forecast card is scoped that way: the default is `weather.*[section=bonbon_weather]`, so a weather entity in any other section renders from the generic `*` variant (a plain state button). Add your own `weather.*` variant if you want forecast cards elsewhere — a new key is appended after the shipped ones and therefore wins everywhere, including the weather section; use `[view=...]` / `[section=...]` if you only want it somewhere else.
 
 **Matching order:** the map in the order you define it, with context filters narrowing a variant down to one view or section. Because the last match wins, put a context-filtered variant *after* the generic one it should override — which is what happens automatically when you add a new key.
 

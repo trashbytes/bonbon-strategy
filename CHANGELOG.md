@@ -59,5 +59,16 @@ customized into `card_variants` and set
   area without a `labels` array no longer throws.
 - `inline_buttons: null` no longer breaks the area card, and Mini Graph cards get their `line_color` even when
   card-mod is not installed.
+- Entities that a selector pulls in with `[hidden=*]` or `[entity_category=*]` keep their card variant:
+  variant matching resolves selectors without the default hidden/diagnostic filtering, so such an entity
+  is no longer rendered as the plain `*` fallback card.
+- An empty YAML node (`bonbon_persons:`, `styles:`, `views:`) means "not configured" instead of crashing
+  the dashboard: `mergeDeep` ignores `null`/`undefined` values, so the shipped default stays in place.
+- `card_mod` in string shorthand (`card_mod: "ha-card { … }"`) no longer throws; it is used as the style
+  and the global CSS is prepended to it. Object forms are still passed through unchanged.
+- Area cards no longer link into area views that were disabled (`bonbon_area: { disabled: true }`), and
+  they no longer receive the `bubbleButtonNonBinary` styles, which only apply to cards with an entity.
+- The deprecated section options tolerate `inline_buttons` / `cards` being a single selector, `null` or
+  `false` instead of an array.
 - Documentation: the manual install list names `bonbon-strategy-templates.js`, the CSS variables use their real
   per-dashboard names (`--bonbon-<panelUrl>-…`), and the `order_<view_key>_…` examples use the actual view key.

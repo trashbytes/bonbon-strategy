@@ -220,6 +220,13 @@ export function applyCardDefaults(variant, defaults) {
   return card;
 }
 
+// Matching resolves a variant selector against the registry, which filters out hidden and
+// diagnostic/config entities by default. Those two filters are widened here so an entity that a card
+// selector pulls in via `[hidden=*]` or `[entity_category=*]` still matches its domain variant
+// instead of falling back to the `*` catch-all. Selectors that carry the filters themselves keep
+// working, because the extra filters only add "any value" matches on top of them.
+const MATCH_ANY_ATTRIBUTE_FILTERS = '[hidden=*][entity_category=*]';
+
 export function createTemplateApi(config = {}, states = {}, resolveEntityFn = null) {
   // Selector -> Set(entity_id) and selector -> parsed selector. Built once per selector per generate run, so
   // matching a card never re-resolves the whole registry and never re-parses the same selector.
@@ -245,7 +252,7 @@ export function createTemplateApi(config = {}, states = {}, resolveEntityFn = nu
     let entityIds = new Set();
     if (typeof resolveEntityFn === 'function') {
       try {
-        const resolved = resolveEntityFn(selector, {});
+        const resolved = resolveEntityFn(selector + MATCH_ANY_ATTRIBUTE_FILTERS, {});
         entityIds = new Set([resolved].flat().map((entry) => entry?.entity?.entity_id).filter(Boolean));
       } catch (e) {
         console.warn(`Bonbon: could not match card template "${selector}"`, e);

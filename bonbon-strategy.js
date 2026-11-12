@@ -135,13 +135,21 @@ export class BonbonStrategy {
         hass?.config?.location_name ||
         'Home';
 
-      config.styles.primary_accent_color_light = config.styles.primary_accent_color.includes('#')
-        ? getColorsFromColor(config.styles.primary_accent_color, false).activeColor
-        : config.styles.primary_accent_color;
+      // A non-object `styles` block (empty YAML node, typo) must not take the whole dashboard down.
+      if (!isPlainObject(config.styles)) {
+        config.styles = { ...defaultConfig.styles };
+      }
 
-      config.styles.primary_accent_color_dark = config.styles.primary_accent_color.includes('#')
-        ? getColorsFromColor(config.styles.primary_accent_color, true).activeColor
-        : config.styles.primary_accent_color;
+      const accentColor = config.styles.primary_accent_color;
+      const isHexAccentColor = typeof accentColor === 'string' && accentColor.includes('#');
+
+      config.styles.primary_accent_color_light = isHexAccentColor
+        ? getColorsFromColor(accentColor, false).activeColor
+        : accentColor;
+
+      config.styles.primary_accent_color_dark = isHexAccentColor
+        ? getColorsFromColor(accentColor, true).activeColor
+        : accentColor;
 
       const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl, config);
       // Template matching resolves selectors against the full registry once per selector and then matches by
@@ -204,6 +212,8 @@ export class BonbonStrategy {
 
       const expandedViews = { ...config.views };
       const areaSectionConfig = { ...expandedViews.bonbon_home.sections.bonbon_areas };
+      // Area cards navigate into the area views, so without them they must not link anywhere.
+      const areaViewsEnabled = !expandedViews.bonbon_area.disabled;
 
       const _floors = Object.values({
         ...(hass.floors || {}),
@@ -306,13 +316,12 @@ export class BonbonStrategy {
               icon: area.icon,
               show_state: false,
               name: area.name.split(' (')[0],
-              button_action: {
-                tap_action: {
-                  action: 'navigate',
-                  navigation_path: `bonbon_area_${area.area_id}`,
-                },
-                hold_action: { action: 'navigate', navigation_path: `/config/areas/area/${area.area_id}` },
-              },
+              button_action: areaViewsEnabled
+                ? {
+                    tap_action: { action: 'navigate', navigation_path: `bonbon_area_${area.area_id}` },
+                    hold_action: { action: 'navigate', navigation_path: `/config/areas/area/${area.area_id}` },
+                  }
+                : { tap_action: { action: 'none' } },
               sub_button: {
                 main: subButtons,
                 bottom: [
@@ -566,7 +575,7 @@ export class BonbonStrategy {
           (entityId && entities[entityId] && hasBinaryState({ entity: entities[entityId] }));
         const cardType = card?.card_type || 'button';
 
-        if (cardType === 'button' && !isToggle && !isBinary) {
+        if (cardType === 'button' && entityId && !isToggle && !isBinary) {
           return ['bubbleButtonNonBinary'];
         }
 
@@ -600,16 +609,20 @@ export class BonbonStrategy {
           }
           if (window.cardMod_patch_state) {
             if (newStruct.type) {
-              newStruct.card_mod = newStruct.card_mod || {};
-              // card-mod accepts a string or an object (`{ 'ha-card': '…' }`). Only the string form is prepended to
-              // the global styles — concatenating an object would turn it into `[object Object]`.
-              const cardModStyle = newStruct.card_mod.style;
+              // card-mod takes an object (`{ style: … }`, `{ 'ha-card': … }`) or the plain string
+              // shorthand. Only a string style gets the global CSS prepended; object forms are passed
+              // through unchanged, concatenating one would turn it into `[object Object]`.
+              const cardMod = newStruct.card_mod;
+              const cardModStyle = typeof cardMod === 'string' ? cardMod : cardMod?.style;
               if (typeof cardModStyle !== 'object' || cardModStyle === null) {
-                newStruct.card_mod.style =
-                  styles.cardmodGlobal +
-                  (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
-                  (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
-                  (cardModStyle || '');
+                newStruct.card_mod = {
+                  ...(isPlainObject(cardMod) ? cardMod : {}),
+                  style:
+                    styles.cardmodGlobal +
+                    (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
+                    (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
+                    (typeof cardModStyle === 'string' ? cardModStyle : ''),
+                };
               }
             }
           }
