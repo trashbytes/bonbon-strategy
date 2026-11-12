@@ -35,6 +35,14 @@ export function createStylesApi(panelUrl, config) {
   ];
   // One selector list, optionally one pseudo-element per part.
   const group = (parts, suffix = '') => parts.map((part) => part + suffix).join(',\n          ');
+  // Renders only the first sub-button that carries the active marker; the inactive ones and every later
+  // active sibling are hidden. `scope` is the container prefix, `active` the marker class or attribute filter.
+  const hideInactive = (scope, active) => css`
+    ${scope} .bubble-sub-button:not(${active}),
+    ${scope} .bubble-sub-button${active} ~ .bubble-sub-button${active} {
+      display: none !important;
+    }
+  `;
 
   const getVariables = () => ({
     global: {
@@ -105,7 +113,7 @@ export function createStylesApi(panelUrl, config) {
         display: block;
         inset: 0;
         position: absolute;
-        border-radius: var(--bubble-button-border-radius);
+        border-radius: ${cssValue('border-radius')};
         background: ${cssValue('hover-overlay-background')};
         opacity: 0;
       }
@@ -149,9 +157,6 @@ export function createStylesApi(panelUrl, config) {
       }
       .fixed-top .bubble-sub-button-container {
         margin-top: 8px;
-      }
-      ha-ripple {
-        display: none;
       }
       .bubble-button {
         background: var(--area-light-color);
@@ -363,24 +368,14 @@ export function createStylesApi(panelUrl, config) {
             color: #fff;
             background-color: var(--bubble-default-color);
           }
-          .bubble-sub-button-container:has(.background-on)
-            [data-group-id='g_main_0']
-            .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-          .bubble-sub-button-container:has(.background-on)
-            [data-group-id='g_main_0']
-            .bubble-sub-button[data-tap-action*='light.turn_off']
-            ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-            display: none !important;
-          }
-          .bubble-sub-button-container:not(:has(.background-on))
-            [data-group-id='g_main_0']
-            .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-          .bubble-sub-button-container:not(:has(.background-on))
-            [data-group-id='g_main_0']
-            .bubble-sub-button[data-tap-action*='light.turn_on']
-            ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-            display: none !important;
-          }
+          ${hideInactive(
+            `.bubble-sub-button-container:has(.background-on) [data-group-id='g_main_0']`,
+            `[data-tap-action*='light.turn_off']`,
+          )}
+          ${hideInactive(
+            `.bubble-sub-button-container:not(:has(.background-on)) [data-group-id='g_main_0']`,
+            `[data-tap-action*='light.turn_on']`,
+          )}
         `,
       bubbleSeparatorLightsSubButtonDefault:
         separatorLightsSubButtonBase +
@@ -389,13 +384,7 @@ export function createStylesApi(panelUrl, config) {
             color: #fff;
             background-color: var(--bubble-default-color);
           }
-          .bubble-sub-button-container [data-group-id='g_main_0'] .bubble-sub-button:not(.background-on),
-          .bubble-sub-button-container
-            [data-group-id='g_main_0']
-            .bubble-sub-button.background-on
-            ~ .bubble-sub-button.background-on {
-            display: none !important;
-          }
+          ${hideInactive(`.bubble-sub-button-container [data-group-id='g_main_0']`, `.background-on`)}
         `,
       bubbleAreaBase,
       bubbleAreaSubButtonDefault: css`
@@ -412,10 +401,7 @@ export function createStylesApi(panelUrl, config) {
         .bubble-container:hover .bubble-sub-button-container.fixed-top .background-on {
           background: var(--area-shade-color) !important;
         }
-        .bubble-sub-button-container.fixed-top .bubble-sub-button:not(.background-on),
-        .bubble-sub-button-container.fixed-top .bubble-sub-button.background-on ~ .bubble-sub-button.background-on {
-          display: none !important;
-        }
+        ${hideInactive('.bubble-sub-button-container.fixed-top', '.background-on')}
       `,
       bubbleAreaSubButtonAlways: css`
         .bubble-sub-button-container.fixed-top .bubble-sub-button,
@@ -428,20 +414,14 @@ export function createStylesApi(panelUrl, config) {
           background: var(--bubble-default-color) !important;
           color: #fff !important;
         }
-        .bubble-sub-button-container.fixed-top:has(.background-on)
-          .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-        .bubble-sub-button-container.fixed-top:has(.background-on)
-          .bubble-sub-button[data-tap-action*='light.turn_off']
-          ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-          display: none !important;
-        }
-        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-          .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-          .bubble-sub-button[data-tap-action*='light.turn_on']
-          ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-          display: none !important;
-        }
+        ${hideInactive(
+          '.bubble-sub-button-container.fixed-top:has(.background-on)',
+          `[data-tap-action*='light.turn_off']`,
+        )}
+        ${hideInactive(
+          '.bubble-sub-button-container.fixed-top:not(:has(.background-on))',
+          `[data-tap-action*='light.turn_on']`,
+        )}
       `,
       graphCard: css`
         ${haCardBase}
