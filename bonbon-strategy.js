@@ -2,7 +2,9 @@ window.bonbon = window.bonbon || {};
 
 const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
-const { defaultConfig } = await import(`./bonbon-strategy-config.js?hacstag=${hacstag}`);
+const { defaultConfig, miniGraphCardTemplate } = await import(
+  `./bonbon-strategy-config.js?hacstag=${hacstag}`,
+);
 const {
   getWeatherIcon,
   mergeDeep,
@@ -13,9 +15,83 @@ const {
   upgradeConfig,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
+const { createTemplateApi, mergeCardVariants } = await import(`./bonbon-strategy-templates.js?hacstag=${hacstag}`);
 
 const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
+
+const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+
+// Turns the legacy section options `show_graphs` and `show_forecast` into
+// section-scoped card variants, so the builders no longer branch on them.
+// Section-scoped variants are matched after the global ones, so they always win.
+const applySectionSugars = (config, userVariants = {}) => {
+  const getForecastTemplates = (forecastType) => {
+    const templates = {
+      'weather.*[label=forecast_daily]': {
+        type: 'weather-forecast',
+        entity: 'entity.entity_id',
+        show_current: true,
+        show_forecast: true,
+        forecast_type: 'daily',
+      },
+      'weather.*[label=forecast_hourly]': {
+        type: 'weather-forecast',
+        entity: 'entity.entity_id',
+        show_current: true,
+        show_forecast: true,
+        forecast_type: 'hourly',
+      },
+      'weather.*[label=forecast]': {
+        type: 'weather-forecast',
+        entity: 'entity.entity_id',
+        show_current: true,
+        show_forecast: true,
+      },
+    };
+    const genericTemplate = {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: true,
+    };
+    // `show_weather_card: true` used to render a forecast without choosing a type, let Home Assistant decide.
+    if (forecastType) {
+      genericTemplate.forecast_type = forecastType;
+    }
+    templates['weather.*'] = genericTemplate;
+    return templates;
+  };
+
+  Object.keys(config?.views || {}).forEach((viewKey) => {
+    const sections = config.views[viewKey]?.sections || {};
+    Object.keys(sections).forEach((sectionKey) => {
+      const section = sections[sectionKey];
+      if (!section) {
+        return;
+      }
+      // The deprecated options become section-scoped variants in the global map. A variant the user already
+      // wrote for the same section wins, so migrating is a no-op; a shipped default may be overridden by the option.
+      const addTemplate = (selector, template) => {
+        const key = `${selector}[section=${sectionKey}]`;
+        if (isPlainObject(userVariants) && isPlainObject(userVariants[key])) {
+          return;
+        }
+        config.card_variants[key] = template;
+      };
+      if (section.show_graphs) {
+        // Entities resolved through `area.<attribute>` carry no labels, so the generic selectors come last.
+        addTemplate('sensor.*', { ...miniGraphCardTemplate });
+        addTemplate('binary_sensor.*', { ...miniGraphCardTemplate });
+      }
+      if (section.show_forecast) {
+        const forecastTemplates = getForecastTemplates(section.show_forecast);
+        Object.keys(forecastTemplates).forEach((selector) => addTemplate(selector, forecastTemplates[selector]));
+      }
+    });
+  });
+  return config;
+};
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
@@ -46,24 +122,52 @@ export class BonbonStrategy {
 
     try {
       const views = [];
-      const config = upgradeConfig(mergeDeep(defaultConfig, userConfig));
+      // Card variants are merged by selector key instead of deep-merging the selector strings, otherwise a
+      // user override of `light.*` would also override the dimmable `light.*[...]` default. Precedence is
+      // shipped defaults < deprecated section options < user variants.
+      const { card_variants: userCardVariants, ...userConfigRest } = userConfig || {};
+      const config = upgradeConfig(mergeDeep(defaultConfig, userConfigRest));
+      applySectionSugars(config, userCardVariants);
+      config.card_variants = mergeCardVariants(config.card_variants, userCardVariants);
 
       const dashboardName =
         Object.values(hass?.panels).find((p) => p?.url_path === panelUrl)?.title ||
         hass?.config?.location_name ||
         'Home';
 
-      config.styles.primary_accent_color_light = config.styles.primary_accent_color.includes('#')
-        ? getColorsFromColor(config.styles.primary_accent_color, false).activeColor
-        : config.styles.primary_accent_color;
+      // A non-object `styles` block (empty YAML node, typo) must not take the whole dashboard down.
+      if (!isPlainObject(config.styles)) {
+        config.styles = { ...defaultConfig.styles };
+      }
 
-      config.styles.primary_accent_color_dark = config.styles.primary_accent_color.includes('#')
-        ? getColorsFromColor(config.styles.primary_accent_color, true).activeColor
-        : config.styles.primary_accent_color;
+      const accentColor = config.styles.primary_accent_color;
+      const isHexAccentColor = typeof accentColor === 'string' && accentColor.includes('#');
+
+      config.styles.primary_accent_color_light = isHexAccentColor
+        ? getColorsFromColor(accentColor, false).activeColor
+        : accentColor;
+
+      config.styles.primary_accent_color_dark = isHexAccentColor
+        ? getColorsFromColor(accentColor, true).activeColor
+        : accentColor;
 
       const { css, observeDarkMode, cssValue, getStyles, getVariables } = createStylesApi(panelUrl, config);
+      // Template matching resolves selectors against the full registry once per selector and then matches by
+      // `entity_id`, so one card's template does not depend on the registry being filtered down to it.
+      const templateApi = createTemplateApi(
+        { card_variants: config.card_variants, card_defaults: config.card_defaults },
+        hass.states,
+        (selector, sectionConfig) =>
+          createEntityApi({
+            entities: hass.entities,
+            devices: hass.devices,
+            states: hass.states,
+            floors: hass.floors,
+            areas: hass.areas,
+          }).resolveEntities(selector, sectionConfig || {}, ''),
+      );
       const { createButtonCard, createSeparatorCard, createGrid, createSubButton, isTogglableEntity, hasBinaryState } =
-        createBuildersApi(panelUrl, config, hass.states);
+        createBuildersApi(panelUrl, config, hass.states, templateApi);
 
       const styles = getStyles();
       const cssVars = getVariables();
@@ -108,6 +212,8 @@ export class BonbonStrategy {
 
       const expandedViews = { ...config.views };
       const areaSectionConfig = { ...expandedViews.bonbon_home.sections.bonbon_areas };
+      // Area cards navigate into the area views, so without them they must not link anywhere.
+      const areaViewsEnabled = !expandedViews.bonbon_area.disabled;
 
       const _floors = Object.values({
         ...(hass.floors || {}),
@@ -125,13 +231,16 @@ export class BonbonStrategy {
           area.categorizedEntityIds = [];
           return area;
         });
+      const _floorIds = new Set(Object.keys(hass.floors || {}));
 
       if (!expandedViews.bonbon_home.disabled) {
         delete expandedViews.bonbon_home.sections.bonbon_areas;
 
         _floors.forEach((floor, index, floors) => {
           const viewKey = 'bonbon_home';
-          const floorAreas = _areas.filter((area) => area.floor_id == floor.floor_id);
+          const floorAreas = _areas.filter(
+            (area) => (_floorIds.has(area.floor_id) ? area.floor_id : '_areas') == floor.floor_id,
+          );
           const sectionConfig = { ...areaSectionConfig };
           sectionConfig.name = floor.name;
           sectionConfig.icon = floor.icon || 'mdi:home-floor-' + String(floor.level).replace('-', 'negative-');
@@ -199,17 +308,20 @@ export class BonbonStrategy {
               })
               .filter(Boolean);
 
+            const hasInlineButtons = Array.isArray(sectionConfig.inline_buttons)
+              ? sectionConfig.inline_buttons.length > 0
+              : !!sectionConfig.inline_buttons;
+
             const areaCard = createButtonCard(null, sectionConfig, {
               icon: area.icon,
               show_state: false,
               name: area.name.split(' (')[0],
-              button_action: {
-                tap_action: {
-                  action: 'navigate',
-                  navigation_path: `bonbon_area_${area.area_id}`,
-                },
-                hold_action: { action: 'navigate', navigation_path: `/config/areas/area/${area.area_id}` },
-              },
+              button_action: areaViewsEnabled
+                ? {
+                    tap_action: { action: 'navigate', navigation_path: `bonbon_area_${area.area_id}` },
+                    hold_action: { action: 'navigate', navigation_path: `/config/areas/area/${area.area_id}` },
+                  }
+                : { tap_action: { action: 'none' } },
               sub_button: {
                 main: subButtons,
                 bottom: [
@@ -221,7 +333,7 @@ export class BonbonStrategy {
                 ],
                 bottom_layout: 'inline',
               },
-              rows: sectionConfig.inline_buttons.length ? 1.4 : 1,
+              rows: hasInlineButtons ? 1.4 : 1,
               styles: css`
                 :host {
                   --area-light-color: var(--area-${area.area_id}-light-color);
@@ -249,6 +361,10 @@ export class BonbonStrategy {
         delete expandedViews.bonbon_home;
       }
 
+      // Area objects are kept out of the emitted view config; they only feed `area.*` placeholders
+      // in card templates and are looked up by view key.
+      const areaViewAreas = {};
+
       if (!expandedViews.bonbon_area.disabled) {
         const areaViewConfig = { ...expandedViews.bonbon_area };
 
@@ -262,6 +378,7 @@ export class BonbonStrategy {
             max_columns: areaViewConfig.max_columns || 1,
             sections: {},
           };
+          areaViewAreas[viewKey] = area;
           Object.keys(areaViewConfig.sections)
             .filter((key) => {
               return !areaViewConfig.sections[key].disabled;
@@ -275,6 +392,9 @@ export class BonbonStrategy {
               const sectionConfig = { ...areaViewConfig.sections[key] };
               sectionConfig.key = key;
               sectionConfig.view = viewKey;
+              // Cards are resolved a second time in the view transform below, where `viewScope` is the view key.
+              // Keeping the area id here lets `order_<area_id>_<n>` labels survive that pass.
+              sectionConfig.order_scopes = [area.area_id, viewKey];
               if (
                 !sectionConfig.area_id ||
                 (Array.isArray(sectionConfig.area_id)
@@ -352,15 +472,20 @@ export class BonbonStrategy {
                   `,
                 },
               };
-              const cards = resolveEntities(sectionConfig.cards, sectionConfig, viewKey).map(function (c) {
-                return createButtonCard(c, sectionConfig, {
-                  show_graph: sectionConfig.show_graphs,
-                  show_forecast: sectionConfig.show_forecast,
-                });
+              const cards = resolveEntities(
+                sectionConfig.cards,
+                sectionConfig,
+                sectionConfig.order_scopes || viewKey,
+              ).map(function (c) {
+                return createButtonCard(c, sectionConfig, {}, areaViewAreas[viewKey]);
               });
 
               if (!sectionConfig.hide_separator && (cards.length || sectionConfig.show_if_empty)) {
-                const separatorSubEntities = resolveEntities(sectionConfig.separator_buttons, sectionConfig, viewKey);
+                const separatorSubEntities = resolveEntities(
+                  sectionConfig.separator_buttons,
+                  sectionConfig,
+                  sectionConfig.order_scopes || viewKey,
+                );
 
                 const separatorSubButtons = separatorSubEntities
                   .map((c, index, filtered) => {
@@ -402,9 +527,9 @@ export class BonbonStrategy {
                   : [];
                 if (key == 'bonbon_weather') {
                   if (sectionConfig.icon == 'auto') {
-                    sectionConfig.icon =
-                      getWeatherIcon(hass.states[separatorSubEntities?.[0]?.entity?.entity_id]?.state) ||
-                      'mdi:cloud-question';
+                    sectionConfig.icon = getWeatherIcon(
+                      hass.states[separatorSubEntities?.[0]?.entity?.entity_id]?.state,
+                    );
                   }
                   if (sectionConfig.name == 'auto') {
                     sectionConfig.name = separatorSubEntities?.[0]?.entity?.name || 'Weather';
@@ -450,7 +575,7 @@ export class BonbonStrategy {
           (entityId && entities[entityId] && hasBinaryState({ entity: entities[entityId] }));
         const cardType = card?.card_type || 'button';
 
-        if (cardType === 'button' && !isToggle && !isBinary) {
+        if (cardType === 'button' && entityId && !isToggle && !isBinary) {
           return ['bubbleButtonNonBinary'];
         }
 
@@ -484,16 +609,25 @@ export class BonbonStrategy {
           }
           if (window.cardMod_patch_state) {
             if (newStruct.type) {
-              newStruct.card_mod = newStruct.card_mod || {};
-              newStruct.card_mod.style =
-                styles.cardmodGlobal +
-                (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
-                (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
-                (newStruct.card_mod?.style || '');
-              if (newStruct.type == 'custom:mini-graph-card') {
-                newStruct.line_color = cssValue('primary-accent-color');
+              // card-mod takes an object (`{ style: … }`, `{ 'ha-card': … }`) or the plain string
+              // shorthand. Only a string style gets the global CSS prepended; object forms are passed
+              // through unchanged, concatenating one would turn it into `[object Object]`.
+              const cardMod = newStruct.card_mod;
+              const cardModStyle = typeof cardMod === 'string' ? cardMod : cardMod?.style;
+              if (typeof cardModStyle !== 'object' || cardModStyle === null) {
+                newStruct.card_mod = {
+                  ...(isPlainObject(cardMod) ? cardMod : {}),
+                  style:
+                    styles.cardmodGlobal +
+                    (!newStruct.type.startsWith('custom:') ? styles.haCardBase : '') +
+                    (newStruct.type == 'custom:mini-graph-card' ? styles.graphCard : '') +
+                    (typeof cardModStyle === 'string' ? cardModStyle : ''),
+                };
               }
             }
+          }
+          if (newStruct.type == 'custom:mini-graph-card') {
+            newStruct.line_color = cssValue('primary-accent-color');
           }
           if (newStruct.elements && Array.isArray(newStruct.elements)) {
             newStruct.elements = applyGlobalStyles(newStruct.elements);
@@ -513,8 +647,6 @@ export class BonbonStrategy {
       const dashboard = {
         views: applyGlobalStyles(views),
       };
-
-      console.log(dashboard);
 
       return dashboard;
     } catch (e) {

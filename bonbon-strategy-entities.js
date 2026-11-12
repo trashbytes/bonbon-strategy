@@ -61,6 +61,15 @@ export function createEntityApi(ctx = {}) {
   }
   context.labels = getLabels();
 
+  // `viewScope` is the key an order/hidden label is scoped to. Area views resolve cards twice (once scoped to the
+  // area, once to the view), so it may be a list — later entries win, as before.
+  function normalizeViewScopes(viewScope) {
+    if (Array.isArray(viewScope)) {
+      return viewScope.filter(Boolean);
+    }
+    return viewScope ? [viewScope] : [];
+  }
+
   function getOrderNumber(c, sectionConfig = {}, viewScope = '') {
     const allLabels = [];
     if (c?.object) {
@@ -77,12 +86,14 @@ export function createEntityApi(ctx = {}) {
       allLabels.push(...context.devices[c?.entity.device_id].labels);
     }
 
+    const viewScopes = normalizeViewScopes(viewScope);
+    const sectionScope = sectionConfig?.key || '';
     const scopes = ['']
       .concat(
         [
-          viewScope ? viewScope + '_' : '',
-          sectionConfig?.key ? sectionConfig?.key + '_' : '',
-          viewScope && sectionConfig?.key ? viewScope + '_' + sectionConfig?.key + '_' : '',
+          ...viewScopes.map((scope) => scope + '_'),
+          sectionScope ? sectionScope + '_' : '',
+          ...viewScopes.map((scope) => (sectionScope ? scope + '_' + sectionScope + '_' : '')),
         ].filter(Boolean),
       )
       .map((scope) => {
@@ -117,12 +128,14 @@ export function createEntityApi(ctx = {}) {
   }
 
   function isHidden(c, sectionConfig = {}, viewScope = '') {
+    const viewScopes = normalizeViewScopes(viewScope);
+    const sectionScope = sectionConfig?.key || '';
     const scopes = ['']
       .concat(
         [
-          viewScope ? '_' + viewScope : '',
-          sectionConfig?.key ? '_' + sectionConfig?.key : '',
-          viewScope && sectionConfig?.key ? '_' + viewScope + '_' + sectionConfig?.key : '',
+          ...viewScopes.map((scope) => '_' + scope),
+          sectionScope ? '_' + sectionScope : '',
+          ...viewScopes.map((scope) => (sectionScope ? '_' + scope + '_' + sectionScope : '')),
         ].filter(Boolean),
       )
       .map((scope) => {

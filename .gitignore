@@ -1,9 +1,9 @@
 .history/
 
+.scratch/
+
 ftp*
 
 assets/
 
 workspace.js
-
-AGENTS.md

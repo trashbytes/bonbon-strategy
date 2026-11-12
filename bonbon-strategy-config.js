@@ -1,3 +1,12 @@
+// The Mini Graph card used for labelled and section-scoped sensor cards.
+export const miniGraphCardTemplate = {
+  type: 'custom:mini-graph-card',
+  height: 56,
+  entities: [{ entity: 'entity.entity_id', show_line: false }],
+  show: { points: false, labels: false, labels_secondary: false },
+  name: 'entity.name',
+};
+
 export const defaultConfig = {
   styles: {
     use_bonbon_colors: true,
@@ -9,11 +18,168 @@ export const defaultConfig = {
     background_image_light: null,
     background_image_dark: null,
   },
-  actions: {
-    default: {
-      icon: 'none',
-      button: 'auto',
+  // The skeleton every generated Bubble Card starts from. Each `card_variants` entry is deep-merged over it, so a
+  // variant only lists what differs (arrays are replaced, not merged). Cards that are not Bubble Cards (weather
+  // forecast, Mini Graph) are used as they are, and `inherit: false` opts a variant out of the defaults entirely.
+  card_defaults: {
+    type: 'custom:bubble-card',
+    card_type: 'button',
+    button_type: 'state',
+    show_state: true,
+    use_accent_color: true,
+    tap_action: { action: 'more-info' },
+    button_action: { tap_action: { action: 'more-info' } },
+    entity: 'entity.entity_id',
+    name: 'entity.name',
+  },
+  // Card variants matched per entity: later keys win, so generic selectors come first and label/attribute-specific
+  // variants follow their generic key. `*` stays last as the fallback, an empty variant is a plain card_defaults card.
+  card_variants: {
+    'weather.*[section=bonbon_weather]': {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: false,
     },
+    // Labels win over the section's `show_forecast`, so they come after the generic weather variant.
+    'weather.*[section=bonbon_weather][label=forecast_daily]': {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: true,
+      forecast_type: 'daily',
+    },
+    'weather.*[section=bonbon_weather][label=forecast_hourly]': {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: true,
+      forecast_type: 'hourly',
+    },
+    'weather.*[section=bonbon_weather][label=forecast]': {
+      type: 'weather-forecast',
+      entity: 'entity.entity_id',
+      show_current: true,
+      show_forecast: true,
+    },
+    'light.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'light.*[supported_color_modes*=brightness|color_temp|hs|xy|rgb|rgbw|rgbww|white]': {
+      button_type: 'slider',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'sensor.*': {},
+    'sensor.*[label=graph|graphs]': miniGraphCardTemplate,
+    'sensor.*[section=bonbon_environment]': miniGraphCardTemplate,
+    'binary_sensor.*': {
+      show_last_changed: true,
+    },
+    'binary_sensor.*[label=graph|graphs]': miniGraphCardTemplate,
+    'binary_sensor.*[section=bonbon_environment]': miniGraphCardTemplate,
+    'switch.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'lock.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'valve.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    // Buttons have no on/off state, so both taps press them instead of toggling.
+    'button.*': {
+      button_type: 'switch',
+      show_last_changed: true,
+      tap_action: { action: 'call-service', service: 'button.press', target: { entity_id: 'entity.entity_id' } },
+      button_action: {
+        tap_action: { action: 'call-service', service: 'button.press', target: { entity_id: 'entity.entity_id' } },
+      },
+    },
+    'input_button.*': {
+      button_type: 'switch',
+      show_last_changed: true,
+      tap_action: { action: 'call-service', service: 'input_button.press', target: { entity_id: 'entity.entity_id' } },
+      button_action: {
+        tap_action: {
+          action: 'call-service',
+          service: 'input_button.press',
+          target: { entity_id: 'entity.entity_id' },
+        },
+      },
+    },
+    'fan.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'humidifier.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'water_heater.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'input_boolean.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'automation.*': {
+      button_type: 'switch',
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'scene.*': {
+      button_type: 'switch',
+      show_state: false,
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'script.*': {
+      button_type: 'switch',
+      show_state: false,
+      tap_action: { action: 'toggle' },
+      button_action: { tap_action: { action: 'toggle' } },
+      show_last_changed: true,
+    },
+    'select.*': { card_type: 'select' },
+    'input_select.*': { card_type: 'select' },
+    'climate.*': {
+      card_type: 'climate',
+      sub_button: [{ select_attribute: 'hvac_modes', show_arrow: false, state_background: false }],
+    },
+    'media_player.*': { card_type: 'media-player' },
+    'cover.*': { card_type: 'cover' },
+    'person.*': { show_last_changed: false },
+    'device_tracker.*': { show_last_changed: true },
+    'sun.*': { show_last_changed: true },
+    'update.*': { show_last_changed: true },
+    'vacuum.*': { show_last_changed: true },
+    'lawn_mower.*': { show_last_changed: true },
+    '*': {},
   },
   views: {
     bonbon_home: {
@@ -28,7 +194,6 @@ export const defaultConfig = {
           disabled: false,
           show_if_empty: true,
           separator_buttons: 'weather.*',
-          show_forecast: false,
         },
         bonbon_persons: {
           name: 'Persons',
@@ -61,7 +226,6 @@ export const defaultConfig = {
           min_columns: 2,
           max_columns: 2,
           disabled: false,
-          bonbon_colors: true,
           separator_buttons: 'light.*:not([label=nightlight])',
           separator_combine_lights: 'when-on',
           sub_buttons: 'light.*:not([label=nightlight])',
@@ -108,7 +272,6 @@ export const defaultConfig = {
           hide_separator: false,
           min_columns: 1,
           max_columns: 3,
-          show_graphs: true,
           cards: [
             'area.temperature_entity_id',
             'area.humidity_entity_id',

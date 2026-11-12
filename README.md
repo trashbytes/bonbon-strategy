@@ -49,7 +49,7 @@ All entities are ordered alphabetically by default but are grouped by device, if
 
 You can override the order of entities by adding labels like `order_<number>`. They will be sorted in ascending order.
 
-To sort entities in several different views and/or sections independently and differently from each other, you can add more specific labels like `order_home_<number>`, `order_<area_id>_<number>`, `order_<view_key>_<number>`, `order_home_<section_key>_<number>`, `order_<area_id>_<section_key>_<number>` or `order_<view_key>_<section_key>_<number>` etc. A greater specificity gives it a higher priority and will thus override lower priority labels.
+To sort entities in several different views and/or sections independently and differently from each other, you can add more specific labels like `order_bonbon_home_<number>`, `order_<area_id>_<number>`, `order_<view_key>_<number>`, `order_bonbon_home_<section_key>_<number>`, `order_<area_id>_<section_key>_<number>` or `order_<view_key>_<section_key>_<number>` etc. A greater specificity gives it a higher priority and will thus override lower priority labels. `<view_key>` is the key a view is configured under: `bonbon_home` for the built-in home view and the plain key (e.g. `diagnostics`) for a custom view — area views answer to the area id.
 
 You can add the label `nightlight` to lights to exclude them from area and floor toggles.
 
@@ -84,7 +84,7 @@ Bonbon Strategy can be installed manually or by using HACS. If you choose to use
 ### Without HACS:
 
 1. Make sure Bubble Card is installed!
-2. Download `bonbon-strategy.js`, `bonbon-strategy-builders.js`, `bonbon-strategy-config.js`, `bonbon-strategy-entities.js`, `bonbon-strategy-styles.js`, `bonbon-strategy-utils.js`,
+2. Download `bonbon-strategy.js`, `bonbon-strategy-builders.js`, `bonbon-strategy-config.js`, `bonbon-strategy-entities.js`, `bonbon-strategy-styles.js`, `bonbon-strategy-templates.js`, `bonbon-strategy-utils.js`,
 3. Place them in `<config>/www/` (restart HA if `/www` didn't exist!)
 4. Go to `Settings` > `Dashboards` > `⋮` > `Resources` > `Add resource` and enter `/local/bonbon-strategy.js` (the other files will be loaded automatically)
 5. Go to `Settings` > `Dashboards` > `Add dashboard` > `New empty dashboard` then create
@@ -157,6 +157,8 @@ strategy:
 
 Now let's get into how it works, but do not use this as your config, as it's generic example code. Pick the parts you need, understand how they work, change them to suit your needs and then selectively add them to your config. Make sure to properly indent everything!
 
+Anything you leave out — or leave empty, like a bare `bonbon_persons:` — keeps the shipped default.
+
 ```yaml
 strategy:
   type: custom:bonbon-strategy
@@ -172,7 +174,33 @@ strategy:
       background_image_light: null # background image for light mode (null | path/to/image)
       background_image_dark: null # background image for dark mode (null | path/to/image)
 
-    # Button actions
+    # The shared skeleton of every generated Bubble Card (see "Card variants" below for details)
+    card_defaults:
+      type: custom:bubble-card
+      card_type: button
+      button_type: state
+      show_state: true
+      use_accent_color: true
+      tap_action:
+        action: more-info
+      button_action:
+        tap_action:
+          action: more-info
+      entity: entity.entity_id
+      name: entity.name
+
+    # Card variants: entity selector -> what differs from `card_defaults`
+    card_variants:
+      'light.*':
+        button_type: switch
+        tap_action:
+          action: toggle
+        button_action:
+          tap_action:
+            action: toggle
+        show_last_changed: true
+
+    # Button actions (deprecated, use `card_variants` instead)
     actions:
       default: # the default config all domains, you can add overrides per domain (note: only applies to default Bubble Cards, doesn't apply to Graphs, Weather-Forecasts or custom cards)
         icon: none # action on icon tap ('auto' | 'toggle' | 'more-info' | 'none')
@@ -195,8 +223,8 @@ strategy:
             min_columns: 1 # minimum columns when rendering
             max_columns: 2 # maximum columns when rendering
             separator_buttons: null # buttons to add to a separator
-            show_graphs: false # render `sensor` and `binary_sensor` cards as graphs, can be done with the label `graph` individually as well
-            show_forecast: false # render `weather` cards with forecast ('daily' | 'hourly' | false), can be done with the labels `forecast_daily` or `forecast_hourly` individually as well
+            show_graphs: false # deprecated, use a `[section=...]` variant instead
+            show_forecast: false # deprecated, use a `[section=...]` variant instead
             prefix: false # name prefix, useful for "Ceiling light" etc., which you may have tons of ('area' | 'floor' | 'device' | false)
             cards: # cards and entities
               - entity_id
@@ -295,6 +323,127 @@ Keep in mind, that entities hidden by `:hide()` are technically always on the da
 
 The `hide()` pseudo function also only works in `cards` and will always generate standard Bubble Cards. For custom cards you can use [conditional cards](https://www.home-assistant.io/dashboards/conditional/), which should still get basic Bonbon styling. For more complex solutions you can use [auto-entities](https://github.com/thomasloven/lovelace-auto-entities), but because of how it's built, Bonbon styling will not be applied (yet?), so it's not recommended.
 
+### Card variants
+
+Every card that Bonbon generates for a single entity comes from a **card variant**. A variant is matched to an
+entity by an entity selector, and `card_defaults` is the shared skeleton it is merged over. This replaces the
+built-in, hard-coded card construction: weather forecasts, graphs and Bubble Cards all come from here.
+
+`card_variants` (top level of `options`) is an ordered map of `entity selector -> card definition`. There is
+exactly one map: variants that should only apply in one view or section say so in the selector with `[view=...]`
+or `[section=...]`.
+
+`card_defaults` holds what every Bubble Card shares — `type`, `card_type`, `button_type`, `entity`, `name` and
+the default `more-info` actions — so a variant only lists what differs from it:
+
+```yaml
+card_defaults:
+  type: custom:bubble-card
+  card_type: button
+  button_type: state
+  show_state: true
+  use_accent_color: true
+  tap_action:
+    action: more-info
+  button_action:
+    tap_action:
+      action: more-info
+  entity: entity.entity_id
+  name: entity.name
+
+card_variants:
+  # lights only differ in the button type and the toggle action ...
+  'light.*':
+    button_type: switch
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+    show_last_changed: true
+  # ... dimmable lights are brightness sliders
+  'light.*[supported_color_modes*=brightness|color_temp|hs|xy|rgb|rgbw|rgbww|white]':
+    button_type: slider
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+    show_last_changed: true
+  # an empty variant is a plain card_defaults card
+  'sensor.*': {}
+
+  # cards that are not Bubble Cards keep their own shape and inherit nothing
+  'sensor.*[section=bonbon_environment]':
+    type: custom:mini-graph-card
+    height: 56
+    entities:
+      - entity: entity.entity_id
+        show_line: false
+    name: entity.name
+```
+
+**How the layers stack.** Only Bubble Cards inherit `card_defaults` — a variant with another `type` (weather
+forecast, Mini Graph, your own custom card) is used exactly as written, so no Bubble options leak into it.
+`inherit: false` opts a single variant out, which is what you want for a card that only shares the selector
+mechanism:
+
+```yaml
+card_variants:
+  'sensor.*inverter':
+    inherit: false
+    type: custom:my-inverter-card
+```
+
+**Context filters.** `[view=...]` and `[section=...]` are not entity attributes — they are matched against the view and section a card is rendered in, and are removed from the selector before the entities are looked up. They accept `|` for alternatives (`[view=bonbon_area|bonbon_home]`) and are combined with entity filters in any order (`light.*[section=lights][brightness=*]`). Per-area views also answer to `[view=bonbon_area]`, custom views to the key they were configured under.
+
+The weather forecast card is scoped that way: the default is `weather.*[section=bonbon_weather]`, so a weather entity in any other section renders from the generic `*` variant (a plain state button). Add your own `weather.*` variant if you want forecast cards elsewhere — a new key is appended after the shipped ones and therefore wins everywhere, including the weather section; use `[view=...]` / `[section=...]` if you only want it somewhere else.
+
+**Matching order:** the map in the order you define it, with context filters narrowing a variant down to one view or section. Because the last match wins, put a context-filtered variant *after* the generic one it should override — which is what happens automatically when you add a new key.
+
+**Last match wins.** For every entity the *last* matching variant in that order is used, which means a generic key must come before its label/attribute-specific variants: `light.*` and `binary_sensor.*` first, then `light.*[supported_color_modes*=...]` and `binary_sensor.*[label=graph|graphs]`. Broad fallbacks belong at the end of the map. The catch-all selector `*` is only used when no other variant matched. A variant whose `type` starts with `custom:` is skipped when that custom card is not loaded (only Bubble Card is assumed to be installed; optional cards such as Mini Graph Card must be present for the graph variants to apply), so the next matching variant applies.
+
+A user variant with the same selector key as a shipped one is deep-merged over it (arrays are replaced, not merged), so you can override a single key, e.g. `{ 'light.*': { button_type: slider } }` keeps the rest of the shipped `light.*` variant and everything from `card_defaults`. User variants with a new selector key are appended at the end, where they win over the shipped ones. The full precedence is `card_defaults` < shipped variant < deprecated section option (`show_graphs`, `show_forecast`) < your variant.
+
+**Placeholders** are resolved for every matched entity, recursively through nested objects and arrays:
+
+| Placeholder | Resolves to |
+| --- | --- |
+| `entity.entity_id` | the entity ID |
+| `entity.name` | the friendly name |
+| `entity.area`, `entity.area_id` | the area name and ID |
+| `entity.floor`, `entity.floor_id` | the floor name and ID |
+| `entity.device`, `entity.device_id` | the device name and ID |
+| `entity.labels` | the entity and device labels |
+| `entity.attributes.<attribute>` | any attribute of the current state, e.g. `entity.attributes.brightness` (resolves to `null` when the entity does not report it) |
+| `area.<attribute>` | the attribute of the area the card is rendered in, e.g. `area.temperature_entity_id`. It is read from the current area, never from the entity. In a view without an area (e.g. `bonbon_home`) it resolves to `undefined`, so the key is dropped |
+
+A value that is exactly one placeholder keeps the type of the resolved value (numbers stay numbers, arrays stay arrays); a placeholder inside a longer string is interpolated as a string. Unresolvable placeholders resolve to `undefined` and the key is dropped from the card, so optional keys like `state_content` never ship an empty value.
+
+**Deprecated: `show_graphs` and `show_forecast`.** Both section options still work and are applied as `[section=...]` variants in the global map (a variant you wrote for that section wins), but they are deprecated and will be removed in v4.0.0. They are no longer part of the shipped defaults — the environment section's graph variants and the weather card's section scoping ship as regular variants.
+
+```yaml
+# deprecated
+views:
+  bonbon_area:
+    sections:
+      my_sensor_section:
+        cards: 'sensor.*'
+        show_graphs: true
+
+# equivalent, and the supported way
+card_variants:
+  'sensor.*[section=my_sensor_section]':
+    type: custom:mini-graph-card
+    height: 56
+    entities:
+      - entity: entity.entity_id
+        show_line: false
+    name: entity.name
+```
+
+The labels `graph`/`graphs`, `forecast`, `forecast_daily` and `forecast_hourly` keep working through the selectors of the shipped variants.
+
 ### Classic YAML cards
 
 Use Home Assistant's built-in cards or custom cards you installed:
@@ -308,6 +457,37 @@ cards:
 ```
 
 You can also mix and match Home Assistant's built-in cards, installed custom cards as well as entity selectors.
+
+### Deprecated: button actions
+
+The `actions` option is deprecated in favour of card variants and will be removed in v4.0.0. It no longer has a default, so an unmodified config does not use it at all; if you still configure it, it keeps working as before: it is applied on top of the generated Bubble card (`icon` maps to `tap_action`, `button` maps to `button_action.tap_action`, and `auto` means toggle for togglable entities and more-info for everything else), while an explicit YAML card in `cards` still wins over it.
+
+To migrate, move the block into `card_variants`. The old config:
+
+```yaml
+actions:
+  default:
+    icon: none
+    button: auto
+  cover:
+    button: toggle
+```
+
+becomes the equivalent variant, which also gives you access to every other card option:
+
+```yaml
+card_variants:
+  'cover.*':
+    type: custom:bubble-card
+    card_type: cover
+    entity: entity.entity_id
+    name: entity.name
+    tap_action:
+      action: more-info # this is what `icon: none` used to become on non-togglable entities
+    button_action:
+      tap_action:
+        action: toggle # this is what `button: toggle` means for covers
+```
 
 ### Styling and Colors
 
@@ -389,7 +569,7 @@ views:
         name: 'Weather'
         separator_buttons: false
         cards: 'weather.*'
-        show_forecast: 'daily' # ('daily' | 'hourly' | false)
+        show_forecast: 'daily' # deprecated, prefer a `card_variants` entry
       bonbon_persons:
         hide_separator: false
 ```
@@ -515,7 +695,6 @@ views:
       desktop_pc:
         name: Desktop PC
         icon: mdi:desktop-classic
-        show_graphs: true
         cards:
           - sensor.*cpu*
           - sensor.*memory*
@@ -536,19 +715,25 @@ Home Assistant default cards will receive some light styling automatically, cust
 
 #### Available CSS Variables
 
+All variables are prefixed with the dashboard's `panelUrl`, so two dashboards can never overwrite each other's colors. For the default dashboard (`/lovelace/`) the prefix is `--bonbon-lovelace-`, for a dashboard with the URL path `home` it is `--bonbon-home-`.
+
 If you are attempting this you probably already know what you're doing.
-Here are some useful variables you can use to style custom cards with `card-mod`:
+Here are some useful variables you can use to style custom cards with `card-mod` (`<panel>` stands for the dashboard's `panelUrl`):
 
 **Card Styling:**
 
-- `--bonbon-box-shadow` - Standard shadow effect used throughout
-- `--bonbon-border-radius` - Border radius for buttons and card elements
+- `--bonbon-<panel>-box-shadow` - Standard shadow effect used throughout
+- `--bonbon-<panel>-border-radius` - Border radius for buttons and card elements
 
 **Colors:**
 
-- `--bonbon-card-background` - Card background color
-- `--bonbon-primary-text-color` - Primary text color
-- `--bonbon-primary-accent-color` - Default accent color for active states (purple: #9373c9)
+- `--bonbon-<panel>-card-background` - Card background color
+- `--bonbon-<panel>-primary-text-color` - Primary text color
+- `--bonbon-<panel>-primary-accent-color` - Default accent color for active states (the resolved `primary_accent_color`)
+
+**Area Colors:**
+
+- `--area-<area_id>-light-color`, `--area-<area_id>-medium-color`, `--area-<area_id>-shade-color` - the color triple of one area, used by the area cards
 
 #### Example Custom Card with Styling
 
@@ -564,8 +749,10 @@ views:
             card_mod:
               style:
                 ha-card: |
-                  border-radius: var(--bonbon-border-radius);
-                  box-shadow: var(--bonbon-box-shadow);
-                  background: var(--bonbon-card-background);
+                  border-radius: var(--bonbon-lovelace-border-radius);
+                  box-shadow: var(--bonbon-lovelace-box-shadow);
+                  background: var(--bonbon-lovelace-card-background);
                   border: none;
 ```
+
+`card_mod` also accepts an object instead of a string (`style: { 'ha-card': … }`). Such a card_mod block is passed through unchanged; only the string form gets the global Bonbon styles prepended.
