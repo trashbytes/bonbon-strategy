@@ -344,11 +344,16 @@ export function createStylesApi(panelUrl, config) {
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.16);
           }
-          /* the fill sits above the card body, so everything the card shows on top of it (icon, name, state)
-             has to be lifted above the fill - the background itself stays below, it carries the accent */
-          .bubble-button-slider-container .bubble-wrapper > :not(.bubble-background) {
+          /* the fill sits above the card body, so the layers that carry icon, name, state and sub-buttons have
+             to be lifted above it. They cannot be lifted on the wrapper's children: the content and buttons
+             containers use display: contents, and z-index does nothing on a box-less element - that is why the
+             content stayed hidden behind the fill. (Never put backticks in these comments: the whole fragment is
+             a template literal.) */
+          .bubble-button-slider-container .bubble-name-container,
+          .bubble-button-slider-container .bubble-icon-container,
+          .bubble-button-slider-container .bubble-sub-button-container {
             position: relative;
-            z-index: 2;
+            z-index: 2 !important;
           }
           .bubble-dropdown-inner-border {
             display: none !important;
