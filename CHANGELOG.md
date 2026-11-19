@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Deprecation notice in the dashboard
+
+A dashboard that still uses a deprecated option now says so where you see it: a Markdown card at the top of the
+first view names the option's path in the config and the option that replaces it, and the same list is logged to
+the browser console. Nothing else changes — every deprecated option keeps working until v4.0.0 — and the card
+disappears as soon as the config no longer contains it.
+
+The notice is derived from the raw user config, before the defaults are merged, so it never fires on the shipped
+config and an option that `upgradeConfig` derives (`show_weather_card` → `show_forecast`) is not reported twice.
+It covers `actions`, the section options `show_graphs` and `show_forecast`, and the v2-era options
+(`show_weather_card`, `weather_entity_id`, `show_temperature`, `show_humidity`, `show_co2`,
+`show_floor_lights_toggle`, `show_area_lights_toggle`).
+
 ### Slider value fill
 
 Bubble Card paints the range fill proportionally, but the generated cards force the whole body to the accent colour

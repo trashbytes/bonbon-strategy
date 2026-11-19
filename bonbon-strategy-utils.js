@@ -442,6 +442,61 @@ export function upgradeConfig(config) {
   return config;
 }
 
+// Options that still work but are slated for removal in v4.0.0. Every entry must have a matching mapping in
+// `upgradeConfig` (or, for `actions`, in `createButtonCard`), so the deprecation notice and the back-compat
+// layer cannot drift apart.
+// The replacement text is what the dashboard notice shows, so keep it short and name the new option.
+const deprecatedSectionOptions = {
+  show_graphs: (sectionKey) =>
+    `replace it with a \`card_variants\` entry \`'sensor.*[section=${sectionKey}]': { type: custom:mini-graph-card }`,
+  show_forecast: (sectionKey) =>
+    `replace it with a \`card_variants\` entry \`'weather.*[section=${sectionKey}]': { type: weather-forecast, show_forecast: true }\``,
+  show_weather_card: () => 'set `cards: weather.*` in that section instead',
+  weather_entity_id: () => 'use `separator_buttons` (minified) or `cards` (full card) instead',
+  show_temperature: () => 'remove `area.temperature_entity_id` from `cards` / `inline_buttons` instead',
+  show_humidity: () => 'remove `area.humidity_entity_id` from `cards` / `inline_buttons` instead',
+  show_co2: () => 'remove the CO2 selector from `cards` / `inline_buttons` instead',
+  show_floor_lights_toggle: () => 'use `separator_combine_lights` instead',
+  show_area_lights_toggle: () => 'use `sub_combine_lights` (areas) or `separator_combine_lights` (lights) instead',
+};
+
+// Reports every deprecated option of the *user* config together with its replacement. It has to run on the raw
+// config, before the merge: `upgradeConfig` derives keys from the legacy ones (`show_weather_card` writes
+// `show_forecast`) and would otherwise report the same option twice. Only section-level keys are inspected, so
+// `show_forecast` on a `weather-forecast` card is not mistaken for the deprecated section option.
+export function findDeprecatedOptions(userConfig) {
+  if (!userConfig || typeof userConfig !== 'object') {
+    return [];
+  }
+
+  const notices = [];
+  if (isObject(userConfig.actions) && Object.keys(userConfig.actions).length) {
+    notices.push({
+      path: 'actions',
+      fix: 'move the per-domain actions into `card_variants` (`tap_action` / `button_action`)',
+    });
+  }
+
+  Object.entries(userConfig.views || {}).forEach(([viewKey, view]) => {
+    Object.entries(view?.sections || {}).forEach(([sectionKey, section]) => {
+      if (!isObject(section)) {
+        return;
+      }
+      Object.keys(deprecatedSectionOptions).forEach((option) => {
+        if (section[option] === undefined) {
+          return;
+        }
+        notices.push({
+          path: `views.${viewKey}.sections.${sectionKey}.${option}`,
+          fix: deprecatedSectionOptions[option](sectionKey),
+        });
+      });
+    });
+  });
+
+  return notices;
+}
+
 // Bubble draws the range fill as an inline transform and publishes no variable for its position, so the
 // value readout cannot be inverted from CSS alone. Pointer events pass through the card's shadow tree, which
 // lets us find the slider under the finger and compare both boxes; the stylesheet then recolours the readout
