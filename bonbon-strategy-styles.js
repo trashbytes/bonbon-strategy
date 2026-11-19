@@ -346,10 +346,13 @@ export function createStylesApi(panelUrl, config) {
              and a cap painted on the container loses against that wrapper's own stacking context. Masking the
              wrapper instead cuts the fill exactly where the icon container starts (8px). */
           .bubble-button-slider-container:not(.is-dragging) .bubble-range-slider {
+            /* white stops work for an alpha mask and a luminance mask alike; black would hide everything
+               on a browser that renders this gradient as a luminance mask */
+            mask-mode: alpha;
             mask-image: linear-gradient(
               to right,
               transparent 0 8px,
-              #000 8px calc(100% - 8px),
+              #fff 8px calc(100% - 8px),
               transparent calc(100% - 8px) 100%
             );
           }
