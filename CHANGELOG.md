@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Icon actions
+
+The icon and the card body are separate action targets in Bubble Card: the body follows `button_action`, the icon
+the card-level `tap_action`/`hold_action`. The generated cards only configured the body, so long-pressing the icon
+did nothing and the two could drift apart.
+
+- The icon now taps exactly like the button: `applyIconActions` copies `button_action.tap_action` onto the card
+  level (toggle on lights, switches and friends, press on `button.*`/`input_button.*`, more-info elsewhere).
+- Long-pressing the icon opens `more-info`. Cards that define their own hold action keep it — the area cards still
+  navigate to the area settings on the icon.
+- Card-level `tap_action` entries were dropped from `defaultConfig` and the shipped variants: `button_action` is
+  the single source, so the two can no longer disagree. Your own `tap_action`/`hold_action` in `card_defaults` or
+  a variant still overrides the derived value, and double-tap stays unset.
+
 ### Version in the console log
 
 The strategy now logs the release it is running: `bonbon-strategy.js` exports `VERSION` and prints it in the load
