@@ -322,21 +322,17 @@ export function createStylesApi(panelUrl, config) {
           }
           /* Slider cards: Bubble paints the range fill proportionally, but the card body already carries the
              full accent above it, so the value is unreadable once the finger is gone. At rest the fill becomes a
-             hairline along the bottom edge - the card says "on" in its body and "how much" in the line. While
-             the card is being dragged the fill stays exactly what Bubble renders. */
+             hairline that floats 2px above the bottom edge and keeps 2px off both side edges (the caps below cut
+             its ends - the fill's own left edge always sits outside the card). While the card is being dragged
+             the fill stays exactly what Bubble renders. */
           .bubble-button-slider-container {
             clip-path: inset(0 round var(--bubble-button-border-radius, var(--bubble-border-radius, 12px)));
           }
           .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             top: auto !important;
-            bottom: 0 !important;
-            /* keep the line 2px off the left and right edge without breaking Bubble's progress maths:
-               the fill is shifted by translateX(<n>%) of its OWN width, so the track has to be 4px narrower
-               and start 2px before the track edge - 6px = 2px inset + 4px track reduction. */
-            left: calc(6px - 100%) !important;
-            width: calc(100% - 4px) !important;
+            bottom: 2px !important;
             height: 3px !important;
-            border-radius: 0 !important;
+            border-radius: 2px !important;
             opacity: 1 !important;
             /* the fill is inserted before the card wrapper, so without a z-index the card's own layers
                (background, content) paint over it - that is why the line was invisible */
@@ -344,6 +340,30 @@ export function createStylesApi(panelUrl, config) {
           }
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             background-color: rgba(255, 255, 255, 0.7) !important;
+          }
+          .bubble-button-slider-container:not(.is-dragging)::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 2px;
+            height: 3px;
+            z-index: 2;
+            pointer-events: none;
+            background-image: linear-gradient(
+              to right,
+              ${cssValue('card-background')} 0 2px,
+              transparent 2px calc(100% - 2px),
+              ${cssValue('card-background')} calc(100% - 2px) 100%
+            );
+          }
+          .is-on .bubble-button-slider-container:not(.is-dragging)::after {
+            background-image: linear-gradient(
+              to right,
+              ${cssValue('primary-accent-color')} 0 2px,
+              transparent 2px calc(100% - 2px),
+              ${cssValue('primary-accent-color')} calc(100% - 2px) 100%
+            );
           }
           .bubble-dropdown-inner-border {
             display: none !important;
