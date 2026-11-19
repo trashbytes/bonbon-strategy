@@ -344,8 +344,9 @@ export function createStylesApi(panelUrl, config) {
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.16);
           }
-          /* the fill sits above the card body, so the icon and name have to be lifted above it */
-          .bubble-button-slider-container .bubble-content-container {
+          /* the fill sits above the card body, so everything the card shows on top of it (icon, name, state)
+             has to be lifted above the fill - the background itself stays below, it carries the accent */
+          .bubble-button-slider-container .bubble-wrapper > :not(.bubble-background) {
             position: relative;
             z-index: 2;
           }
