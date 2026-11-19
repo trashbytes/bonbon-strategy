@@ -333,6 +333,9 @@ export function createStylesApi(panelUrl, config) {
             height: 3px !important;
             border-radius: 0 !important;
             opacity: 1 !important;
+            /* the fill is inserted before the card wrapper, so without a z-index the card's own layers
+               (background, content) paint over it - that is why the line was invisible */
+            z-index: 1 !important;
           }
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             background-color: rgba(255, 255, 255, 0.7) !important;
