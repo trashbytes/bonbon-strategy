@@ -343,18 +343,11 @@ export function createStylesApi(panelUrl, config) {
           }
           /* The fill lives inside the range-slider wrapper (position: absolute, z-index: 0) and is shifted by
              translateX(<n>%), so its left edge always sits outside the card - it can never be inset by moving it,
-             and a cap painted on the container loses against that wrapper's own stacking context. Masking the
-             wrapper instead cuts the fill exactly where the icon container starts (8px). */
+             and a cap painted on the container loses against that wrapper's own stacking context. Clipping the
+             wrapper cuts the fill exactly where the icon container starts (8px); clip-path, unlike a mask, has no
+             luminance mode that could swallow the line. */
           .bubble-button-slider-container:not(.is-dragging) .bubble-range-slider {
-            /* white stops work for an alpha mask and a luminance mask alike; black would hide everything
-               on a browser that renders this gradient as a luminance mask */
-            mask-mode: alpha;
-            mask-image: linear-gradient(
-              to right,
-              transparent 0 8px,
-              #fff 8px calc(100% - 8px),
-              transparent calc(100% - 8px) 100%
-            );
+            clip-path: inset(0 8px);
           }
           .bubble-dropdown-inner-border {
             display: none !important;
