@@ -343,10 +343,11 @@ export function createStylesApi(panelUrl, config) {
           }
           /* The fill sits inside the range-slider wrapper (same 500x56 box as the container, fill shifted out to
              the left by translateX), so clipping the wrapper cuts the line at the icon container's 8 px margin
-             without touching the card body. A clip, not a cap and not a mask: a cap on the container loses against
-             the card's own layers and a gradient mask is not rendered consistently. */
+             without touching the card body. The clip makes the wrapper a stacking context, which drops the fill
+             below the card's own background - the explicit z-index lifts it back above. */
           .bubble-button-slider-container:not(.is-dragging) .bubble-range-slider {
             clip-path: inset(0 8px);
+            z-index: 2;
           }
           .bubble-dropdown-inner-border {
             display: none !important;
