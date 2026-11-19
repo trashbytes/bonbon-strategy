@@ -341,9 +341,13 @@ export function createStylesApi(panelUrl, config) {
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             background-color: rgba(255, 255, 255, 0.7) !important;
           }
-          /* Known-good state: the hairline itself. The 8 px inset is pending - see AGENTS.md, it needs a clip on
-             the element that really contains the fill (the range-slider wrapper), which is being verified in the
-             user's DOM. */
+          /* The fill sits inside the range-slider wrapper (same 500x56 box as the container, fill shifted out to
+             the left by translateX), so clipping the wrapper cuts the line at the icon container's 8 px margin
+             without touching the card body. A clip, not a cap and not a mask: a cap on the container loses against
+             the card's own layers and a gradient mask is not rendered consistently. */
+          .bubble-button-slider-container:not(.is-dragging) .bubble-range-slider {
+            clip-path: inset(0 8px);
+          }
           .bubble-dropdown-inner-border {
             display: none !important;
           }
