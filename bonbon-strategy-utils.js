@@ -454,7 +454,9 @@ export function trackSliderValueContrast() {
     const valueBox = value.getBoundingClientRect();
     if (!valueBox.width) return;
     const fillBox = fill.getBoundingClientRect();
-    const covered = fillBox.right >= valueBox.left + 1 && fillBox.left <= valueBox.right;
+    // Switch only once the fill has passed the middle of the readout, so the colour does not flip while the
+    // edge is still creeping up on the digits.
+    const covered = fillBox.right >= valueBox.left + valueBox.width / 2 && fillBox.left <= valueBox.right;
     value.toggleAttribute('data-bonbon-value-on-fill', covered);
   };
 
