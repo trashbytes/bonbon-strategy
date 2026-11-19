@@ -350,19 +350,20 @@ export function createStylesApi(panelUrl, config) {
             height: 3px;
             z-index: 2;
             pointer-events: none;
+            /* the caps sit on the icon container's left margin (8px), so the line starts where the icon starts */
             background-image: linear-gradient(
               to right,
-              ${cssValue('card-background')} 0 2px,
-              transparent 2px calc(100% - 2px),
-              ${cssValue('card-background')} calc(100% - 2px) 100%
+              ${cssValue('card-background')} 0 8px,
+              transparent 8px calc(100% - 8px),
+              ${cssValue('card-background')} calc(100% - 8px) 100%
             );
           }
           .is-on .bubble-button-slider-container:not(.is-dragging)::after {
             background-image: linear-gradient(
               to right,
-              ${cssValue('primary-accent-color')} 0 2px,
-              transparent 2px calc(100% - 2px),
-              ${cssValue('primary-accent-color')} calc(100% - 2px) 100%
+              ${cssValue('primary-accent-color')} 0 8px,
+              transparent 8px calc(100% - 8px),
+              ${cssValue('primary-accent-color')} calc(100% - 8px) 100%
             );
           }
           .bubble-dropdown-inner-border {

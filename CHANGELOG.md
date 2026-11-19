@@ -6,11 +6,11 @@
 
 Bubble Card paints the range fill proportionally, but the generated cards force the whole body to the accent colour
 when an entity is on — so once the drag ended a light looked purely binary. At rest (no drag in progress) the fill is
-now a 3 px line that floats 2 px above the bottom edge and keeps 2 px off the left and right edge: white while the
-card is on, accent-coloured otherwise, still animated and still following the value. While the card is being dragged
-nothing changes — Bubble's own fill and value readout stay exactly as they were. The line's ends are cut by two 2 px
-caps painted in the card body's own colour, and the card container is clipped to its border radius so everything
-respects the rounded corners.
+now a 3 px line that floats 2 px above the bottom edge and starts and ends flush with the icon container's 8 px side
+margin: white while the card is on, accent-coloured otherwise, still animated and still following the value. While the
+card is being dragged nothing changes — Bubble's own fill and value readout stay exactly as they were. The line's ends
+are cut by two 8 px caps painted in the card body's own colour, and the card container is clipped to its border radius
+so everything respects the rounded corners.
 
 ### Icon actions
 
