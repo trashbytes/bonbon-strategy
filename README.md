@@ -491,6 +491,26 @@ card_variants:
         action: toggle # this is what `button: toggle` means for covers
 ```
 
+### Deprecation notices
+
+While your configuration still uses a deprecated option, the dashboard shows a warning card at the top of the first
+view. It names the option's path in your config and the option that replaces it; the same list is logged to the
+browser console. Nothing else changes — the option keeps working until it is removed in v4.0.0 — and the card
+disappears as soon as your config no longer contains it.
+
+Currently deprecated:
+
+| Option | Replace with |
+| --- | --- |
+| `actions` | a `card_variants` entry with `tap_action` / `button_action` (see above) |
+| `show_graphs` (section option) | a `card_variants` entry with a `[section=...]` filter, e.g. `'sensor.*[section=bonbon_environment]': { type: custom:mini-graph-card }` |
+| `show_forecast` (section option) | a `card_variants` entry with a `[section=...]` filter, e.g. `'weather.*[section=bonbon_weather]': { type: weather-forecast, show_forecast: true }` |
+
+Options from the v2 era are still translated automatically and are reported the same way: `show_weather_card`,
+`weather_entity_id`, `show_temperature`, `show_humidity`, `show_co2`, `show_floor_lights_toggle` and
+`show_area_lights_toggle`. Each notice names the current option that replaces it — `cards`, `separator_buttons`,
+`separator_combine_lights`, `sub_combine_lights`, or dropping the matching entry from `cards` / `inline_buttons`.
+
 ### Styling and Colors
 
 Bonbon Strategy offers flexible styling options to customize the appearance of your dashboard.

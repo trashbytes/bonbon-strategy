@@ -15,6 +15,7 @@ const {
   normalizeSectionColumn,
   applySectionColumns,
   upgradeConfig,
+  findDeprecatedOptions,
   trackSliderValueContrast,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
@@ -99,6 +100,27 @@ const applySectionSugars = (config, userVariants = {}) => {
   return config;
 };
 
+// One Markdown card naming every deprecated option still in the user config and what replaces it. It is prepended
+// to the first view, so a dashboard that relies on one of them says so where the user sees it, and disappears as
+// soon as the config is migrated. A long list is cut off here; the console warning carries all of it.
+const createDeprecationCard = (notices) => {
+  const shownNotices = notices.slice(0, 6);
+  const lines = shownNotices.map((notice) => `- \`${notice.path}\`: ${notice.fix}`);
+  if (notices.length > shownNotices.length) {
+    lines.push(`- …and ${notices.length - shownNotices.length} more, see the browser console`);
+  }
+
+  return {
+    type: 'markdown',
+    content: [
+      '**⚠️ Deprecated configuration**',
+      ...lines,
+      '',
+      'These options still work in this version and will be removed in **v4.0.0**.',
+    ].join('\n'),
+  };
+};
+
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
     const panelUrl = hass.panelUrl;
@@ -128,6 +150,10 @@ export class BonbonStrategy {
 
     try {
       const views = [];
+      let homeView = null;
+      // Detection runs on the raw user config: the merged config already contains the keys `upgradeConfig`
+      // derived from the legacy ones, and the shipped defaults have none of them.
+      const deprecatedOptions = findDeprecatedOptions(userConfig);
       // Card variants are merged by selector key instead of deep-merging the selector strings, otherwise a
       // user override of `light.*` would also override the dimmable `light.*[...]` default. Precedence is
       // shipped defaults < deprecated section options < user variants.
@@ -556,6 +582,7 @@ export class BonbonStrategy {
           if (viewKey == 'bonbon_home') {
             viewConfig.title = dashboardName || viewConfig.title || viewKey;
             views.unshift(viewConfig);
+            homeView = viewConfig;
           } else {
             if (!viewKey.startsWith('bonbon_area_')) {
               viewConfig.path = 'custom_' + viewKey;
@@ -564,6 +591,19 @@ export class BonbonStrategy {
           }
         }
       });
+
+      // The notice belongs above everything on the first view the dashboard actually shows — the home view, or
+      // the first remaining view when `bonbon_home` is disabled.
+      if (deprecatedOptions.length) {
+        console.warn(
+          `🍬 Bonbon Strategy: ${deprecatedOptions.length} deprecated config option(s), removed in v4.0.0:\n` +
+            deprecatedOptions.map((notice) => `  ${notice.path} → ${notice.fix}`).join('\n'),
+        );
+        const noticeView = homeView || views[0];
+        if (noticeView) {
+          noticeView.sections.unshift({ cards: [createDeprecationCard(deprecatedOptions)] });
+        }
+      }
 
       const getInferredBubbleStyles = (card) => {
         if (!card?.type?.startsWith('custom:bubble-card')) {
