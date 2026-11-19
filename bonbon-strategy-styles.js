@@ -321,19 +321,20 @@ export function createStylesApi(panelUrl, config) {
             opacity: 1 !important;
           }
           /* Slider cards: Bubble paints the range fill proportionally, but the card body already carries the
-             full accent above it, so the value is unreadable once the finger is gone. Keep the fill as a
-             hairline along the bottom edge - the card then says "on" in its body and "how much" in the line. */
+             full accent above it, so the value is unreadable once the finger is gone. At rest the fill becomes a
+             hairline along the bottom edge - the card says "on" in its body and "how much" in the line. While
+             the card is being dragged the fill stays exactly what Bubble renders. */
           .bubble-button-slider-container {
             clip-path: inset(0 round var(--bubble-button-border-radius, var(--bubble-border-radius, 12px)));
           }
-          .bubble-button-slider-container .bubble-range-fill[class] {
+          .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             top: auto !important;
             bottom: 0 !important;
             height: 3px !important;
             border-radius: 0 !important;
             opacity: 1 !important;
           }
-          .is-on .bubble-button-slider-container .bubble-range-fill[class] {
+          .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             background-color: rgba(255, 255, 255, 0.7) !important;
           }
           .bubble-dropdown-inner-border {
