@@ -328,27 +328,25 @@ export function createStylesApi(panelUrl, config) {
           .bubble-button-slider-container {
             clip-path: inset(0 round var(--bubble-button-border-radius, var(--bubble-border-radius, 12px)));
           }
+          /* Value fill: full height and edge to edge again. The filled part is painted in the body's own accent
+             (so it is invisible against the "on" body and simply IS the correct colour), and the empty remainder
+             is dimmed by the fill's own spread shadow, which is drawn outside its box and clipped by the card.
+             Nothing is inset, nothing is rounded. */
           .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
-            top: auto !important;
-            bottom: 2px !important;
-            height: 3px !important;
-            border-radius: 2px !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            height: 100% !important;
+            border-radius: 0 !important;
             opacity: 1 !important;
-            /* the fill is inserted before the card wrapper, so without a z-index the card's own layers
-               (background, content) paint over it - that is why the line was invisible */
             z-index: 1 !important;
+            background-color: ${cssValue('primary-accent-color')} !important;
           }
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
-            background-color: rgba(255, 255, 255, 0.7) !important;
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.16);
           }
-          /* The fill sits inside the range-slider wrapper (same 500x56 box as the container, fill shifted out to
-             the left by translateX), so clipping the wrapper cuts the line at the card's corner radius (12px) -
-             8px sat too close to the rounded corners. The clip hugs the line's own band (bottom 2px .. 5px) and is
-             rounded, which gives both ends a pill shape even where the clip does the cutting. At rest the wrapper
-             paints nothing but the line, so clipping the rest away is harmless. The clip makes the wrapper a
-             stacking context, which drops the fill below the card's own background - the explicit z-index lifts it. */
-          .bubble-button-slider-container:not(.is-dragging) .bubble-range-slider {
-            clip-path: inset(calc(100% - 5px) 12px 2px 12px round 1.5px);
+          /* the fill sits above the card body, so the icon and name have to be lifted above it */
+          .bubble-button-slider-container .bubble-content-container {
+            position: relative;
             z-index: 2;
           }
           .bubble-dropdown-inner-border {

@@ -2,15 +2,14 @@
 
 ## Unreleased
 
-### Slider value line
+### Slider value fill
 
 Bubble Card paints the range fill proportionally, but the generated cards force the whole body to the accent colour
-when an entity is on — so once the drag ended a light looked purely binary. At rest (no drag in progress) the fill is
-now a 3 px line that floats 2 px above the bottom edge and starts and ends inset by the card's corner radius (12 px):
-white while the card is on, accent-coloured otherwise, still animated and still following the value. While the card
-is being dragged nothing changes — Bubble's own fill and value readout stay exactly as they were. The line is clipped
-at both ends into a pill shape, and the card container is clipped to its border radius so everything respects the
-rounded corners.
+when an entity is on — so once the drag ended a light looked purely binary. The fill is therefore full height and
+edge to edge again: the filled part is painted in the body's accent (exactly the configured colour), and the empty
+remainder is dimmed 16 % by the fill's own spread shadow, so the active area keeps its colour while the rest reads as
+inactive. The icon and name are lifted above the fill so they stay readable. While the card is being dragged nothing
+changes — Bubble's own fill and value readout stay exactly as they were.
 
 ### Icon actions
 

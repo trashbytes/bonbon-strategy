@@ -518,15 +518,15 @@ styles:
   card_text_color_dark: '#eeeeee' # dark mode text color
 ```
 
-#### Slider Value Line
+#### Slider Value Fill
 
-Slider cards (lights with brightness, `input_number`, `fan`, …) keep their fill visible while you are **not**
-touching them: the card body carries the "on" accent, and the resting value is drawn as a 3 px line that floats 2 px
-above the bottom edge and starts/ends flush with the card's corner radius (12 px) — white while the entity is on,
-accent-coloured while it is not. A drag is unaffected: while the card is being slid it shows Bubble Card's own fill
-and value readout, exactly as before, and the line collapses back when you let go. Override the colour with card-mod
-if you want it different (`--bubble-slider-fill-color` is *not* used here), e.g.
-`.is-on .bubble-range-fill { background: #fff !important; }` on the card.
+Slider cards show the current value as a **full-height** fill: the filled part is painted in the card body's own
+accent colour (so it is exactly the colour you configured), and the remaining part is dimmed slightly so the active
+area stands out. Nothing is inset or rounded — the fill follows the card's shape and reaches the edges. While a drag
+is in progress nothing changes: the card shows Bubble Card's own fill and value readout, exactly as before.
+
+To change the dimming strength, override the fill's shadow on the card, e.g.
+`.is-on .bubble-range-fill { box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.25) !important; }` for a stronger effect.
 
 #### Background Images
 
