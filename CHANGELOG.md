@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Slider value line
+
+Bubble Card paints the range fill proportionally, but the generated cards force the whole body to the accent colour
+when an entity is on — so once the drag ended a light looked purely binary. The fill is now restyled into a 3 px line
+along the bottom edge of the card: white while the card is on, accent-coloured otherwise, still following the live
+value while dragging and still animated. The card container is clipped to its own border radius so the line ends
+cleanly at the corners.
+
 ### Icon actions
 
 The icon and the card body are separate action targets in Bubble Card: the body follows `button_action`, the icon

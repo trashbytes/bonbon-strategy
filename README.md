@@ -518,6 +518,14 @@ styles:
   card_text_color_dark: '#eeeeee' # dark mode text color
 ```
 
+#### Slider Value Line
+
+Slider cards (lights with brightness, `input_number`, `fan`, …) keep their fill visible after you let go: the card
+body carries the "on" accent, and the current value is drawn as a 3 px line along the bottom edge — white while the
+entity is on, accent-coloured while it is not. It follows Bubble Card's own range fill, so it updates live while
+dragging. Override the colour with card-mod if you want it different, e.g. `--bubble-slider-fill-color` is *not*
+used, so set `.is-on .bubble-range-fill { background: #fff !important; }` on the card.
+
 #### Background Images
 
 Add background images for visual customization:
