@@ -121,6 +121,8 @@ Behaviors that look wrong at first glance but are deliberate. Add an entry here 
 
 Commits are authored as `trashbytes <10084665+trashbytes@users.noreply.github.com>` (configured repo-wide, keep it that way — never commit under a different identity). Messages are English, lowercase, single-line, and describe the behavior change (`render dimmable lights as brightness sliders instead of toggles`). No conventional-commit prefixes and no issue references in the subject.
 
+Work directly on short-lived branches and delete them **immediately after the merge**: `git branch -d <branch>` plus `git push origin --delete <branch>`, then `git fetch --prune`. `main` is the only branch that survives a completed merge; leftovers are stale by definition and hide what is actually released.
+
 ## Testing / validating changes
 
 There is no test suite. Validate by:
