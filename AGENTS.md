@@ -126,9 +126,27 @@ Commits are authored as `trashbytes <10084665+trashbytes@users.noreply.github.co
 There is no test suite. Validate by:
 
 0. For a change to `bonbon-strategy-styles.js`, prove the emitted CSS did not move: copy the file first (`cp bonbon-strategy-styles.js /tmp/styles-baseline.js`), edit, then `node scripts/css-equivalence.mjs /tmp/styles-baseline.js bonbon-strategy-styles.js`. It renders `getVariables()` and every `getStyles()` fragment for a light and a styled config and exits 0 only when the rule sets are equal. CSS whitespace is insignificant, so rebuilding a selector list from an array passes, while a changed value, a dropped `!important`, a dropped selector part or a reordered rule fails. This gate covers the styles module only — the card/template behavior still needs step 1.
-1. Loading the strategy in a real Home Assistant instance (HACS install, or copy the `bonbon-strategy-*.js` files to `<config>/www/` and add `/local/bonbon-strategy.js` as a resource, then clear the frontend cache). The local dev instance registers `/local/bonbon-strategy-loader.js`, which imports the modules with a fresh `hacstag` on every page load, so writing the modules into its `/config/www` is all a deploy needs — no HA restart. The dashboard to look at is **„Übersicht"** (`/my-dashboard/<view>`, the instance's default dashboard); its only slider card is `light.0x60a423fffef7125a` ("Wohnzimmer E27"), which is what the value-line rules were tuned on.
+1. Loading the strategy in a real Home Assistant instance (HACS install, or copy the `bonbon-strategy-*.js` files to `<config>/www/` and add `/local/bonbon-strategy.js` as a resource, then clear the frontend cache). The local dev instance registers `/local/bonbon-strategy-loader.js`, which imports the modules with a fresh `hacstag` on every page load, so writing the modules into its `/config/www` is all a deploy needs — no HA restart. The reference dashboard is the instance's default one (path `my-dashboard`, title „Übersicht"); pick a slider card there (the living-room Zigbee lamp, "Wohnzimmer E27") for anything touching the range fill.
 2. Checking the browser console — thrown errors surface as an "Error" view.
 3. CI only checks HACS metadata via `.github/workflows/validate.yaml`; keep `hacs.json` valid.
+
+## Verifying a style change on the real frontend (do this, do not simulate)
+
+A mock proves nothing here: the card is a `custom:bubble-card` whose shadow DOM, stacking contexts and Bubble's own rules decide the outcome. Every claim about the rendering needs a measurement or screenshot from the running dashboard.
+
+1. **Deploy, then prove the bytes.** Copy the changed module into `<config>/www` and compare `md5sum` of the local file against the bytes served from `/local/<file>?<cache-buster>` over HTTP. A "successful" copy is not a deployed file (see "Dev deploy").
+2. **Establish the session before measuring anything.** A fresh automation browser lands on `/auth/authorize`; log in through the browser vault (never put credentials in the repo or the chat). Then **assert you are on the dashboard**: `document.querySelector('ha-panel-lovelace')` must exist and a recursive count of `bubble-card` inside shadow roots must be > 0. Measuring right after a navigation usually measures the login page or an empty view — every value reads 0 and it looks like "nothing renders".
+3. **Force the module reload.** HA is an SPA: switching views does not re-import the strategy, and `/local/` is served with `max-age` in weeks. Reload with the cache bypassed (`Page.reload { ignoreCache: true }` via CDP, or a hard reload in the UI) and re-check the console banner (`Bonbon Strategy v<version> geladen — Dateien vom <date>`) before trusting any measurement.
+4. **Read the live values.** Find the card by its config entity, then read `getComputedStyle` for the properties the rule sets (e.g. `.bubble-range-fill` → `z-index`, `height`, `background-color`, `box-shadow`; the card wrapper and its children for stacking). Computed values are the only proof that a rule matched.
+5. **Take a screenshot as visual proof.** `Page.captureScreenshot` with a clip in **page** coordinates (viewport rect plus `scrollX/scrollY`), `scale: 3`, then crop and inspect the pixels (the tools venv has Pillow). Compare the colour inside and outside the filled area instead of eyeballing a thumbnail.
+6. **Only then report.** Say what was measured (numbers, colours, element positions), not what the CSS was supposed to do.
+
+### Stacking of the slider card (why rules "do nothing" here)
+
+- `.bubble-range-fill` is inserted into `.bubble-range-slider` **before** `.bubble-wrapper`, so it paints under the card body unless it gets an explicit `z-index`.
+- `.bubble-wrapper` is `position: absolute` without a `z-index`; the button card keeps name, icon and state as its **direct children** (there is no shared content container to lift), so lifting the fill above them requires `.bubble-wrapper > :not(.bubble-background)`.
+- A `clip-path` or `mask` on the range wrapper creates a stacking context and drops the fill below the body again — that is why those variants made the line vanish entirely.
+- `::after` on the card container is not a reliable overlay: it loses against the wrapper's stacking context.
 
 ## Dev deploy (standing rule)
 
@@ -136,7 +154,8 @@ The user tests on his live dev instance, so a change that plausibly works is dep
 
 1. Copy the changed `bonbon-strategy-*.js` modules into `<config>/www` (write route, credentials and traps: `home-assistant-config` skill, `references/config-file-access.md` — the Advanced SSH add-on is started and stopped around the copy).
 2. Verify over HTTP that `/local/<file>` serves the new bytes (`md5sum` against the local file), not from the SSH shell.
-3. Tell the user it is live; the dev loader appends a fresh `hacstag`, so a dashboard reload is enough. The console then shows `Bonbon Strategy v<version> geladen — Dateien vom <date>`; name that line (and the date it should show) so he can confirm the deploy took effect.
+3. Verify at the real interface before reporting: reload with the cache bypassed, prove the dashboard actually rendered, read the computed values and take a screenshot (see "Verifying a style change on the real frontend"). "Deployed" is not "works".
+4. Tell the user it is live; the dev loader appends a fresh `hacstag`, so a dashboard reload is enough. The console then shows `Bonbon Strategy v<version> geladen — Dateien vom <date>`; name that line (and the date it should show) so he can confirm the deploy took effect.
 
 ## When you change something
 
