@@ -341,29 +341,16 @@ export function createStylesApi(panelUrl, config) {
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             background-color: rgba(255, 255, 255, 0.7) !important;
           }
-          .bubble-button-slider-container:not(.is-dragging)::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 2px;
-            height: 3px;
-            z-index: 2;
-            pointer-events: none;
-            /* the caps sit on the icon container's left margin (8px), so the line starts where the icon starts */
-            background-image: linear-gradient(
+          /* The fill lives inside the range-slider wrapper (position: absolute, z-index: 0) and is shifted by
+             translateX(<n>%), so its left edge always sits outside the card - it can never be inset by moving it,
+             and a cap painted on the container loses against that wrapper's own stacking context. Masking the
+             wrapper instead cuts the fill exactly where the icon container starts (8px). */
+          .bubble-button-slider-container:not(.is-dragging) .bubble-range-slider {
+            mask-image: linear-gradient(
               to right,
-              ${cssValue('card-background')} 0 8px,
-              transparent 8px calc(100% - 8px),
-              ${cssValue('card-background')} calc(100% - 8px) 100%
-            );
-          }
-          .is-on .bubble-button-slider-container:not(.is-dragging)::after {
-            background-image: linear-gradient(
-              to right,
-              ${cssValue('primary-accent-color')} 0 8px,
-              transparent 8px calc(100% - 8px),
-              ${cssValue('primary-accent-color')} calc(100% - 8px) 100%
+              transparent 0 8px,
+              #000 8px calc(100% - 8px),
+              transparent calc(100% - 8px) 100%
             );
           }
           .bubble-dropdown-inner-border {
