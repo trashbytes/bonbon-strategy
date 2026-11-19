@@ -181,8 +181,6 @@ strategy:
       button_type: state
       show_state: true
       use_accent_color: true
-      tap_action:
-        action: more-info
       button_action:
         tap_action:
           action: more-info
@@ -193,8 +191,6 @@ strategy:
     card_variants:
       'light.*':
         button_type: switch
-        tap_action:
-          action: toggle
         button_action:
           tap_action:
             action: toggle
@@ -334,7 +330,7 @@ exactly one map: variants that should only apply in one view or section say so i
 or `[section=...]`.
 
 `card_defaults` holds what every Bubble Card shares — `type`, `card_type`, `button_type`, `entity`, `name` and
-the default `more-info` actions — so a variant only lists what differs from it:
+the default `more-info` button action — so a variant only lists what differs from it:
 
 ```yaml
 card_defaults:
@@ -343,8 +339,6 @@ card_defaults:
   button_type: state
   show_state: true
   use_accent_color: true
-  tap_action:
-    action: more-info
   button_action:
     tap_action:
       action: more-info
@@ -355,8 +349,6 @@ card_variants:
   # lights only differ in the button type and the toggle action ...
   'light.*':
     button_type: switch
-    tap_action:
-      action: toggle
     button_action:
       tap_action:
         action: toggle
@@ -364,8 +356,6 @@ card_variants:
   # ... dimmable lights are brightness sliders
   'light.*[supported_color_modes*=brightness|color_temp|hs|xy|rgb|rgbw|rgbww|white]':
     button_type: slider
-    tap_action:
-      action: toggle
     button_action:
       tap_action:
         action: toggle
@@ -382,6 +372,18 @@ card_variants:
         show_line: false
     name: entity.name
 ```
+
+**Icon and button actions.** A Bubble Card button has two action targets: the icon and the card body. The card
+body is configured with `button_action`, the icon with the card-level `tap_action`/`double_tap_action`/
+`hold_action`. Bonbon fills both from one source so they cannot drift apart:
+
+- the icon taps exactly like the button, i.e. it copies `button_action.tap_action` (toggle on lights and switches,
+  press on `button.*`, more-info on sensors);
+- long-pressing the icon opens `more-info` (or, on the area cards, navigates to the area settings, because that is
+  the card's own hold action).
+
+Set `tap_action` or `hold_action` in `card_defaults` or in a variant to override one of them; an explicit action
+always wins over the derived one. Double-tap stays unset.
 
 **How the layers stack.** Only Bubble Cards inherit `card_defaults` — a variant with another `type` (weather
 forecast, Mini Graph, your own custom card) is used exactly as written, so no Bubble options leak into it.
@@ -515,6 +517,16 @@ styles:
   card_text_color_light: '#111111' # light mode text color
   card_text_color_dark: '#eeeeee' # dark mode text color
 ```
+
+#### Slider Value Fill
+
+Slider cards show the current value as a **full-height** fill: the filled part is painted in the card body's own
+accent colour (so it is exactly the colour you configured), and the remaining part is dimmed slightly so the active
+area stands out. Nothing is inset or rounded — the fill follows the card's shape and reaches the edges. While a drag
+is in progress nothing changes: the card shows Bubble Card's own fill and value readout, exactly as before.
+
+To change the dimming strength, override the fill's shadow on the card, e.g.
+`.is-on .bubble-range-fill { box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.25) !important; }` for a stronger effect.
 
 #### Background Images
 

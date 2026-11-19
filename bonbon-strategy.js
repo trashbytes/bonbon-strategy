@@ -1,10 +1,12 @@
+// Release version. Single source of truth: logged in the console banner and read by the dev loader.
+// Bump together with the CHANGELOG release heading and the git tag (see AGENTS.md, "Versioning & release log").
+export const VERSION = '4.0.0-dev';
+
 window.bonbon = window.bonbon || {};
 
 const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
 
-const { defaultConfig, miniGraphCardTemplate } = await import(
-  `./bonbon-strategy-config.js?hacstag=${hacstag}`,
-);
+const { defaultConfig, miniGraphCardTemplate } = await import(`./bonbon-strategy-config.js?hacstag=${hacstag}`);
 const {
   getWeatherIcon,
   mergeDeep,
@@ -13,12 +15,16 @@ const {
   normalizeSectionColumn,
   applySectionColumns,
   upgradeConfig,
+  trackSliderValueContrast,
 } = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
 const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
 const { createTemplateApi, mergeCardVariants } = await import(`./bonbon-strategy-templates.js?hacstag=${hacstag}`);
 
 const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
 const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
+
+// Slider cards invert their value readout while the fill runs underneath it (see bubbleGlobal).
+trackSliderValueContrast();
 
 const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
 
@@ -465,9 +471,9 @@ export class BonbonStrategy {
                   style: css`
                     :host {
                       display: var(${sectionConfig.display_var}, block) !important;
-                      ${viewConfig.max_columns == 1
-                        ? `margin-top: var(${sectionConfig.margin_var}, 0) !important;`
-                        : ''}
+                      ${
+                        viewConfig.max_columns == 1 ? `margin-top: var(${sectionConfig.margin_var}, 0) !important;` : ''
+                      }
                     }
                   `,
                 },
@@ -678,7 +684,8 @@ export class BonbonStrategy {
 
 customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
 console.info(
-  `%c 🍬 Bonbon %c Strategy `,
+  `%c 🍬 Bonbon %c Strategy %c v${VERSION} `,
   'background-color: #cfd49b;color: #000;padding: 3px 2px 3px 3px;border-radius: 14px 0 0 14px;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
-  'background-color: #8e72c3;color: #fff;padding: 3px 3px 3px 2px;border-radius: 0 14px 14px 0;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
+  'background-color: #8e72c3;color: #fff;padding: 3px 3px 3px 2px;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
+  'background-color: #4b4453;color: #fff;padding: 3px 3px 3px 2px;border-radius: 0 14px 14px 0;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
 );

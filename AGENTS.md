@@ -20,14 +20,15 @@ All modules are plain ES modules loaded in the browser. There is **no build step
 | `bonbon-strategy-config.js` | Exports `miniGraphCardTemplate` and `defaultConfig` (`{ styles, card_defaults, card_variants, views }`; the `views → sections → cards` tree). |
 | `bonbon-strategy-utils.js` | Color math (`getColorsFromColor`, `getAreaColors`, `getWeatherIcon`), `mergeDeep`, `normalizeSectionColumn`, `applySectionColumns`, `upgradeConfig`. |
 | `bonbon-strategy-templates.js` | `createTemplateApi(config, states, resolveEntities)` → `findTemplate`, `getCardTemplate`, `getTemplates`; plus `mergeCardVariants`, `applyCardDefaults`, `parseTemplateSelector`, `matchesSectionContext`, `isCustomCardInstalled`. Selector matching (entity part + `[view]`/`[section]` context filters), merging over `card_defaults`, placeholder resolution. |
-| `bonbon-strategy-builders.js` | `createBuildersApi(panelUrl, config, states, templateApi)` → `createButtonCard`, `createSeparatorCard`, `createSubButton`, `createGrid`, `isTogglableEntity`, `hasBinaryState`. |
+| `bonbon-strategy-builders.js` | `createBuildersApi(panelUrl, config, states, templateApi)` → `createButtonCard` (also derives the icon actions from `button_action` via `applyIconActions`), `createSeparatorCard`, `createSubButton`, `createGrid`, `isTogglableEntity`, `hasBinaryState`. |
 | `bonbon-strategy-styles.js` | `createStylesApi(panelUrl, config)` → `css`, `observeDarkMode`, `cssVariable`, `cssValue`, `getVariables`, `getStyles`. |
 | `bonbon-strategy-entities.js` | `createEntityApi(ctx)` → entity prep, selector resolution, sorting, area/floor scoping. |
 | `README.md` | User-facing documentation. **Source of truth for config options** — update it whenever you add or change a user-facing option. |
 | `hacs.json` | HACS metadata (`filename: bonbon-strategy.js`). |
 | `.github/workflows/validate.yaml` | CI: `hacs/action` validation (daily + manual). No tests, no lint, no typecheck. |
+| `scripts/css-equivalence.mjs` | Dev gate for the style fragments: renders two versions of the styles module headlessly and compares the emitted CSS rule by rule (see "Testing / validating changes"). |
 
-Local-only / gitignored (do not assume they ship): `bonbon-strategy-loader.js` (dev cache-busting loader that appends `?hacstag=<timestamp>`), `workspace.js` (commented-out scratch), `assets/`, `ftp*`, `.history/`.
+Local-only in use (never loaded by a HACS install): `bonbon-strategy-loader.js` — the dev instance registers it as the dashboard resource; it imports `bonbon-strategy.js` with a fresh `?hacstag` and logs the running `VERSION` plus the served files' `Last-Modified`. It is tracked, so it sits in the release archive, but nothing in the release references it. Gitignored scratch (do not assume anything here ships): `workspace.js` (commented-out scratch), `assets/`, `ftp*`, `.history/`.
 
 ## Architecture / data flow
 
@@ -50,7 +51,8 @@ Card generation no longer lives in the builders: every single-entity card comes 
 - Sections are `disabled`-filtered and sorted by `order` (ascending, `Infinity` last).
 - Section keys are meaningful: `bonbon_weather` and `bonbon_miscellaneous` have special handling in code, and `bonbon_area` sections use `area_id` scoping.
 - `card_variants` is the shipping card catalogue: an ordered `selector → card` map. **Order matters** (last match wins): keep generic selectors before their label/attribute-specific variants and keep `*` last. Adding a new domain or card shape means adding a variant, not a branch in the builders.
-- `card_defaults` is the skeleton every Bubble Card variant is deep-merged over (type, card_type, button_type, entity, name, the `more-info` default actions), so a variant only lists what differs. Inheritance applies **only** when the effective `type` is `custom:bubble-card` on both sides — weather forecast, Mini Graph and custom cards keep their own shape — and `inherit: false` on a variant opts out of it entirely (the key is stripped before the card is emitted).
+- `card_defaults` is the skeleton every Bubble Card variant is deep-merged over (type, card_type, button_type, entity, name, the `more-info` `button_action`), so a variant only lists what differs. Inheritance applies **only** when the effective `type` is `custom:bubble-card` on both sides — weather forecast, Mini Graph and custom cards keep their own shape — and `inherit: false` on a variant opts out of it entirely (the key is stripped before the card is emitted).
+- **Actions live in `button_action` only.** `createButtonCard` runs `applyIconActions` on every emitted Bubble Card: the card-level `tap_action` (the icon's target) is copied from `button_action.tap_action`, and `hold_action` becomes `more-info` (or, entity-less, the card's own `button_action.hold_action`) unless the card already sets one. Do not add a card-level `tap_action` to `defaultConfig` variants — it would only duplicate `button_action.tap_action` and drift. An explicit `tap_action`/`hold_action` from a user variant or the deprecated `actions` layer wins, because the helper only fills what is missing.
 - The Mini Graph card exists once, as `miniGraphCardTemplate` exported from `bonbon-strategy-config.js`; `card_variants` and `applySectionSugars` both reuse it.
 - The weather card ships a section-scoped default plus one label variant per `forecast_daily` / `forecast_hourly` / `forecast`, so labels still beat the section option.
 - View/section scoping is a selector concern: `weather.*[section=bonbon_weather]` and `sensor.*[section=bonbon_environment]` in the shipped defaults, appended after the generic selectors so they win. There is no per-section variant map.
@@ -82,11 +84,23 @@ Order and hidden labels are matched against the scopes `''`, `<viewScope>`, `<se
 - `createStylesApi` namespaces every CSS variable per dashboard: `--bonbon-<panelUrl>-<suffix>` (`cssVariable` / `cssValue`).
 - Dark mode is detected from `meta[name="color-scheme"]` via a `MutationObserver` (`observeDarkMode`), not from a `getStyles(isDark)` argument.
 - `getStyles()` returns named fragments concatenated onto generated cards: `cardmodGlobal`, `bubbleGlobal`, `bubbleAreaBase`, `bubbleButtonNonBinary`, `bubbleSeparatorSubButtonBase`, `bubbleSeparatorLightsSubButtonAlways`, `bubbleSeparatorLightsSubButtonDefault`, `bubbleAreaSubButtonDefault`, `bubbleAreaSubButtonAlways`, `graphCard`, `haCardBase`. Cards opt in via `bonbon_styles: [...]`.
+- Selector lists shared by several rules are defined once as the `containers` / `backgrounds` arrays plus `group(parts, suffix)` in `createStylesApi`, and the `:after` / `:hover:after` variants are derived with the suffix argument. The "show only the active sub-button" rules come from `hideInactive(scope, active)`. Add a repeated list or rule there instead of writing it out inline again; a second hand-written copy is what drifts first.
+- Slider cards repurpose Bubble's own `.bubble-range-fill` (`bubbleGlobal`, scoped to `.bubble-button-slider-container`): full height, edge to edge, painted in `primary-accent-color`, so the filled part *is* the body colour. The empty remainder is dimmed by the fill's own `box-shadow: 0 0 0 100vmax rgba(0,0,0,.16)` — a shadow is drawn outside the border box, so only the part right of the fill (i.e. the empty remainder) is darkened, and the card's `clip-path` trims it to the rounded corners. The fill carries `z-index: 1` because it is inserted *before* the card wrapper and would otherwise sit under the body, `pointer-events: none` because it is a pure paint layer, and **every** layer above it is lifted with `.bubble-button-slider-container .bubble-wrapper > :not(.bubble-background) { position: relative; z-index: 2 }` — lifting only `.bubble-content-container` is not enough, the button card keeps name, icon and state as direct children of the wrapper, so the content stayed under the fill. The whole block is guarded with `:not(.is-dragging)`: an active drag must keep Bubble's own fill and value readout. The value readout (`.bubble-range-value`) keeps the surface text colour and is switched to white by `[data-bonbon-value-on-fill]` as soon as the fill edge passes it — Bubble publishes the fill position only as an inline `transform`, so `trackSliderValueContrast()` (registered once in `bonbon-strategy.js`) toggles that attribute on pointer events; it anchors on the `BUBBLE-CARD` in `composedPath()`, because the pointer lands on `.bubble-background` and never on `.bubble-range-slider`. Do not turn the fill back into a hairline without also re-checking the stacking (a clip or mask on the range wrapper creates a context that drops the fill below the body).
 - Public CSS variables exposed to users for `card-mod` are all namespaced, e.g. `--bonbon-<panelUrl>-box-shadow`, `--bonbon-<panelUrl>-border-radius`, `--bonbon-<panelUrl>-card-background`, `--bonbon-<panelUrl>-primary-text-color`, `--bonbon-<panelUrl>-primary-accent-color`. Area colors are the exception: `--area-<area_id>-{light,medium,shade}-color`.
 
 ## Cache-busting (important)
 
-`bonbon-strategy.js` imports its siblings with `?hacstag=${hacstag}` read from its own `import.meta.url`. HACS supplies the tag in production; the gitignored `bonbon-strategy-loader.js` appends a timestamp for local dev. **Every** module that needs a sibling does the same dynamic import (`bonbon-strategy-templates.js` → `bonbon-strategy-utils.js`); a plain static `import` loads a second, un-tagged copy that can be served stale. When editing modules locally, reload with a fresh `hacstag` (or the loader) or HA will serve stale files. **Do not hardcode or remove the `hacstag` query.**
+`bonbon-strategy.js` imports its siblings with `?hacstag=${hacstag}` read from its own `import.meta.url`. HACS supplies the tag in production; the local dev loader (`bonbon-strategy-loader.js`, never part of a HACS install) appends a timestamp for local dev. **Every** module that needs a sibling does the same dynamic import (`bonbon-strategy-templates.js` → `bonbon-strategy-utils.js`); a plain static `import` loads a second, un-tagged copy that can be served stale. When editing modules locally, reload with a fresh `hacstag` (or the loader) or HA will serve stale files. **Do not hardcode or remove the `hacstag` query.**
+
+## Versioning & release log
+
+One line in the browser console must always answer "which release is running, and how old are the files".
+
+- `bonbon-strategy.js` exports `VERSION` — the **only** place a version number lives. It ships to every HACS install and is printed in the load banner (`🍬 Bonbon Strategy v<version>`). Never duplicate it in another module, in `hacs.json` or in the README.
+- The dev loader never carries a version. It reads `VERSION` from the imported module and adds the `Last-Modified` date of the served `/local/bonbon-strategy.js` (HEAD request, `cache: 'no-store'`), so `v<version> geladen — Dateien vom <date>` tells a released version from a local working copy at a glance. `fallbackUpdated` in the loader is only used when the server sends no `Last-Modified` header.
+- **Every release bumps `VERSION` at least in the patch position** (minor for new options, major for the removals/breaking changes). While unreleased the value keeps a `-dev` suffix and names the version being worked toward; a tag may never carry it.
+- Release procedure, in one commit-ready sequence: `VERSION` without `-dev` → CHANGELOG `## Unreleased` becomes `## <version> — YYYY-MM-DD` → commit → tag `v<version>` → push the tag (HACS reads the tag, so the `hacstag` changes with it). Right after the tag, set `VERSION` to the next number with `-dev` again, so a dev deploy never reports a released version.
+- `VERSION` and the tag must never disagree: a tag whose `VERSION` differs is a bug, not a detail.
 
 ## Conventions
 
@@ -111,12 +125,43 @@ Commits are authored as `trashbytes <10084665+trashbytes@users.noreply.github.co
 
 There is no test suite. Validate by:
 
-1. Loading the strategy in a real Home Assistant instance (HACS install, or copy the `bonbon-strategy-*.js` files to `<config>/www/` and add `/local/bonbon-strategy.js` as a resource, then clear the frontend cache). The local dev instance registers `/local/bonbon-strategy-loader.js`, which imports the modules with a fresh `hacstag` on every page load, so writing the modules into its `/config/www` is all a deploy needs — no HA restart.
+0. For a change to `bonbon-strategy-styles.js`, prove the emitted CSS did not move: copy the file first (`cp bonbon-strategy-styles.js /tmp/styles-baseline.js`), edit, then `node scripts/css-equivalence.mjs /tmp/styles-baseline.js bonbon-strategy-styles.js`. It renders `getVariables()` and every `getStyles()` fragment for a light and a styled config and exits 0 only when the rule sets are equal. CSS whitespace is insignificant, so rebuilding a selector list from an array passes, while a changed value, a dropped `!important`, a dropped selector part or a reordered rule fails. This gate covers the styles module only — the card/template behavior still needs step 1.
+1. Loading the strategy in a real Home Assistant instance (HACS install, or copy the `bonbon-strategy-*.js` files to `<config>/www/` and add `/local/bonbon-strategy.js` as a resource, then clear the frontend cache). The local dev instance registers `/local/bonbon-strategy-loader.js`, which imports the modules with a fresh `hacstag` on every page load, so writing the modules into its `/config/www` is all a deploy needs — no HA restart. The reference dashboard is the instance's default one (path `my-dashboard`, title „Übersicht"); pick a slider card there (the living-room Zigbee lamp, "Wohnzimmer E27") for anything touching the range fill.
 2. Checking the browser console — thrown errors surface as an "Error" view.
 3. CI only checks HACS metadata via `.github/workflows/validate.yaml`; keep `hacs.json` valid.
+
+## Verifying a style change on the real frontend (do this, do not simulate)
+
+A mock proves nothing here: the card is a `custom:bubble-card` whose shadow DOM, stacking contexts and Bubble's own rules decide the outcome. Every claim about the rendering needs a measurement or screenshot from the running dashboard.
+
+1. **Deploy, then prove the bytes.** Copy the changed module into `<config>/www` and compare `md5sum` of the local file against the bytes served from `/local/<file>?<cache-buster>` over HTTP. A "successful" copy is not a deployed file (see "Dev deploy").
+2. **Establish the session and make the tab visible before measuring anything.** A fresh automation browser lands on `/auth/authorize`; log in through the browser vault (never put credentials in the repo or the chat). Then **`Page.bringToFront`** — this is the step that cost hours: HA's `hui-root` renders a view only while the document is visible, so in a backgrounded headless tab the dashboard stays empty (`hui-view-container.view` stays null, 0 `hui-card`, no error in the console) even though `lovelace.config.views` is fully populated. After every navigation and reload, bring the tab to front again and assert a recursive count of `bubble-card` > 0 before reading any style.
+3. **Force the module reload.** HA is an SPA: switching views does not re-import the strategy, and `/local/` is served with `max-age` in weeks. Reload with the cache bypassed (`Page.reload { ignoreCache: true }` via CDP, or a hard reload in the UI) and re-check the console banner (`Bonbon Strategy v<version> geladen — Dateien vom <date>`) before trusting any measurement.
+4. **Read the live values.** Find the card by its config entity, then read `getComputedStyle` for the properties the rule sets (e.g. `.bubble-range-fill` → `z-index`, `height`, `background-color`, `box-shadow`; the card wrapper and its children for stacking). Computed values are the only proof that a rule matched.
+5. **Take a screenshot as visual proof.** `Page.captureScreenshot` with a clip in **page** coordinates (viewport rect plus `scrollX/scrollY`), `scale: 3`, then crop and inspect the pixels (the tools venv has Pillow). Compare the colour inside and outside the filled area instead of eyeballing a thumbnail.
+6. **Only then report.** Say what was measured (numbers, colours, element positions), not what the CSS was supposed to do.
+
+### Stacking of the slider card (why rules "do nothing" here)
+
+- `.bubble-range-fill` is inserted into `.bubble-range-slider` **before** `.bubble-wrapper`, so it paints under the card body unless it gets an explicit `z-index`.
+- `.bubble-wrapper` is `position: absolute` without a `z-index`; what has to be lifted are the leaves that paint the content, not the wrapper's children.
+- A `clip-path` or `mask` on the range wrapper creates a stacking context and drops the fill below the body again — that is why those variants made the line vanish entirely.
+- `.bubble-content-container` and `.bubble-buttons-container` use `display: contents`; **`z-index` has no effect on a box-less element**, so lifting the wrapper's children does nothing. Lift the leaves (`.bubble-name-container`, `.bubble-icon-container`, `.bubble-sub-button-container`) instead.
+- Never put backticks into a comment inside `bonbon-strategy-styles.js`: every fragment is a template literal, and one backtick ends the string with a `ReferenceError` at module load.
+- `::after` on the card container is not a reliable overlay: it loses against the wrapper's stacking context.
+
+## Dev deploy (standing rule)
+
+The user tests on his live dev instance, so a change that plausibly works is deployed to it right away and then reported — do not wait to be asked, but always say that it is deployed (and which files) so he can test immediately.
+
+1. Copy the changed `bonbon-strategy-*.js` modules into `<config>/www` (write route, credentials and traps: `home-assistant-config` skill, `references/config-file-access.md` — the Advanced SSH add-on is started and stopped around the copy).
+2. Verify over HTTP that `/local/<file>` serves the new bytes (`md5sum` against the local file), not from the SSH shell.
+3. Verify at the real interface before reporting: reload with the cache bypassed, prove the dashboard actually rendered, read the computed values and take a screenshot (see "Verifying a style change on the real frontend"). "Deployed" is not "works".
+4. Tell the user it is live; the dev loader appends a fresh `hacstag`, so a dashboard reload is enough. The console then shows `Bonbon Strategy v<version> geladen — Dateien vom <date>`; name that line (and the date it should show) so he can confirm the deploy took effect.
 
 ## When you change something
 
 - User-facing option → update `README.md` and `defaultConfig` (and `upgradeConfig` if it replaces an old option).
+- Release → bump `VERSION` in `bonbon-strategy.js` and turn the CHANGELOG `## Unreleased` heading into the released version with its date (see "Versioning & release log").
 - New style fragment → add it to `getStyles()` and document its name if users select it via `bonbon_styles`.
 - New selector syntax → update the README "Entity selectors" section and the parser in `bonbon-strategy-entities.js`.

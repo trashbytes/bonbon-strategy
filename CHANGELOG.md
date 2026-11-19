@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+### Slider value fill
+
+Bubble Card paints the range fill proportionally, but the generated cards force the whole body to the accent colour
+when an entity is on — so once the drag ended a light looked purely binary. The fill is therefore full height and
+edge to edge again: the filled part is painted in the body's accent (exactly the configured colour), and the empty
+remainder is dimmed 16 % by the fill's own spread shadow, so the active area keeps its colour while the rest reads as
+inactive. The icon and name are lifted above the fill so they stay readable. While the card is being dragged nothing
+changes — Bubble's own fill and value readout stay exactly as they were, except that the readout switches to white as
+soon as the fill edge passes its centre (Bubble exposes the fill only as an inline transform, so a small pointer hook
+toggles the attribute the stylesheet reacts to).
+
+### Icon actions
+
+The icon and the card body are separate action targets in Bubble Card: the body follows `button_action`, the icon
+the card-level `tap_action`/`hold_action`. The generated cards only configured the body, so long-pressing the icon
+did nothing and the two could drift apart.
+
+- The icon now taps exactly like the button: `applyIconActions` copies `button_action.tap_action` onto the card
+  level (toggle on lights, switches and friends, press on `button.*`/`input_button.*`, more-info elsewhere).
+- Long-pressing the icon opens `more-info`. Cards that define their own hold action keep it — the area cards still
+  navigate to the area settings on the icon.
+- Card-level `tap_action` entries were dropped from `defaultConfig` and the shipped variants: `button_action` is
+  the single source, so the two can no longer disagree. Your own `tap_action`/`hold_action` in `card_defaults` or
+  a variant still overrides the derived value, and double-tap stays unset.
+
+### Version in the console log
+
+The strategy now logs the release it is running: `bonbon-strategy.js` exports `VERSION` and prints it in the load
+banner (`🍬 Bonbon Strategy v4.0.0`). The dev loader adds the served files' `Last-Modified` date
+(`Bonbon Strategy v4.0.0-dev geladen — Dateien vom 19.11.2026, 12:40:07`), so a released version can be told apart
+from a local working copy without opening a file. Both are dev-only output — no config, no visual change.
+
 ### Card variants
 
 Every card that Bonbon generates for an entity is now coming from a **card variant** instead of being built by

@@ -21,13 +21,14 @@ export const defaultConfig = {
   // The skeleton every generated Bubble Card starts from. Each `card_variants` entry is deep-merged over it, so a
   // variant only lists what differs (arrays are replaced, not merged). Cards that are not Bubble Cards (weather
   // forecast, Mini Graph) are used as they are, and `inherit: false` opts a variant out of the defaults entirely.
+  // The icon never gets its own action config here: it taps exactly like `button_action` and long-presses
+  // `more-info` (see `applyIconActions` in bonbon-strategy-builders.js).
   card_defaults: {
     type: 'custom:bubble-card',
     card_type: 'button',
     button_type: 'state',
     show_state: true,
     use_accent_color: true,
-    tap_action: { action: 'more-info' },
     button_action: { tap_action: { action: 'more-info' } },
     entity: 'entity.entity_id',
     name: 'entity.name',
@@ -64,13 +65,11 @@ export const defaultConfig = {
     },
     'light.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'light.*[supported_color_modes*=brightness|color_temp|hs|xy|rgb|rgbw|rgbww|white]': {
       button_type: 'slider',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
@@ -84,19 +83,16 @@ export const defaultConfig = {
     'binary_sensor.*[section=bonbon_environment]': miniGraphCardTemplate,
     'switch.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'lock.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'valve.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
@@ -104,7 +100,6 @@ export const defaultConfig = {
     'button.*': {
       button_type: 'switch',
       show_last_changed: true,
-      tap_action: { action: 'call-service', service: 'button.press', target: { entity_id: 'entity.entity_id' } },
       button_action: {
         tap_action: { action: 'call-service', service: 'button.press', target: { entity_id: 'entity.entity_id' } },
       },
@@ -112,7 +107,6 @@ export const defaultConfig = {
     'input_button.*': {
       button_type: 'switch',
       show_last_changed: true,
-      tap_action: { action: 'call-service', service: 'input_button.press', target: { entity_id: 'entity.entity_id' } },
       button_action: {
         tap_action: {
           action: 'call-service',
@@ -123,45 +117,38 @@ export const defaultConfig = {
     },
     'fan.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'humidifier.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'water_heater.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'input_boolean.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'automation.*': {
       button_type: 'switch',
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'scene.*': {
       button_type: 'switch',
       show_state: false,
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },
     'script.*': {
       button_type: 'switch',
       show_state: false,
-      tap_action: { action: 'toggle' },
       button_action: { tap_action: { action: 'toggle' } },
       show_last_changed: true,
     },

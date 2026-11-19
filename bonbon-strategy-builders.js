@@ -49,7 +49,6 @@ export function createBuildersApi(panelUrl, config, states = {}, templateApi = n
       button_type: 'state',
       show_state: true,
       use_accent_color: true,
-      tap_action: { action: 'more-info' },
       button_action: { tap_action: { action: 'more-info' } },
     };
     if (c?.entity) {
@@ -57,10 +56,32 @@ export function createBuildersApi(panelUrl, config, states = {}, templateApi = n
       base.entity = c.entity.entity_id;
     } else {
       base.button_type = 'name';
-      base.tap_action = { action: 'none' };
       base.button_action = { tap_action: { action: 'none' } };
     }
     return base;
+  };
+
+  // A Bubble Card's icon and its card body are separate action targets: the icon uses the card-level
+  // `tap_action`/`hold_action`, the body uses `button_action`. Configuring only one of them therefore leaves the
+  // icon with Bubble Card's own defaults. One rule for both, so they cannot drift: the icon taps like the button,
+  // and a long press opens `more-info` (or the button's own hold action, where a card defines one).
+  const applyIconActions = (card) => {
+    if (card?.type !== 'custom:bubble-card') {
+      return card;
+    }
+    const buttonActions = card.button_action || {};
+    const entityId = typeof card.entity === 'string' ? card.entity : card.entity?.entity_id;
+    if (!card.tap_action && buttonActions.tap_action) {
+      card.tap_action = structuredClone(buttonActions.tap_action);
+    }
+    if (!card.hold_action) {
+      if (buttonActions.hold_action) {
+        card.hold_action = structuredClone(buttonActions.hold_action);
+      } else if (entityId) {
+        card.hold_action = { action: 'more-info' };
+      }
+    }
+    return card;
   };
 
   // Deprecated: `actions` is only applied when the user configured it.
@@ -182,6 +203,7 @@ export function createBuildersApi(panelUrl, config, states = {}, templateApi = n
     applyConfiguredActions(base, c);
 
     const merged = { ...base, ...(options || {}) };
+    applyIconActions(merged);
     if (c?.object) {
       return {
         ...merged,

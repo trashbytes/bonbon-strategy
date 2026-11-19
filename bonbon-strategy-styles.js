@@ -1,6 +1,6 @@
 export function createStylesApi(panelUrl, config) {
   const metaScheme = document.querySelector('meta[name="color-scheme"]');
-  const css = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] || ''), '');
+  const css = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] ?? ''), '');
   const isDark = () => {
     return metaScheme?.getAttribute('content') === 'dark';
   };
@@ -16,6 +16,33 @@ export function createStylesApi(panelUrl, config) {
   };
   const cssVariable = (suffix) => `--bonbon-${panelUrl}-${suffix}`;
   const cssValue = (suffix) => `var(${cssVariable(suffix)})`;
+
+  // Selector parts shared by several rules in `bubbleGlobal`.
+  const containers = [
+    '.bubble-sub-buttons-container .bubble-sub-button',
+    '.bubble-button-container:not(.bubble-buttons-container)',
+    '.bubble-select-container',
+    '.bubble-climate-container',
+    '.bubble-cover-container',
+    '.bubble-media-player-container',
+  ];
+  const backgrounds = [
+    '.bubble-select-container',
+    '.bubble-climate-container',
+    '.bubble-cover-container',
+    '.bubble-media-player-container',
+    '.bubble-button-background',
+  ];
+  // One selector list, optionally one pseudo-element per part.
+  const group = (parts, suffix = '') => parts.map((part) => part + suffix).join(',\n          ');
+  // Renders only the first sub-button that carries the active marker; the inactive ones and every later
+  // active sibling are hidden. `scope` is the container prefix, `active` the marker class or attribute filter.
+  const hideInactive = (scope, active) => css`
+    ${scope} .bubble-sub-button:not(${active}),
+    ${scope} .bubble-sub-button${active} ~ .bubble-sub-button${active} {
+      display: none !important;
+    }
+  `;
 
   const getVariables = () => ({
     global: {
@@ -86,7 +113,7 @@ export function createStylesApi(panelUrl, config) {
         display: block;
         inset: 0;
         position: absolute;
-        border-radius: var(--bubble-button-border-radius);
+        border-radius: ${cssValue('border-radius')};
         background: ${cssValue('hover-overlay-background')};
         opacity: 0;
       }
@@ -130,9 +157,6 @@ export function createStylesApi(panelUrl, config) {
       }
       .fixed-top .bubble-sub-button-container {
         margin-top: 8px;
-      }
-      ha-ripple {
-        display: none;
       }
       .bubble-button {
         background: var(--area-light-color);
@@ -199,6 +223,13 @@ export function createStylesApi(panelUrl, config) {
         box-shadow: 0 2px 6px rgba(0, 0, 0, ${cssValue('sub-button-shadow-opacity')});
       }
     `;
+    // Hover rule shared by `bubbleAreaSubButtonDefault` and `bubbleAreaSubButtonAlways`.
+    const areaSubButtonHover = css`
+      .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
+      .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
+        background: var(--area-shade-color) !important;
+      }
+    `;
     const styles = {
       cardmodGlobal: globalStyles,
       bubbleGlobal:
@@ -227,11 +258,7 @@ export function createStylesApi(panelUrl, config) {
           ha-ripple {
             display: none !important;
           }
-          .bubble-select-container,
-          .bubble-climate-container,
-          .bubble-cover-container,
-          .bubble-media-player-container,
-          .bubble-button-background {
+          ${group(backgrounds)} {
             background-color: ${cssValue('card-background')} !important;
             opacity: 1 !important;
           }
@@ -248,31 +275,15 @@ export function createStylesApi(panelUrl, config) {
           .bubble-button-container {
             overflow: visible;
           }
-          .bubble-sub-buttons-container .bubble-sub-button,
-          .bubble-button-container:not(.bubble-buttons-container),
-          .bubble-select-container,
-          .bubble-climate-container,
-          .bubble-cover-container,
-          .bubble-media-player-container {
+          ${group(containers)} {
             border-radius: var(--bubble-button-border-radius);
           }
-          .bubble-sub-buttons-container .bubble-sub-button:after,
-          .bubble-button-container:not(.bubble-buttons-container):after,
-          .bubble-select-container:after,
-          .bubble-climate-container:after,
-          .bubble-cover-container:after,
-          .bubble-media-player-container:after {
+          ${group(containers, ':after')} {
             ${shadowOverlay}
           }
-          .bubble-sub-buttons-container .bubble-sub-button:hover:after,
-          .bubble-button-container:not(.bubble-buttons-container):hover:after,
-          .bubble-select-container:hover:after,
-          .bubble-climate-container:hover:after,
-          .bubble-cover-container:hover:after,
-          .bubble-media-player-container:hover:after {
+          ${group(containers, ':hover:after')} {
             background: ${cssValue('hover-overlay-background')};
           }
-          mwc-list-item[selected],
           mwc-list-item[selected],
           .is-on .bubble-name-container {
             --icon-primary-color: #fff;
@@ -308,6 +319,48 @@ export function createStylesApi(panelUrl, config) {
             background-color: ${cssValue('primary-accent-color')} !important;
             filter: none !important;
             opacity: 1 !important;
+          }
+          /* Slider cards: Bubble paints the range fill proportionally, but the card body already carries the
+             full accent above it, so the value is unreadable once the finger is gone. At rest the fill becomes a
+             hairline that floats 2px above the bottom edge and keeps 2px off both side edges (the caps below cut
+             its ends - the fill's own left edge always sits outside the card). While the card is being dragged
+             the fill stays exactly what Bubble renders. */
+          .bubble-button-slider-container {
+            clip-path: inset(0 round var(--bubble-button-border-radius, var(--bubble-border-radius, 12px)));
+          }
+          /* Value fill: full height and edge to edge again. The filled part is painted in the body's own accent
+             (so it is invisible against the "on" body and simply IS the correct colour), and the empty remainder
+             is dimmed by the fill's own spread shadow, which is drawn outside its box and clipped by the card.
+             Nothing is inset, nothing is rounded. */
+          .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
+            top: 0 !important;
+            bottom: 0 !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            opacity: 1 !important;
+            z-index: 1 !important;
+            background-color: ${cssValue('primary-accent-color')} !important;
+            pointer-events: none !important;
+          }
+          .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.16);
+          }
+          /* the fill sits above the card body, so the layers that carry icon, name, state and sub-buttons have
+             to be lifted above it. They cannot be lifted on the wrapper's children: the content and buttons
+             containers use display: contents, and z-index does nothing on a box-less element - that is why the
+             content stayed hidden behind the fill. (Never put backticks in these comments: the whole fragment is
+             a template literal.) */
+          .bubble-button-slider-container .bubble-name-container,
+          .bubble-button-slider-container .bubble-icon-container,
+          .bubble-button-slider-container .bubble-sub-button-container {
+            position: relative;
+            z-index: 2 !important;
+          }
+          /* The value readout keeps the surface text colour and sits at the trailing edge, while the fill
+             grows underneath it. Bubble exposes the fill position only as an inline transform, so the
+             strategy sets the attribute once the fill edge passes the readout (trackSliderValueContrast). */
+          .bubble-button-slider-container .bubble-range-value[data-bonbon-value-on-fill] {
+            color: #fff !important;
           }
           .bubble-dropdown-inner-border {
             display: none !important;
@@ -357,24 +410,14 @@ export function createStylesApi(panelUrl, config) {
             color: #fff;
             background-color: var(--bubble-default-color);
           }
-          .bubble-sub-button-container:has(.background-on)
-            [data-group-id='g_main_0']
-            .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-          .bubble-sub-button-container:has(.background-on)
-            [data-group-id='g_main_0']
-            .bubble-sub-button[data-tap-action*='light.turn_off']
-            ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-            display: none !important;
-          }
-          .bubble-sub-button-container:not(:has(.background-on))
-            [data-group-id='g_main_0']
-            .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-          .bubble-sub-button-container:not(:has(.background-on))
-            [data-group-id='g_main_0']
-            .bubble-sub-button[data-tap-action*='light.turn_on']
-            ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-            display: none !important;
-          }
+          ${hideInactive(
+            `.bubble-sub-button-container:has(.background-on) [data-group-id='g_main_0']`,
+            `[data-tap-action*='light.turn_off']`,
+          )}
+          ${hideInactive(
+            `.bubble-sub-button-container:not(:has(.background-on)) [data-group-id='g_main_0']`,
+            `[data-tap-action*='light.turn_on']`,
+          )}
         `,
       bubbleSeparatorLightsSubButtonDefault:
         separatorLightsSubButtonBase +
@@ -383,15 +426,9 @@ export function createStylesApi(panelUrl, config) {
             color: #fff;
             background-color: var(--bubble-default-color);
           }
-          .bubble-sub-button-container [data-group-id='g_main_0'] .bubble-sub-button:not(.background-on),
-          .bubble-sub-button-container
-            [data-group-id='g_main_0']
-            .bubble-sub-button.background-on
-            ~ .bubble-sub-button.background-on {
-            display: none !important;
-          }
+          ${hideInactive(`.bubble-sub-button-container [data-group-id='g_main_0']`, `.background-on`)}
         `,
-      bubbleAreaBase: bubbleAreaBase,
+      bubbleAreaBase,
       bubbleAreaSubButtonDefault: css`
         .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
           color: var(--primary-text-color) !important;
@@ -399,49 +436,34 @@ export function createStylesApi(panelUrl, config) {
         .bubble-sub-button-container.fixed-top .bubble-sub-button {
           background: var(--area-medium-color) !important;
         }
-        .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-        .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-          background: var(--area-shade-color) !important;
-        }
+        ${areaSubButtonHover}
         .bubble-sub-button-container.fixed-top .background-on {
           background: var(--area-medium-color) !important;
         }
         .bubble-container:hover .bubble-sub-button-container.fixed-top .background-on {
           background: var(--area-shade-color) !important;
         }
-        .bubble-sub-button-container.fixed-top .bubble-sub-button:not(.background-on),
-        .bubble-sub-button-container.fixed-top .bubble-sub-button.background-on ~ .bubble-sub-button.background-on {
-          display: none !important;
-        }
+        ${hideInactive('.bubble-sub-button-container.fixed-top', '.background-on')}
       `,
       bubbleAreaSubButtonAlways: css`
         .bubble-sub-button-container.fixed-top .bubble-sub-button,
         .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
           background: var(--area-medium-color) !important;
         }
-        .bubble-container:hover .bubble-sub-button-container.fixed-top .bubble-sub-button,
-        .bubble-container:hover .bubble-sub-button-container.fixed-top:not(:has(.background-on)) .bubble-sub-button {
-          background: var(--area-shade-color) !important;
-        }
+        ${areaSubButtonHover}
         .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button,
         .bubble-container:hover .bubble-sub-button-container.fixed-top:has(.background-on) .bubble-sub-button {
           background: var(--bubble-default-color) !important;
           color: #fff !important;
         }
-        .bubble-sub-button-container.fixed-top:has(.background-on)
-          .bubble-sub-button:not([data-tap-action*='light.turn_off']),
-        .bubble-sub-button-container.fixed-top:has(.background-on)
-          .bubble-sub-button[data-tap-action*='light.turn_off']
-          ~ .bubble-sub-button[data-tap-action*='light.turn_off'] {
-          display: none !important;
-        }
-        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-          .bubble-sub-button:not([data-tap-action*='light.turn_on']),
-        .bubble-sub-button-container.fixed-top:not(:has(.background-on))
-          .bubble-sub-button[data-tap-action*='light.turn_on']
-          ~ .bubble-sub-button[data-tap-action*='light.turn_on'] {
-          display: none !important;
-        }
+        ${hideInactive(
+          '.bubble-sub-button-container.fixed-top:has(.background-on)',
+          `[data-tap-action*='light.turn_off']`,
+        )}
+        ${hideInactive(
+          '.bubble-sub-button-container.fixed-top:not(:has(.background-on))',
+          `[data-tap-action*='light.turn_on']`,
+        )}
       `,
       graphCard: css`
         ${haCardBase}
@@ -527,9 +549,7 @@ export function createStylesApi(panelUrl, config) {
           }
         }
       `,
-      haCardBase: css`
-        ${haCardBase}
-      `,
+      haCardBase,
     };
     return styles;
   };

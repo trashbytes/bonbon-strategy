@@ -441,3 +441,35 @@ export function upgradeConfig(config) {
   }
   return config;
 }
+
+// Bubble draws the range fill as an inline transform and publishes no variable for its position, so the
+// value readout cannot be inverted from CSS alone. Pointer events pass through the card's shadow tree, which
+// lets us find the slider under the finger and compare both boxes; the stylesheet then recolours the readout
+// via [data-bonbon-value-on-fill]. Runs once per frontend load.
+export function trackSliderValueContrast() {
+  const sync = (slider) => {
+    const fill = slider.querySelector('.bubble-range-fill');
+    const value = slider.querySelector('.bubble-range-value');
+    if (!fill || !value) return;
+    const valueBox = value.getBoundingClientRect();
+    if (!valueBox.width) return;
+    const fillBox = fill.getBoundingClientRect();
+    // Switch only once the fill has passed the middle of the readout, so the colour does not flip while the
+    // edge is still creeping up on the digits.
+    const covered = fillBox.right >= valueBox.left + valueBox.width / 2 && fillBox.left <= valueBox.right;
+    value.toggleAttribute('data-bonbon-value-on-fill', covered);
+  };
+
+  const handle = (event) => {
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    // The pointer never reaches the slider element itself (Bubble binds the drag to the button container and
+    // the slider sits under the background), so the card is the only reliable anchor in the path.
+    const card = path.find((node) => node.tagName === 'BUBBLE-CARD');
+    const slider = card && card.shadowRoot && card.shadowRoot.querySelector('.bubble-range-slider');
+    if (slider) sync(slider);
+  };
+
+  for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
+    document.addEventListener(type, handle, { capture: true, passive: true });
+  }
+}
