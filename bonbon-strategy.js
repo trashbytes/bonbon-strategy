@@ -1,6 +1,6 @@
 // Release version. Single source of truth: logged in the console banner and read by the dev loader.
 // Bump together with the CHANGELOG release heading and the git tag (see AGENTS.md, "Versioning & release log").
-export const VERSION = '4.0.0-dev';
+export const VERSION = '3.2.0-dev';
 
 window.bonbon = window.bonbon || {};
 
