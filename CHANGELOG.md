@@ -9,7 +9,9 @@ when an entity is on — so once the drag ended a light looked purely binary. Th
 edge to edge again: the filled part is painted in the body's accent (exactly the configured colour), and the empty
 remainder is dimmed 16 % by the fill's own spread shadow, so the active area keeps its colour while the rest reads as
 inactive. The icon and name are lifted above the fill so they stay readable. While the card is being dragged nothing
-changes — Bubble's own fill and value readout stay exactly as they were.
+changes — Bubble's own fill and value readout stay exactly as they were, except that the readout switches to white as
+soon as the fill edge passes its centre (Bubble exposes the fill only as an inline transform, so a small pointer hook
+toggles the attribute the stylesheet reacts to).
 
 ### Icon actions
 
