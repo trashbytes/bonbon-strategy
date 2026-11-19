@@ -342,13 +342,13 @@ export function createStylesApi(panelUrl, config) {
             background-color: rgba(255, 255, 255, 0.7) !important;
           }
           /* The fill sits inside the range-slider wrapper (same 500x56 box as the container, fill shifted out to
-             the left by translateX), so clipping the wrapper cuts the line at the icon container's 8 px margin
-             without touching the card body. The clip hugs the line's own band (bottom 2px .. 5px) and is rounded,
-             which gives both ends a pill shape even where the clip does the cutting. At rest the wrapper paints
-             nothing but the line, so clipping the rest away is harmless. The clip makes the wrapper a stacking
-             context, which drops the fill below the card's own background - the explicit z-index lifts it back. */
+             the left by translateX), so clipping the wrapper cuts the line at the card's corner radius (12px) -
+             8px sat too close to the rounded corners. The clip hugs the line's own band (bottom 2px .. 5px) and is
+             rounded, which gives both ends a pill shape even where the clip does the cutting. At rest the wrapper
+             paints nothing but the line, so clipping the rest away is harmless. The clip makes the wrapper a
+             stacking context, which drops the fill below the card's own background - the explicit z-index lifts it. */
           .bubble-button-slider-container:not(.is-dragging) .bubble-range-slider {
-            clip-path: inset(calc(100% - 5px) 8px 2px 8px round 1.5px);
+            clip-path: inset(calc(100% - 5px) 12px 2px 12px round 1.5px);
             z-index: 2;
           }
           .bubble-dropdown-inner-border {

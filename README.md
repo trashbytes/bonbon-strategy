@@ -522,7 +522,7 @@ styles:
 
 Slider cards (lights with brightness, `input_number`, `fan`, …) keep their fill visible while you are **not**
 touching them: the card body carries the "on" accent, and the resting value is drawn as a 3 px line that floats 2 px
-above the bottom edge and starts/ends flush with the icon container's 8 px side margin — white while the entity is on,
+above the bottom edge and starts/ends flush with the card's corner radius (12 px) — white while the entity is on,
 accent-coloured while it is not. A drag is unaffected: while the card is being slid it shows Bubble Card's own fill
 and value readout, exactly as before, and the line collapses back when you let go. Override the colour with card-mod
 if you want it different (`--bubble-slider-fill-color` is *not* used here), e.g.
