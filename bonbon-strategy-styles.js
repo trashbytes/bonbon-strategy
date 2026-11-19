@@ -340,6 +340,7 @@ export function createStylesApi(panelUrl, config) {
             opacity: 1 !important;
             z-index: 1 !important;
             background-color: ${cssValue('primary-accent-color')} !important;
+            pointer-events: none !important;
           }
           .is-on .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.16);
