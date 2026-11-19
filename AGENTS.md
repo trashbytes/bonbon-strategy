@@ -28,7 +28,7 @@ All modules are plain ES modules loaded in the browser. There is **no build step
 | `.github/workflows/validate.yaml` | CI: `hacs/action` validation (daily + manual). No tests, no lint, no typecheck. |
 | `scripts/css-equivalence.mjs` | Dev gate for the style fragments: renders two versions of the styles module headlessly and compares the emitted CSS rule by rule (see "Testing / validating changes"). |
 
-Local-only / gitignored (do not assume they ship): `bonbon-strategy-loader.js` (dev cache-busting loader that appends `?hacstag=<timestamp>`), `workspace.js` (commented-out scratch), `assets/`, `ftp*`, `.history/`.
+Local-only in use (never loaded by a HACS install): `bonbon-strategy-loader.js` — the dev instance registers it as the dashboard resource; it imports `bonbon-strategy.js` with a fresh `?hacstag` and logs the running `VERSION` plus the served files' `Last-Modified`. It is tracked, so it sits in the release archive, but nothing in the release references it. Gitignored scratch (do not assume anything here ships): `workspace.js` (commented-out scratch), `assets/`, `ftp*`, `.history/`.
 
 ## Architecture / data flow
 
@@ -88,7 +88,17 @@ Order and hidden labels are matched against the scopes `''`, `<viewScope>`, `<se
 
 ## Cache-busting (important)
 
-`bonbon-strategy.js` imports its siblings with `?hacstag=${hacstag}` read from its own `import.meta.url`. HACS supplies the tag in production; the gitignored `bonbon-strategy-loader.js` appends a timestamp for local dev. **Every** module that needs a sibling does the same dynamic import (`bonbon-strategy-templates.js` → `bonbon-strategy-utils.js`); a plain static `import` loads a second, un-tagged copy that can be served stale. When editing modules locally, reload with a fresh `hacstag` (or the loader) or HA will serve stale files. **Do not hardcode or remove the `hacstag` query.**
+`bonbon-strategy.js` imports its siblings with `?hacstag=${hacstag}` read from its own `import.meta.url`. HACS supplies the tag in production; the local dev loader (`bonbon-strategy-loader.js`, never part of a HACS install) appends a timestamp for local dev. **Every** module that needs a sibling does the same dynamic import (`bonbon-strategy-templates.js` → `bonbon-strategy-utils.js`); a plain static `import` loads a second, un-tagged copy that can be served stale. When editing modules locally, reload with a fresh `hacstag` (or the loader) or HA will serve stale files. **Do not hardcode or remove the `hacstag` query.**
+
+## Versioning & release log
+
+One line in the browser console must always answer "which release is running, and how old are the files".
+
+- `bonbon-strategy.js` exports `VERSION` — the **only** place a version number lives. It ships to every HACS install and is printed in the load banner (`🍬 Bonbon Strategy v<version>`). Never duplicate it in another module, in `hacs.json` or in the README.
+- The dev loader never carries a version. It reads `VERSION` from the imported module and adds the `Last-Modified` date of the served `/local/bonbon-strategy.js` (HEAD request, `cache: 'no-store'`), so `v<version> geladen — Dateien vom <date>` tells a released version from a local working copy at a glance. `fallbackUpdated` in the loader is only used when the server sends no `Last-Modified` header.
+- **Every release bumps `VERSION` at least in the patch position** (minor for new options, major for the removals/breaking changes). While unreleased the value keeps a `-dev` suffix and names the version being worked toward; a tag may never carry it.
+- Release procedure, in one commit-ready sequence: `VERSION` without `-dev` → CHANGELOG `## Unreleased` becomes `## <version> — YYYY-MM-DD` → commit → tag `v<version>` → push the tag (HACS reads the tag, so the `hacstag` changes with it). Right after the tag, set `VERSION` to the next number with `-dev` again, so a dev deploy never reports a released version.
+- `VERSION` and the tag must never disagree: a tag whose `VERSION` differs is a bug, not a detail.
 
 ## Conventions
 
@@ -124,10 +134,11 @@ The user tests on his live dev instance, so a change that plausibly works is dep
 
 1. Copy the changed `bonbon-strategy-*.js` modules into `<config>/www` (write route, credentials and traps: `home-assistant-config` skill, `references/config-file-access.md` — the Advanced SSH add-on is started and stopped around the copy).
 2. Verify over HTTP that `/local/<file>` serves the new bytes (`md5sum` against the local file), not from the SSH shell.
-3. Tell the user it is live; the dev loader appends a fresh `hacstag`, so a dashboard reload is enough.
+3. Tell the user it is live; the dev loader appends a fresh `hacstag`, so a dashboard reload is enough. The console then shows `Bonbon Strategy v<version> geladen — Dateien vom <date>`; name that line (and the date it should show) so he can confirm the deploy took effect.
 
 ## When you change something
 
 - User-facing option → update `README.md` and `defaultConfig` (and `upgradeConfig` if it replaces an old option).
+- Release → bump `VERSION` in `bonbon-strategy.js` and turn the CHANGELOG `## Unreleased` heading into the released version with its date (see "Versioning & release log").
 - New style fragment → add it to `getStyles()` and document its name if users select it via `bonbon_styles`.
 - New selector syntax → update the README "Entity selectors" section and the parser in `bonbon-strategy-entities.js`.
