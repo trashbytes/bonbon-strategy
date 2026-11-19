@@ -330,6 +330,11 @@ export function createStylesApi(panelUrl, config) {
           .bubble-button-slider-container:not(.is-dragging) .bubble-range-fill[class] {
             top: auto !important;
             bottom: 0 !important;
+            /* keep the line 2px off the left and right edge without breaking Bubble's progress maths:
+               the fill is shifted by translateX(<n>%) of its OWN width, so the track has to be 4px narrower
+               and start 2px before the track edge - 6px = 2px inset + 4px track reduction. */
+            left: calc(6px - 100%) !important;
+            width: calc(100% - 4px) !important;
             height: 3px !important;
             border-radius: 0 !important;
             opacity: 1 !important;

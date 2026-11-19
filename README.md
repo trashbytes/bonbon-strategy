@@ -522,10 +522,11 @@ styles:
 
 Slider cards (lights with brightness, `input_number`, `fan`, …) keep their fill visible while you are **not**
 touching them: the card body carries the "on" accent, and the resting value is drawn as a 3 px line along the bottom
-edge — white while the entity is on, accent-coloured while it is not. A drag is unaffected: while the card is being
-slid it shows Bubble Card's own fill and value readout, exactly as before, and the line collapses back when you let
-go. Override the colour with card-mod if you want it different (`--bubble-slider-fill-color` is *not* used here),
-e.g. `.is-on .bubble-range-fill { background: #fff !important; }` on the card.
+edge, inset 2 px from the left and right edge — white while the entity is on, accent-coloured while it is not. A drag
+is unaffected: while the card is being slid it shows Bubble Card's own fill and value readout, exactly as before, and
+the line collapses back when you let go. Override the colour with card-mod if you want it different
+(`--bubble-slider-fill-color` is *not* used here), e.g. `.is-on .bubble-range-fill { background: #fff !important; }`
+on the card.
 
 #### Background Images
 
