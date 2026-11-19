@@ -356,6 +356,12 @@ export function createStylesApi(panelUrl, config) {
             position: relative;
             z-index: 2 !important;
           }
+          /* The value readout keeps the surface text colour and sits at the trailing edge, while the fill
+             grows underneath it. Bubble exposes the fill position only as an inline transform, so the
+             strategy sets the attribute once the fill edge passes the readout (trackSliderValueContrast). */
+          .bubble-button-slider-container .bubble-range-value[data-bonbon-value-on-fill] {
+            color: #fff !important;
+          }
           .bubble-dropdown-inner-border {
             display: none !important;
           }
