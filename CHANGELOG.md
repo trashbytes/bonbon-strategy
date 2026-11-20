@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 3.1.0-beta.1 — 2026-11-20
 
 ### Deprecation notice in the dashboard
