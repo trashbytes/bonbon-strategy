@@ -509,13 +509,16 @@ Currently deprecated:
 | Option | Replace with |
 | --- | --- |
 | `actions` | a `card_variants` entry with `tap_action` / `button_action` (see above) |
-| `show_graphs` (section option) | a `card_variants` entry with a `[section=...]` filter, e.g. `'sensor.*[section=bonbon_environment]': { type: custom:mini-graph-card }` |
-| `show_forecast` (section option) | a `card_variants` entry with a `[section=...]` filter, e.g. `'weather.*[section=bonbon_weather]': { type: weather-forecast, show_forecast: true }` |
+| `show_graphs` (section option) | two `card_variants` entries, `'sensor.*[section=<key>]'` and `'binary_sensor.*[section=<key>]'`, both `type: custom:mini-graph-card` |
+| `show_forecast` (section option) | a `card_variants` entry `'weather.*[section=<key>]'` with `show_forecast: true`; for `daily`/`hourly` the shipped label variants (`forecast_daily`, `forecast_hourly`) win over the section instead |
+| `show_weather_card` | `cards: weather.*` in that section |
+| `weather_entity_id` | the entity in `separator_buttons` (minified separator) or `cards` (full card) |
+| `show_temperature` / `show_humidity` / `show_co2` | only `false` has an effect: delete the line and drop the entry (`area.temperature_entity_id`, `area.humidity_entity_id`, the CO2 selector) from `inline_buttons` (areas) resp. `cards` (environment). `true` is the shipped default, so the line can simply go |
+| `show_floor_lights_toggle` | `separator_combine_lights` with the same value; add `separator_buttons: false` when the old value was `false` |
+| `show_area_lights_toggle` | `sub_combine_lights` (areas view) or `separator_combine_lights` (lights section) with the same value; add `sub_buttons: false` resp. `separator_buttons: false` when it was `false` |
 
-Options from the v2 era are still translated automatically and are reported the same way: `show_weather_card`,
-`weather_entity_id`, `show_temperature`, `show_humidity`, `show_co2`, `show_floor_lights_toggle` and
-`show_area_lights_toggle`. Each notice names the current option that replaces it — `cards`, `separator_buttons`,
-`separator_combine_lights`, `sub_combine_lights`, or dropping the matching entry from `cards` / `inline_buttons`.
+The notice states the replacement per config entry and quotes the value you actually set — the option's value is
+read, so a `true` and a `false` line get different advice.
 
 ### Styling and Colors
 

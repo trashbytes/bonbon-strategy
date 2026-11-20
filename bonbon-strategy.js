@@ -1,6 +1,6 @@
 // Release version. Single source of truth: logged in the console banner and read by the dev loader.
 // Bump together with the CHANGELOG release heading and the git tag (see AGENTS.md, "Versioning & release log").
-export const VERSION = '3.1.0-dev';
+export const VERSION = '3.1.0-beta.6';
 
 window.bonbon = window.bonbon || {};
 
@@ -148,6 +148,11 @@ const escapeHtml = (value) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
+// The fix texts mark identifiers with backticks. Escape first, then turn the pairs into real <code> elements, so
+// the card renders them as code instead of printing the backticks. An unbalanced backtick is left as it is.
+const formatNoticeText = (value) =>
+  escapeHtml(value).replace(/`([^`]+)`/g, '<code>$1</code>');
+
 // The cards live inside shadow roots (`hui-card` holds the card element in its own shadow DOM), so `closest()`
 // stops at the host boundary. This walks up through hosts until it finds the tag.
 const closestAcrossRoots = (element, tag) => {
@@ -197,7 +202,7 @@ class BonbonDeprecationNotice extends HTMLElement {
     const rows = shown
       .map(
         (notice) =>
-          `<div class="row"><code>${escapeHtml(notice.path)}</code><span class="fix">${escapeHtml(
+          `<div class="row"><code class="path">${escapeHtml(notice.path)}</code><span class="fix">${formatNoticeText(
             notice.fix,
           )}</span></div>`,
       )
@@ -273,27 +278,40 @@ class BonbonDeprecationNotice extends HTMLElement {
           --mdc-icon-size: 18px;
         }
         .rows {
-          margin: 6px 0 0 28px;
+          margin: 8px 0 0 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
         .row {
           display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          padding: 1px 0;
+          flex-direction: column;
+          gap: 2px;
         }
         code {
           font-family: var(--code-font-family, monospace);
           font-size: 12px;
+          padding: 1px 4px;
+          border-radius: 4px;
+          background: rgba(127, 127, 127, 0.14);
           color: var(--primary-text-color);
         }
-        .fix {
+        code.path {
+          font-size: 11px;
+          align-self: flex-start;
+          background: none;
+          padding: 0;
           color: var(--secondary-text-color, #727272);
+          word-break: break-all;
+        }
+        .fix {
+          color: var(--primary-text-color);
         }
         .muted {
           color: var(--secondary-text-color, #727272);
         }
         .foot {
-          margin: 8px 0 0 28px;
+          margin: 10px 0 0 28px;
           color: var(--secondary-text-color, #727272);
         }
       </style>

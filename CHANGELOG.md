@@ -1,6 +1,26 @@
 # Changelog
 
-## Unreleased
+## 3.1.0-beta.6 — 2026-11-20
+
+### Deprecation hints: rendered code and accurate replacements
+
+The notice used to print its backticks literally, because the card is a plain element and no longer a Markdown
+card. Backtick-marked identifiers are now converted to real `<code>` chips after escaping, so paths, option names
+and selector strings render as code instead of raw punctuation.
+
+The advice itself was rewritten against `upgradeConfig` and now depends on the option's value and its section:
+
+- `show_temperature` / `show_humidity` / `show_co2`: only `false` does anything. A `true` line is the shipped
+  default and is reported as "no effect, delete it"; a `false` line names the list to edit (`inline_buttons` in
+  `bonbon_areas`, `cards` in `bonbon_environment`) and warns that the entry ships in the defaults otherwise.
+- `show_floor_lights_toggle` / `show_area_lights_toggle`: the replacement is quoted with the value you actually
+  set (`separator_combine_lights: always`, not a bare option name), the target is section-aware
+  (`sub_combine_lights` in `bonbon_areas`, `separator_combine_lights` in `bonbon_lights`), and a `false` value
+  also names the second key the old option cleared (`separator_buttons` / `sub_buttons`).
+- `show_graphs`: both variants the upgrade creates are named (`sensor.*` and `binary_sensor.*`).
+- `show_forecast`: `daily`/`hourly` point at the shipped label variants instead of a variant the user would have
+  to write.
+- `show_weather_card` / `weather_entity_id`: phrased as the thing to write, not as "use X instead".
 
 ## 3.1.0-beta.5 — 2026-11-20
 

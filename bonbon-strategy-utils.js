@@ -444,20 +444,49 @@ export function upgradeConfig(config) {
 
 // Options that still work but are slated for removal in v4.0.0. Every entry must have a matching mapping in
 // `upgradeConfig` (or, for `actions`, in `createButtonCard`), so the deprecation notice and the back-compat
-// layer cannot drift apart.
-// The replacement text is what the dashboard notice shows, so keep it short and name the new option.
+// layer cannot drift apart. The fix is computed from the section that carries the option: it names the exact key
+// the upgrade writes and, where the value matters, quotes the replacement with the value the user actually set.
+// Backticks mark inline code in the dashboard notice; keep them around the identifiers.
+const inlineListFor = (sectionKey) => (sectionKey === 'bonbon_areas' ? 'inline_buttons' : 'cards');
+
+// Only `false` does anything for these options — it drops one entry from the section's selector list, and `true`
+// is exactly the shipped default. So a `true` line is a no-op and can just go, while a `false` line has to be
+// replaced by the list without that entry (the entry ships in the defaults and would otherwise come back).
+const describeHiddenEntry = (sectionKey, value, selector) => {
+  const list = inlineListFor(sectionKey);
+  if (value !== false) {
+    return 'no effect (only `false` removes the entry), so this line can be deleted';
+  }
+  return `delete this line and drop \`${selector}\` from \`${list}\` — it ships in the defaults otherwise`;
+};
+
+// The two toggles copy their value into the new option, and `false` also clears the buttons container — without
+// that second key the empty separator stays on the dashboard.
+const describeCombineLights = (target, value) => {
+  const lines = [`replace with \`${target}: ${value === true ? 'always' : value}\``];
+  if (value === false) {
+    lines.push(`plus \`${target === 'sub_combine_lights' ? 'sub_buttons' : 'separator_buttons'}: false\``);
+  }
+  return lines.join(' ');
+};
+
 const deprecatedSectionOptions = {
   show_graphs: (sectionKey) =>
-    `replace it with a \`card_variants\` entry \`'sensor.*[section=${sectionKey}]': { type: custom:mini-graph-card }`,
-  show_forecast: (sectionKey) =>
-    `replace it with a \`card_variants\` entry \`'weather.*[section=${sectionKey}]': { type: weather-forecast, show_forecast: true }\``,
-  show_weather_card: () => 'set `cards: weather.*` in that section instead',
-  weather_entity_id: () => 'use `separator_buttons` (minified) or `cards` (full card) instead',
-  show_temperature: () => 'remove `area.temperature_entity_id` from `cards` / `inline_buttons` instead',
-  show_humidity: () => 'remove `area.humidity_entity_id` from `cards` / `inline_buttons` instead',
-  show_co2: () => 'remove the CO2 selector from `cards` / `inline_buttons` instead',
-  show_floor_lights_toggle: () => 'use `separator_combine_lights` instead',
-  show_area_lights_toggle: () => 'use `sub_combine_lights` (areas) or `separator_combine_lights` (lights) instead',
+    `replace it with two \`card_variants\` entries, \`'sensor.*[section=${sectionKey}]'\` and ` +
+    `\`'binary_sensor.*[section=${sectionKey}]'\`, both of type \`custom:mini-graph-card\``,
+  show_forecast: (sectionKey, value) =>
+    value === true
+      ? `replace it with a \`card_variants\` entry \`'weather.*[section=${sectionKey}]'\` with \`show_forecast: true\``
+      : `put the label \`forecast_${value}\` on the weather entity — that variant ships and wins over the section`,
+  show_weather_card: () => 'replace it with `cards: weather.*` in that section',
+  weather_entity_id: () => 'put the entity in `separator_buttons` (minified separator) or `cards` (full card)',
+  show_temperature: (sectionKey, value) => describeHiddenEntry(sectionKey, value, 'area.temperature_entity_id'),
+  show_humidity: (sectionKey, value) => describeHiddenEntry(sectionKey, value, 'area.humidity_entity_id'),
+  show_co2: (sectionKey, value) =>
+    describeHiddenEntry(sectionKey, value, 'sensor.*[device_class=carbon_dioxide][unit_of_measurement=ppm]'),
+  show_floor_lights_toggle: (sectionKey, value) => describeCombineLights('separator_combine_lights', value),
+  show_area_lights_toggle: (sectionKey, value) =>
+    describeCombineLights(sectionKey === 'bonbon_areas' ? 'sub_combine_lights' : 'separator_combine_lights', value),
 };
 
 // Reports every deprecated option of the *user* config together with its replacement. It has to run on the raw
@@ -488,7 +517,7 @@ export function findDeprecatedOptions(userConfig) {
         }
         notices.push({
           path: `views.${viewKey}.sections.${sectionKey}.${option}`,
-          fix: deprecatedSectionOptions[option](sectionKey),
+          fix: deprecatedSectionOptions[option](sectionKey, section[option]),
         });
       });
     });
