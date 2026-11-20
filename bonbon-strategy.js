@@ -1,12 +1,17 @@
 // Release version. Single source of truth: logged in the console banner and read by the dev loader.
 // Bump together with the CHANGELOG release heading and the git tag (see AGENTS.md, "Versioning & release log").
-export const VERSION = '3.1.0-dev';
+export const VERSION = '3.1.0-beta.2';
 
 window.bonbon = window.bonbon || {};
 
-const hacstag = new URL(import.meta.url).searchParams.get('hacstag');
+// Cache-busting tag for the sibling modules. HACS supplies `hacstag` on the resource URL; a dashboard that
+// registers the file itself carries HA's own `v` resource version instead (or nothing). Never let the tag fall
+// through to `null`: HA serves `/local/` with a 31-day max-age, so a `?hacstag=null` URL pins the siblings to
+// whatever the browser cached first and a new export arrives as `undefined` after an update.
+const resourceParams = new URL(import.meta.url).searchParams;
+const cacheTag = resourceParams.get('hacstag') || resourceParams.get('v') || VERSION;
 
-const { defaultConfig, miniGraphCardTemplate } = await import(`./bonbon-strategy-config.js?hacstag=${hacstag}`);
+const { defaultConfig, miniGraphCardTemplate } = await import(`./bonbon-strategy-config.js?hacstag=${cacheTag}`);
 const {
   getWeatherIcon,
   mergeDeep,
@@ -17,12 +22,12 @@ const {
   upgradeConfig,
   findDeprecatedOptions,
   trackSliderValueContrast,
-} = await import(`./bonbon-strategy-utils.js?hacstag=${hacstag}`);
-const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${hacstag}`);
-const { createTemplateApi, mergeCardVariants } = await import(`./bonbon-strategy-templates.js?hacstag=${hacstag}`);
+} = await import(`./bonbon-strategy-utils.js?hacstag=${cacheTag}`);
+const { createBuildersApi } = await import(`./bonbon-strategy-builders.js?hacstag=${cacheTag}`);
+const { createTemplateApi, mergeCardVariants } = await import(`./bonbon-strategy-templates.js?hacstag=${cacheTag}`);
 
-const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${hacstag}`);
-const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${hacstag}`);
+const { createStylesApi } = await import(`./bonbon-strategy-styles.js?hacstag=${cacheTag}`);
+const { createEntityApi } = await import(`./bonbon-strategy-entities.js?hacstag=${cacheTag}`);
 
 // Slider cards invert their value readout while the fill runs underneath it (see bubbleGlobal).
 trackSliderValueContrast();

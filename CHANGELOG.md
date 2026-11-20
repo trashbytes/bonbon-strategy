@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## 3.1.0-beta.2 — 2026-11-20
+
+### Fixed
+
+- The sibling modules can no longer be pinned to a stale cached copy: the cache tag falls back from `hacstag` to
+  HA's own `v` resource version and then to `VERSION`, so a dashboard resource without `hacstag` no longer
+  requests them as `?hacstag=null`. HA serves `/local/` with a 31-day max-age, so such a URL kept the siblings of
+  the first load; right after the 3.1.0-beta.1 update that surfaced as `trackSliderValueContrast is not a
+  function` and as `undefined` for every other newly added export.
 
 ## 3.1.0-beta.1 — 2026-11-20
 
