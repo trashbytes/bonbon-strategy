@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 3.1.0-beta.5 — 2026-11-20
 
 ## 3.1.0-beta.4 — 2026-11-20
