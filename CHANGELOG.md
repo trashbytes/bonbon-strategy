@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 3.1.0-beta.6 — 2026-11-20
 
 ### Deprecation hints: rendered code and accurate replacements
