@@ -281,6 +281,16 @@ export function createStylesApi(panelUrl, config) {
           ${group(containers, ':after')} {
             ${shadowOverlay}
           }
+          /* A slider button puts .bubble-button-slider-container on the SAME element that carries the overlay
+             above (Bubble adds it next to bubble-button-card-container), so the clip-path that rounds the
+             range fill also cuts the outer half of the panel shadow away - the card then reads flat next to its
+             neighbours. The clip has to stay (it is what trims the fill's spread shadow to the card), so the
+             overlay is painted one level up on ha-card for those cards as well. Measured on the running
+             dashboard: without this rule the pixels right of the bottom edge go from a 207-211 gradient to a
+             flat 215, with it they match a normal card exactly. */
+          ha-card:has(.bubble-button-slider-container)::after {
+            ${shadowOverlay}
+          }
           ${group(containers, ':hover:after')} {
             background: ${cssValue('hover-overlay-background')};
           }

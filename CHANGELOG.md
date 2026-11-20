@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## 3.1.0-beta.3 — 2026-11-20
+
+### Slider card shadow
+
+Slider cards (dimmable lights, `button_type: slider`) no longer sit flat next to their neighbours. Bubble adds
+`bubble-button-slider-container` to the *same* element that carries the panel-shadow overlay, so the `clip-path`
+that rounds the range fill also cut away the outer half of that overlay. The shadow is now painted on `ha-card`
+for those cards as well, while the fill keeps its clip. Measured on the running dashboard: the pixels right below
+the bottom edge fell from a 207→211 gradient to a flat 215 without the fix and match a normal card again with it.
 
 ## 3.1.0-beta.2 — 2026-11-20
 

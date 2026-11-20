@@ -100,6 +100,7 @@ One line in the browser console must always answer "which release is running, an
 - `bonbon-strategy.js` exports `VERSION` — the **only** place a version number lives. It ships to every HACS install and is printed in the load banner (`🍬 Bonbon Strategy v<version>`). Never duplicate it in another module, in `hacs.json` or in the README.
 - The dev loader never carries a version. It reads `VERSION` from the imported module and adds the `Last-Modified` date of the served `/local/bonbon-strategy.js` (HEAD request, `cache: 'no-store'`), so `v<version> geladen — Dateien vom <date>` tells a released version from a local working copy at a glance. `fallbackUpdated` in the loader is only used when the server sends no `Last-Modified` header.
 - **Every release bumps `VERSION` at least in the patch position** (minor for new options, major for the removals/breaking changes). While unreleased the value keeps a `-dev` suffix and names the version being worked toward; a tag may never carry it.
+- **Minor versions are consecutive.** A release takes the minor directly after the last tag, never a jump (3.0.x → 3.1.0 → 3.2.0), however far ahead the feature set was planned. A skipped number cannot be filled afterwards without deleting and re-creating published tags.
 - Release procedure, in one commit-ready sequence: `VERSION` without `-dev` → CHANGELOG `## Unreleased` becomes `## <version> — YYYY-MM-DD` → commit → tag `v<version>` → push the tag (HACS reads the tag, so the `hacstag` changes with it). Right after the tag, set `VERSION` to the next number with `-dev` again, so a dev deploy never reports a released version.
 - `VERSION` and the tag must never disagree: a tag whose `VERSION` differs is a bug, not a detail.
 
@@ -152,6 +153,7 @@ A mock proves nothing here: the card is a `custom:bubble-card` whose shadow DOM,
 - `.bubble-content-container` and `.bubble-buttons-container` use `display: contents`; **`z-index` has no effect on a box-less element**, so lifting the wrapper's children does nothing. Lift the leaves (`.bubble-name-container`, `.bubble-icon-container`, `.bubble-sub-button-container`) instead.
 - Never put backticks into a comment inside `bonbon-strategy-styles.js`: every fragment is a template literal, and one backtick ends the string with a `ReferenceError` at module load.
 - `::after` on the card container is not a reliable overlay: it loses against the wrapper's stacking context.
+- A slider card can be simulated without touching a dashboard: add `bubble-button-slider-container` to a normal button card's container in the console. Bubble sets the same class, so the clip, the shadow rules and the stacking behave exactly as on a real slider — that is how the clipped shadow overlay was found and fixed.
 
 ## Dev deploy (standing rule)
 
