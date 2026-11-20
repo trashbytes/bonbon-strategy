@@ -167,7 +167,7 @@ The user tests on his live dev instance, so a change that plausibly works is dep
 ## When you change something
 
 - User-facing option → update `README.md` and `defaultConfig` (and `upgradeConfig` if it replaces an old option).
-- Deprecating an option → add it to `findDeprecatedOptions` with the option that replaces it (that list is what the dashboard notice and the README table show), and note the removal version in `README.md`.
+- Deprecating an option → add it to `findDeprecatedOptions` with the option that replaces it (that list is what the dashboard notice and the README table show), and note the removal version in `README.md`. The notice card is `custom:bonbon-deprecation-notice`, defined in `bonbon-strategy.js`; it renders its own shadow DOM and stores the dismissal per dashboard under `bonbon-deprecation-dismissed:<panelUrl>` = the running `VERSION`, so it reappears after an update. Never give it a fixed version — it must follow `VERSION`.
 - Release → bump `VERSION` in `bonbon-strategy.js` and turn the CHANGELOG `## Unreleased` heading into the released version with its date (see "Versioning & release log").
 - New style fragment → add it to `getStyles()` and document its name if users select it via `bonbon_styles`.
 - New selector syntax → update the README "Entity selectors" section and the parser in `bonbon-strategy-entities.js`.

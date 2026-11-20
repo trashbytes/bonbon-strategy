@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased
+## 3.1.0-beta.4 — 2026-11-20
+
+### Dismissable deprecation notice
+
+The warning card about deprecated options is now dismissable: a ✕ in its corner hides it, and the dismissal is
+remembered per dashboard in `localStorage` for the running version only — so the notice returns with the next
+update instead of after every reload. If storage is unavailable the notice simply stays visible, and the console
+warning is unchanged. The card is no longer a Markdown card but a small element the strategy registers
+(`custom:bonbon-deprecation-notice`), because the button has to write the storage key and remove the card from the
+view. Hiding it also takes the now-empty section out of the view, so the notice does not leave a blank strip
+behind. The notice text is escaped before it goes into the DOM, so a crafted config key cannot inject markup.
 
 ## 3.1.0-beta.3 — 2026-11-20
 

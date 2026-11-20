@@ -498,6 +498,12 @@ view. It names the option's path in your config and the option that replaces it;
 browser console. Nothing else changes — the option keeps working until it is removed in v4.0.0 — and the card
 disappears as soon as your config no longer contains it.
 
+The card can be dismissed with the ✕ in its top right corner. The dismissal is remembered per dashboard for the
+running version only, so the notice comes back after the next update instead of on every reload — that is
+deliberate, an update is exactly when a stale option is worth another look. It is stored in the browser
+(`localStorage`, key `bonbon-deprecation-dismissed:<dashboard path>`), so it has to be dismissed once per browser
+and device.
+
 Currently deprecated:
 
 | Option | Replace with |

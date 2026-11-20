@@ -1,6 +1,6 @@
 // Release version. Single source of truth: logged in the console banner and read by the dev loader.
 // Bump together with the CHANGELOG release heading and the git tag (see AGENTS.md, "Versioning & release log").
-export const VERSION = '3.1.0-dev';
+export const VERSION = '3.1.0-beta.4';
 
 window.bonbon = window.bonbon || {};
 
@@ -105,26 +105,203 @@ const applySectionSugars = (config, userVariants = {}) => {
   return config;
 };
 
-// One Markdown card naming every deprecated option still in the user config and what replaces it. It is prepended
+// One notice card naming every deprecated option still in the user config and what replaces it. It is prepended
 // to the first view, so a dashboard that relies on one of them says so where the user sees it, and disappears as
 // soon as the config is migrated. A long list is cut off here; the console warning carries all of it.
-const createDeprecationCard = (notices) => {
-  const shownNotices = notices.slice(0, 6);
-  const lines = shownNotices.map((notice) => `- \`${notice.path}\`: ${notice.fix}`);
-  if (notices.length > shownNotices.length) {
-    lines.push(`- …and ${notices.length - shownNotices.length} more, see the browser console`);
-  }
+// The notice is dismissable: the dismissal is stored per dashboard and keyed on the running VERSION, so it stays
+// hidden for that release and returns with the next update instead of on every reload.
+const DISMISS_STORAGE_PREFIX = 'bonbon-deprecation-dismissed:';
 
+export const readDismissedVersion = (panelUrl) => {
+  try {
+    return window.localStorage.getItem(DISMISS_STORAGE_PREFIX + panelUrl);
+  } catch {
+    return null;
+  }
+};
+
+const writeDismissedVersion = (panelUrl, version) => {
+  try {
+    window.localStorage.setItem(DISMISS_STORAGE_PREFIX + panelUrl, version);
+  } catch {
+    // Storage disabled (private mode, hardened browser): the notice simply stays visible.
+  }
+};
+
+const createDeprecationCard = (notices, panelUrl) => {
   return {
-    type: 'markdown',
-    content: [
-      '**⚠️ Deprecated configuration**',
-      ...lines,
-      '',
-      'These options still work in this version and will be removed in **v4.0.0**.',
-    ].join('\n'),
+    type: 'custom:bonbon-deprecation-notice',
+    notices,
+    panel: panelUrl,
+    version: VERSION,
+    dismiss_label: 'Hide until the next update',
   };
 };
+
+// The notice text is built from config keys, i.e. from user YAML, and rendered through innerHTML. Escaping keeps a
+// crafted key name from injecting markup.
+const escapeHtml = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+// The cards live inside shadow roots (`hui-card` holds the card element in its own shadow DOM), so `closest()`
+// stops at the host boundary. This walks up through hosts until it finds the tag.
+const closestAcrossRoots = (element, tag) => {
+  let node = element;
+  while (node) {
+    const hit = node.closest ? node.closest(tag) : null;
+    if (hit) {
+      return hit;
+    }
+    const root = node.getRootNode ? node.getRootNode() : null;
+    node = root && root.host ? root.host : null;
+  }
+  return null;
+};
+
+// Renders the notice the strategy generates and owns the dismiss button. A dedicated element is needed because
+// the button has to write to localStorage and take the card out of the view; a Markdown card cannot do either.
+class BonbonDeprecationNotice extends HTMLElement {
+  setConfig(config) {
+    this._config = config || {};
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+  }
+
+  getCardSize() {
+    return 3;
+  }
+
+  connectedCallback() {
+    this._render();
+  }
+
+  _render() {
+    const config = this._config;
+    if (!config || this._rendered) {
+      return;
+    }
+    this._rendered = true;
+
+    const notices = config.notices || [];
+    const shown = notices.slice(0, 6);
+    const more = notices.length - shown.length;
+
+    const rows = shown
+      .map(
+        (notice) =>
+          `<div class="row"><code>${escapeHtml(notice.path)}</code><span class="fix">${escapeHtml(
+            notice.fix,
+          )}</span></div>`,
+      )
+      .join('');
+    const moreRow = more > 0 ? `<div class="row muted">…and ${more} more, see the browser console</div>` : '';
+
+    const shadow = this.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
+      <style>
+        ha-card {
+          padding: 12px 14px 10px;
+          box-sizing: border-box;
+          font-size: 13px;
+          line-height: 1.45;
+        }
+        .head {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 500;
+        }
+        .head ha-icon {
+          color: var(--warning-color, #ff9800);
+          --mdc-icon-size: 20px;
+        }
+        .title {
+          flex: 1;
+        }
+        .close {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          padding: 0;
+          border: none;
+          border-radius: 50%;
+          background: none;
+          color: var(--secondary-text-color, #727272);
+          cursor: pointer;
+        }
+        .close:hover {
+          background: rgba(0, 0, 0, 0.06);
+        }
+        .close ha-icon {
+          --mdc-icon-size: 18px;
+        }
+        .rows {
+          margin: 6px 0 0 28px;
+        }
+        .row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 1px 0;
+        }
+        code {
+          font-family: var(--code-font-family, monospace);
+          font-size: 12px;
+          color: var(--primary-text-color);
+        }
+        .fix {
+          color: var(--secondary-text-color, #727272);
+        }
+        .muted {
+          color: var(--secondary-text-color, #727272);
+        }
+        .foot {
+          margin: 8px 0 0 28px;
+          color: var(--secondary-text-color, #727272);
+        }
+      </style>
+      <ha-card>
+        <div class="head">
+          <ha-icon icon="mdi:alert-outline"></ha-icon>
+          <span class="title">Deprecated configuration</span>
+          <button class="close" title="${config.dismiss_label || 'Dismiss'}" aria-label="${
+            config.dismiss_label || 'Dismiss'
+          }"><ha-icon icon="mdi:close"></ha-icon></button>
+        </div>
+        <div class="rows">${rows}${moreRow}</div>
+        <div class="foot">These options still work in this version and will be removed in v4.0.0.</div>
+      </ha-card>
+    `;
+
+    shadow.querySelector('.close').addEventListener('click', () => {
+      writeDismissedVersion(config.panel, config.version);
+      // Take the card out of the view without waiting for a reload; the strategy skips it from then on. The
+      // notice sits in a section of its own, so the grid wrapper and the empty section go with it — otherwise
+      // the section keeps its row gap as a blank strip above the dashboard.
+      const section = closestAcrossRoots(this, 'hui-section');
+      const gridSection = closestAcrossRoots(this, 'hui-grid-section');
+      const host = closestAcrossRoots(this, 'hui-card') || gridSection || this;
+      host.style.display = 'none';
+      if (section && !Array.from(section.querySelectorAll('hui-card')).some((card) => card.style.display !== 'none')) {
+        section.style.display = 'none';
+      }
+    });
+  }
+}
+
+if (!customElements.get('bonbon-deprecation-notice')) {
+  customElements.define('bonbon-deprecation-notice', BonbonDeprecationNotice);
+}
 
 export class BonbonStrategy {
   static async generate(userConfig, hass) {
@@ -605,8 +782,8 @@ export class BonbonStrategy {
             deprecatedOptions.map((notice) => `  ${notice.path} → ${notice.fix}`).join('\n'),
         );
         const noticeView = homeView || views[0];
-        if (noticeView) {
-          noticeView.sections.unshift({ cards: [createDeprecationCard(deprecatedOptions)] });
+        if (noticeView && readDismissedVersion(panelUrl) !== VERSION) {
+          noticeView.sections.unshift({ cards: [createDeprecationCard(deprecatedOptions, panelUrl)] });
         }
       }
 
@@ -727,7 +904,10 @@ export class BonbonStrategy {
   }
 }
 
-customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
+// Guarded so a second import of this module (dev loader reloads, a duplicate dashboard resource) cannot throw.
+if (!customElements.get('ll-strategy-bonbon-strategy')) {
+  customElements.define('ll-strategy-bonbon-strategy', BonbonStrategy);
+}
 console.info(
   `%c 🍬 Bonbon %c Strategy %c v${VERSION} `,
   'background-color: #cfd49b;color: #000;padding: 3px 2px 3px 3px;border-radius: 14px 0 0 14px;font-family: DejaVu Sans,Verdana,Geneva,sans-serif;',
