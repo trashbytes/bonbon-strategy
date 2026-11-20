@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.1.0-beta.1 — 2026-11-20
 
 ### Deprecation notice in the dashboard
 
@@ -43,8 +43,8 @@ did nothing and the two could drift apart.
 ### Version in the console log
 
 The strategy now logs the release it is running: `bonbon-strategy.js` exports `VERSION` and prints it in the load
-banner (`🍬 Bonbon Strategy v3.2.0`). The dev loader adds the served files' `Last-Modified` date
-(`Bonbon Strategy v3.2.0-dev geladen — Dateien vom 19.11.2026, 12:40:07`), so a released version can be told apart
+banner (`🍬 Bonbon Strategy v3.1.0`). The dev loader adds the served files' `Last-Modified` date
+(`Bonbon Strategy v3.1.0-dev geladen — Dateien vom 19.11.2026, 12:40:07`), so a released version can be told apart
 from a local working copy without opening a file. Both are dev-only output — no config, no visual change.
 
 ### Card variants
