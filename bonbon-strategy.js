@@ -1,6 +1,6 @@
 // Release version. Single source of truth: logged in the console banner and read by the dev loader.
 // Bump together with the CHANGELOG release heading and the git tag (see AGENTS.md, "Versioning & release log").
-export const VERSION = '3.1.0-dev';
+export const VERSION = '3.1.0-beta.5';
 
 window.bonbon = window.bonbon || {};
 
@@ -205,13 +205,40 @@ class BonbonDeprecationNotice extends HTMLElement {
     const moreRow = more > 0 ? `<div class="row muted">…and ${more} more, see the browser console</div>` : '';
 
     const shadow = this.attachShadow({ mode: 'open' });
+    // The notice is a plain card, so it would otherwise keep Home Assistant's own card shadow instead of the
+    // strategy's: a flat body plus the overlay shadow the generated cards paint as `::after`. Both come from the
+    // per-dashboard variables the strategy sets on `documentElement`, so the notice follows light/dark mode and a
+    // user's own `styles` overrides. The fallbacks mirror `getVariables()` for the case where the notice renders
+    // before the variables are written.
+    const panel = config.panel;
+    const varName = (suffix) => `--bonbon-${panel}-${suffix}`;
     shadow.innerHTML = `
       <style>
         ha-card {
+          position: relative;
           padding: 12px 14px 10px;
           box-sizing: border-box;
           font-size: 13px;
           line-height: 1.45;
+          background: var(${varName('card-background')}, var(--card-background-color));
+          border: none;
+          border-radius: var(${varName('border-radius')}, 12px);
+          box-shadow: none;
+          overflow: visible;
+        }
+        ha-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          display: block;
+          pointer-events: none;
+          border-radius: var(${varName('border-radius')}, 12px);
+          box-shadow: var(
+            ${varName('box-shadow')},
+            0 2px 6px rgba(0, 0, 0, 0.05),
+            inset 0 0.5px 0 0 rgba(255, 255, 255, 0.2),
+            inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.1)
+          );
         }
         .head {
           display: flex;

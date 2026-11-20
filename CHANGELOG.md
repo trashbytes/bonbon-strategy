@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.1.0-beta.5 — 2026-11-20
 
 ## 3.1.0-beta.4 — 2026-11-20
 
@@ -13,6 +13,12 @@ warning is unchanged. The card is no longer a Markdown card but a small element 
 (`custom:bonbon-deprecation-notice`), because the button has to write the storage key and remove the card from the
 view. Hiding it also takes the now-empty section out of the view, so the notice does not leave a blank strip
 behind. The notice text is escaped before it goes into the DOM, so a crafted config key cannot inject markup.
+
+The card also uses the strategy's own panel styling instead of Home Assistant's default card shadow: flat body in
+`--bonbon-<panelUrl>-card-background`, radius from `--bonbon-<panelUrl>-border-radius`, and the same overlay shadow
+the generated cards paint as `::after` (`--bonbon-<panelUrl>-box-shadow`), so it sits in the dashboard like every
+other card and follows light/dark mode and `styles` overrides. Measured on the running dashboard, its computed
+`::after` shadow is byte-identical to a generated Bubble card's.
 
 ## 3.1.0-beta.3 — 2026-11-20
 
